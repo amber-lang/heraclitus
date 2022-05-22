@@ -1,17 +1,17 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Region {
-    name: String,
-    start: String,
-    end: String,
-    interp: Vec<String>,
-    preserve: bool
+    pub name: String,
+    pub begin: String,
+    pub end: String,
+    pub interp: Vec<String>,
+    pub preserve: bool
 }
 
 impl Region {
-    pub fn new(name: &str, start: &str, end: &str) -> Self {
+    pub fn new(name: &str, begin: &str, end: &str) -> Self {
         Region {
             name: String::from(name),
-            start: String::from(start),
+            begin: String::from(begin),
             end: String::from(end),
             interp: vec![],
             preserve: true
@@ -36,7 +36,7 @@ mod test {
         // Sloppy Region initialization
         let left = super::Region {
             name: String::from("module-name"),
-            start: String::from("{"),
+            begin: String::from("{"),
             end: String::from("}"),
             interp: vec![
                 String::from("sub-module-1"),
