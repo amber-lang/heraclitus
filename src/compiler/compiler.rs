@@ -48,7 +48,8 @@ mod test {
     fn test() {
         let rules = super::Rules {
             symbols: vec![],
-            regions: vec![]   
+            regions: vec![],
+            escape_symbol: '\\'
         };
     }
 }

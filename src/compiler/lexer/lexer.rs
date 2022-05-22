@@ -1,8 +1,10 @@
 use crate::compiler::Compiler;
 use super::region_handler::RegionHandler;
+use super::reader::Reader;
 
 pub fn lexer(cc: &Compiler) {
-    let rules = RegionHandler::new(&cc.rules);
+    let reader = Reader::new();
+    let rules = RegionHandler::new(&cc.rules, &reader);
     for letter in cc.code.chars() {
         let new_rule = rules.handle_region();
         // TODO: When handling symbol, use peekable
