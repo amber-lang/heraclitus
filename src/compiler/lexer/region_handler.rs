@@ -5,7 +5,7 @@ pub struct RegionHandler<'a> {
     regions: Vec<Region>,
     escape: char,
     region_stack: Vec<Region>,
-    reader: &'a Reader
+    reader: &'a Reader<'a>
 }
 
 impl<'a> RegionHandler<'a> {
@@ -80,6 +80,34 @@ impl<'a> RegionHandler<'a> {
                 return Some(region.clone());
             }
         }
-        None   
+        None
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn match_region() {
+        let lines = vec![
+            "start",
+            "some code",
+            "end"
+        ];
+        let code = lines.join("\n");
+        let mut reader = super::Reader::new(&code);
+        let region = super::Region::new("module-name", "start", "end");
+        let rh = super::RegionHandler {
+            region_stack: Vec::new(),
+            regions: vec![region],
+            escape: '\\',
+            reader: &reader
+        };
+        // Simulate reading
+        for _ in 0..lines[0].len() {
+            // TODO: Fix this issue
+            reader.next_letter();
+        }
+        let region = rh.match_region_by_begin();
+        println!("{:?}", region);
     }
 }

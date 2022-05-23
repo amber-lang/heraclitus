@@ -2,29 +2,35 @@ use crate::compiler::token::Token;
 
 const BEGINNING: (usize, usize) = (1, 1);
 
-pub struct Reader {
-    pub code: String,
+pub struct Reader<'a> {
+    pub code: &'a String,
     pub row: usize,
     pub col: usize,
     pub index: usize
 }
 
-impl Reader {
-    pub fn new() -> Self {
+impl<'a> Reader<'a> {
+    pub fn new(code: &'a String) -> Self {
         Reader {
-            code: String::new(),
+            code,
             row: BEGINNING.0,
             col: BEGINNING.1,
             index: 0
         }
     }
 
-    pub fn next_letter(&mut self, letter: char) {
-        self.index += 1;
-        self.col += 1;
-        if letter == '\n' {
-            self.row += 1;
-            self.col = BEGINNING.1;
+    pub fn next_letter(&mut self) -> bool {
+        match self.code.chars().nth(self.index) {
+            Some(letter) => {
+                self.index += 1;
+                self.col += 1;
+                if letter == '\n' {
+                    self.row += 1;
+                    self.col = BEGINNING.1;
+                }
+                true
+            }
+            None => false
         }
     }
 
