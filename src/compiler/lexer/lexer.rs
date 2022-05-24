@@ -4,7 +4,7 @@ use super::reader::Reader;
 
 pub fn lexer(cc: &Compiler) {
     let reader = Reader::new(&cc.code);
-    let rules = RegionHandler::new(&cc.rules, &reader);
+    let rules = RegionHandler::new(&cc.rules);
     for letter in cc.code.chars() {
         let new_rule = rules.handle_region();
         // TODO: When handling symbol, use peekable

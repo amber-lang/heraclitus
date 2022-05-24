@@ -19,7 +19,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    pub fn next_letter(&mut self) -> bool {
+    pub fn next_letter(&mut self) -> Option<char> {
         match self.code.chars().nth(self.index) {
             Some(letter) => {
                 self.index += 1;
@@ -28,9 +28,9 @@ impl<'a> Reader<'a> {
                     self.row += 1;
                     self.col = BEGINNING.1;
                 }
-                true
+                Some(letter)
             }
-            None => false
+            None => None
         }
     }
 
@@ -53,5 +53,13 @@ impl<'a> Reader<'a> {
         // Handle arithmetic overflow
         let end = if self.index + n < self.code.len() { self.index + n } else { return None };
         Some(&self.code[begin..end])
+    }
+}
+
+impl<'a> Iterator for Reader<'a> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next_letter()
     }
 }

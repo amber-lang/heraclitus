@@ -1,24 +1,22 @@
 use crate::rules::{Region, Rules};
 use super::reader::Reader;
 
-pub struct RegionHandler<'a> {
+pub struct RegionHandler {
     regions: Vec<Region>,
     escape: char,
     region_stack: Vec<Region>,
-    reader: &'a Reader<'a>
 }
 
-impl<'a> RegionHandler<'a> {
-    pub fn new(rules: &Rules, reader: &'a Reader) -> Self {
+impl RegionHandler {
+    pub fn new(rules: &Rules) -> Self {
         RegionHandler {
             region_stack: Vec::new(),
             regions: rules.regions.clone(),
-            escape: rules.escape_symbol,
-            reader
+            escape: rules.escape_symbol
         }
     }
 
-    pub fn get_region(&'a self) -> Option<&'a Region> {
+    pub fn get_region(&self) -> Option<&Region> {
         self.region_stack.last()
     }
 
@@ -46,12 +44,12 @@ impl<'a> RegionHandler<'a> {
     // TODO: Make tests for this function
 
     // Matches region by some getter callback
-    fn match_region_by(&self, cb: impl Fn(&Region) -> &String) -> Option<Region> {
+    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String) -> Option<Region> {
         // Closure that checks if for each given Region is there any that matches current history state
-        let predicate = |candidate: &Region| match self.reader.get_history(cb(candidate).len()) {
+        let predicate = |candidate: &Region| match reader.get_history(cb(candidate).len()) {
             Some(code_chunk) => {
                 // Check if the region was escaped
-                let is_escaped = match self.reader.get_history(cb(candidate).len() + 1) {
+                let is_escaped = match reader.get_history(cb(candidate).len() + 1) {
                     Some(code_chunk_with_escape) => code_chunk_with_escape.chars().next().unwrap() == self.escape,
                     None => false
                 };
@@ -62,12 +60,12 @@ impl<'a> RegionHandler<'a> {
         self.get_region_by(predicate)
     }
 
-    fn match_region_by_begin(&self) -> Option<Region> {
-        self.match_region_by(|candidate: &Region| &candidate.name)
+    fn match_region_by_begin(&self, reader: &Reader) -> Option<Region> {
+        self.match_region_by(reader, |candidate: &Region| &candidate.begin)
     }
 
-    fn match_region_by_end(&self) -> Option<Region> {
-        self.match_region_by(|candidate: &Region| &candidate.end)
+    fn match_region_by_end(&self, reader: &Reader) -> Option<Region> {
+        self.match_region_by(reader, |candidate: &Region| &candidate.end)
     }
 
     fn get_region_by_name(&self, name: &String) -> Option<Region> {
@@ -89,25 +87,32 @@ mod test {
     #[test]
     fn match_region() {
         let lines = vec![
-            "start",
-            "some code",
+            "begin",
+            "\\begin",
             "end"
         ];
         let code = lines.join("\n");
         let mut reader = super::Reader::new(&code);
-        let region = super::Region::new("module-name", "start", "end");
+        let region = super::Region::new("module-name", "begin", "end");
         let rh = super::RegionHandler {
             region_stack: Vec::new(),
             regions: vec![region],
-            escape: '\\',
-            reader: &reader
+            escape: '\\'
         };
-        // Simulate reading
-        for _ in 0..lines[0].len() {
-            // TODO: Fix this issue
-            reader.next_letter();
+        let left = vec![
+            (5, String::from("begin")),
+            (16, String::from("end"))
+        ];
+        let mut right = Vec::new();
+        // Simulate matching regions
+        while let Some(_) = reader.next() {
+            if let Some(begin) = rh.match_region_by_begin(&reader) {
+                right.push((reader.index, begin.begin));
+            }
+            if let Some(end) = rh.match_region_by_end(&reader) {
+                right.push((reader.index, end.end));
+            }
         }
-        let region = rh.match_region_by_begin();
-        println!("{:?}", region);
+        assert_eq!(left, right);
     }
 }
