@@ -20,7 +20,8 @@ impl RegionHandler {
         self.region_stack.last()
     }
 
-    pub fn handle_region(&self) {
+    // TODO: Make tests for handle region
+    pub fn handle_region(&self, reader: &Reader) -> bool {
         // If we are not in the global scope
         if let Some(region) = self.get_region() {
             // If current context is lexically preserved
@@ -31,17 +32,33 @@ impl RegionHandler {
                         // Get the region object of this interpolation
                         let interp_region = self.get_region_by_name(interp_name)
                             .expect(format!("Region '{}' does not exists", interp_name).as_str());
-                        // TODO: Finish once Reader is ready
-                        
+                        // The region that got matched based on current code lexing state
+                        if let Some(begin_region) = self.match_region_by_begin(reader) {
+                            if begin_region.name == *interp_name {
+                                self.region_stack.push(begin_region);
+                                return true;
+                            }
+                        }
                     }
-                    
-                    
+                }
+            }
+            // Let's check if we can close current region
+            if let Some(end_region) = self.match_region_by_end(reader) {
+                if end_region.name == region.name {
+                    self.region_stack.pop();
+                    return true;
                 }
             }
         }
+        else {
+            // Check if we can open a region
+            if let Some(begin_region) = self.match_region_by_begin(reader) {
+                self.region_stack.push(begin_region);
+                return true;
+            }
+        }
+        false
     }
-
-    // TODO: Make tests for this function
 
     // Matches region by some getter callback
     fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String) -> Option<Region> {
