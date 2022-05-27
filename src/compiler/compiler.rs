@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::rules::Rules;
-use crate::compiler::lexer::lexer;
+use crate::compiler::lexer::Lexer;
 
 pub struct Compiler {
     pub name: String,
@@ -12,7 +12,7 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    fn new(name: &str, rules: Rules) -> Self {
+    pub fn new(name: &str, rules: Rules) -> Self {
         Compiler {
             name: String::from(name),
             rules,
@@ -28,17 +28,17 @@ impl Compiler {
         Ok(())
     }
 
-    pub fn load(mut self, code: String) {
-        self.code = code;
+    pub fn load<T: AsRef<str>>(&mut self, code: T) {
+        self.code = String::from(code.as_ref());
     }
 
-    pub fn set_path(mut self, file_path: String) {
+    pub fn set_path(&mut self, file_path: String) {
         self.path = file_path;
     }
 
-    pub fn compile(self) -> Self {
-        lexer(&self);
-        self
+    pub fn compile(&self) {
+        let mut lexer = Lexer::new(&self);
+        lexer.run();
     }
 }
 

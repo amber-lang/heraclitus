@@ -1,5 +1,3 @@
-use crate::compiler::token::Token;
-
 const BEGINNING: (usize, usize) = (0, 1);
 
 pub struct Reader<'a> {
@@ -51,8 +49,8 @@ impl<'a> Reader<'a> {
     }
 
     // Gets position of token that has been read
-    pub fn get_token_position(&self, token: Token) -> (usize, usize) {
-        (self.row, self.col - token.word.len())
+    pub fn get_word_position(&self, word: &String) -> (usize, usize) {
+        (self.row, self.col - word.len())
     }
 
     // Get last n characters that were processed in correct order
