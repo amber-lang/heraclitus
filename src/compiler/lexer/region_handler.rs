@@ -10,7 +10,7 @@ pub struct RegionHandler {
 impl RegionHandler {
     pub fn new(rules: &Rules) -> Self {
         RegionHandler {
-            region_stack: Vec::new(),
+            region_stack: vec![],
             regions: rules.regions.clone(),
             escape: rules.escape_symbol
         }
@@ -21,7 +21,7 @@ impl RegionHandler {
     }
 
     // TODO: Make tests for handle region
-    pub fn handle_region(&self, reader: &Reader) -> bool {
+    pub fn handle_region(&mut self, reader: &Reader) -> bool {
         // If we are not in the global scope
         if let Some(region) = self.get_region() {
             // If current context is lexically preserved
@@ -108,28 +108,58 @@ mod test {
             "\\begin",
             "end"
         ];
+        let expected = vec![
+            (4, String::from("begin")),
+            (15, String::from("end"))
+        ];
         let code = lines.join("\n");
         let mut reader = super::Reader::new(&code);
         let region = super::Region::new("module-name", "begin", "end");
         let rh = super::RegionHandler {
-            region_stack: Vec::new(),
+            region_stack: vec![],
             regions: vec![region],
             escape: '\\'
         };
-        let left = vec![
-            (5, String::from("begin")),
-            (16, String::from("end"))
-        ];
-        let mut right = Vec::new();
+
+        let mut result = vec![];
         // Simulate matching regions
         while let Some(_) = reader.next() {
             if let Some(begin) = rh.match_region_by_begin(&reader) {
-                right.push((reader.index, begin.begin));
+                result.push((reader.get_index(), begin.begin));
             }
             if let Some(end) = rh.match_region_by_end(&reader) {
-                right.push((reader.index, end.end));
+                result.push((reader.get_index(), end.end));
             }
         }
-        assert_eq!(left, right);
+        assert_eq!(expected, result);
+    }
+
+    // #[test]
+    fn handle_region() {
+        let lines = vec![
+            "'My name is {name}.'"
+        ];
+        let expected = vec![
+            0, 12, 17, 19
+        ];
+        let code = lines.join("\n");
+        let mut reader = super::Reader::new(&code);
+        let mut rh = super::RegionHandler {
+            region_stack: vec![],
+            regions: vec![
+                super::Region::new("string", "'", "'").add_interp("interpolation"),
+                super::Region::new("interpolation", "{", "}").tokenize_inner()
+            ],
+            escape: '\\'
+        };
+        let mut result = vec![];
+        // Simulate matching regions
+        while let Some(_) = reader.next() {
+            let region_mutated = rh.handle_region(&reader);
+            if region_mutated {
+                result.push(reader.get_index());
+            }
+        }
+        assert_eq!(expected, result);      
     }
 }
