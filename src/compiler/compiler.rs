@@ -41,15 +41,3 @@ impl Compiler {
         lexer.run();
     }
 }
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test() {
-        let rules = super::Rules {
-            symbols: vec![],
-            regions: vec![],
-            escape_symbol: '\\'
-        };
-    }
-}

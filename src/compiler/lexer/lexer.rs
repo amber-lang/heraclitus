@@ -1,5 +1,4 @@
 use crate::compiler::{ Compiler, Token };
-use crate::rules::{ Region, Rules };
 use super::region_handler::RegionHandler;
 use super::reader::Reader;
 
@@ -26,6 +25,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    // Add word that has been completed in previous iteration to the lexem
     fn add_word(&mut self, word: String) -> String {
         if word.len() > 0 {
             let (row, col) = self.reader.get_word_position(&word);
@@ -34,6 +34,21 @@ impl<'a> Lexer<'a> {
                 path: self.path,
                 row,
                 col
+            });
+            String::new()
+        }
+        else { word }
+    }
+
+    // Add word that has been completed in current iteration to the lexem
+    fn add_word_inclusively(&mut self, word: String) -> String {
+        if word.len() > 0 {
+            let (row, col) = self.reader.get_word_position(&word);
+            self.lexem.push(Token {
+                word,
+                path: self.path,
+                row,
+                col: col + 1
             });
             String::new()
         }
@@ -64,10 +79,7 @@ impl<'a> Lexer<'a> {
                 else if self.symbols.contains(&letter) {
                     word = self.add_word(word);
                     word.push(letter);
-                    word = self.add_word(word);
-                    // TODO: When handling symbol, use peekable
-                    // to handle the self.add_word(True)
-                    // https://doc.rust-lang.org/stdx/iter/struct.Peekable.html
+                    word = self.add_word_inclusively(word);
                 }
                 // Handle word
                 else {
@@ -82,18 +94,34 @@ impl<'a> Lexer<'a> {
 
 #[cfg(test)]
 mod test {
+    use crate::rules::{ Region, Rules };
+
     #[test]
     fn test_lexer() {
         let symbols = vec!['(', ')'];
         let regions = vec![
-            super::Region::new("string", "'", "'")
+            Region::new("string", "'", "'")
         ];
-        let rules = super::Rules::new(symbols, regions);
+        let expected = vec![
+            ("let".to_string(), 1, 1),
+            ("a".to_string(), 1, 5),
+            ("=".to_string(), 1, 7),
+            ("(".to_string(), 1, 9),
+            ("12".to_string(), 1, 10),
+            ("+".to_string(), 1, 13),
+            ("32".to_string(), 1, 15),
+            (")".to_string(), 1, 17)
+        ];
+        let rules = Rules::new(symbols, regions);
         let mut cc = super::Compiler::new("TestScript", rules);
         cc.load("let a = (12 + 32)");
-        
         let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
         lexer.run();
-        println!("{:?}", lexer.lexem);
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.row, lex.col));
+        }
+        assert_eq!(expected, result);
     }
 }

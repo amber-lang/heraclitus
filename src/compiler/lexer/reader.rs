@@ -63,12 +63,22 @@ impl<'a> Reader<'a> {
         Some(&self.code[begin..end])
     }
 
-    // Similar to `get_history` but returns a mutable String that can be stored
+    // Similar to `get_history` but returns a mutable String that can be owned
     pub fn get_history_string(&self, n: usize) -> Option<String> {
-        if let Some(value) = self.get_history(n) {
-            Some(String::from(value))
+        match self.get_history(n) {
+            Some(value) => Some(String::from(value)),
+            None => None
         }
-        else { None }
+    }
+
+    // Show next character that is going to be consumed
+    pub fn peek(&self) -> Option<char> {
+        // Amount required to peek one item in the future
+        let one_forward = 2;
+        match self.get_future(one_forward) {
+            Some(value) => value.chars().nth(one_forward - 1),
+            None => None
+        }
     }
 
     // Get next n characters that will be processed in correct order
@@ -80,12 +90,12 @@ impl<'a> Reader<'a> {
         Some(&self.code[begin..end])
     }
 
-    // Similar to `get_future` but returns a mutable String that can be stored
+    // Similar to `get_future` but returns a mutable String that can be owned
     pub fn get_future_string(&self, n: usize) -> Option<String> {
-        if let Some(value) = self.get_future(n) {
-            Some(String::from(value))
+        match self.get_future(n) {
+            Some(value) => Some(String::from(value)),
+            None => None
         }
-        else { None }
     }
 }
 

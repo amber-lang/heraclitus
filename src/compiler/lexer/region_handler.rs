@@ -34,7 +34,7 @@ impl RegionHandler {
                             .expect(format!("Region '{}' does not exists", interp_name).as_str());
                         // The region that got matched based on current code lexing state
                         if let Some(begin_region) = self.match_region_by_begin(reader) {
-                            if begin_region.name == *interp_name {
+                            if begin_region.name == *interp_region.name {
                                 self.region_stack.push(begin_region);
                                 return true;
                             }
@@ -134,7 +134,7 @@ mod test {
         assert_eq!(expected, result);
     }
 
-    // #[test]
+    #[test]
     fn handle_region() {
         let lines = vec![
             "'My name is {name}.'"
