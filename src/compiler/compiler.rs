@@ -1,44 +1,43 @@
 use std::fs::File;
+use std::io::prelude::*;
 
 use crate::rules::Rules;
-use super::lexer;
+use crate::compiler::lexer::Lexer;
 
 pub struct Compiler {
-    name: String,
-    rules: Rules,
-    code: String
+    pub name: String,
+    pub rules: Rules,
+    pub code: String,
+    pub path: String
 }
 
 impl Compiler {
-    fn new(name: &str, rules: Rules) -> Self {
+    pub fn new(name: &str, rules: Rules) -> Self {
         Compiler {
             name: String::from(name),
             rules,
-            code: String::new()
+            code: String::new(),
+            path: String::from("[code]")
         }
     }
 
-    pub fn load_file(file: File) {
-        
+    pub fn load_file(mut self, file_path: String) -> std::io::Result<()> {
+        let mut file = File::open(&file_path)?;
+        file.read_to_string(&mut self.code)?;
+        self.path = file_path;
+        Ok(())
     }
 
-    pub fn load(code: String) {
-        
+    pub fn load<T: AsRef<str>>(&mut self, code: T) {
+        self.code = String::from(code.as_ref());
     }
 
-    pub fn compile(mut self) -> Self {
-        lexer();
-        self
+    pub fn set_path(&mut self, file_path: String) {
+        self.path = file_path;
     }
-}
 
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test() {
-        let rules = super::Rules {
-            symbols: vec![],
-            regions: vec![]   
-        };
+    pub fn compile(&self) {
+        let mut lexer = Lexer::new(&self);
+        lexer.run();
     }
 }
