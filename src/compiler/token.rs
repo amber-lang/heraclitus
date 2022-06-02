@@ -3,8 +3,7 @@ use std::fmt::{Formatter, Display, Result, Debug};
 pub struct Token <'a> {
     pub word: String,
     pub path: &'a String,
-    pub row: usize,
-    pub col: usize
+    pub pos: (usize, usize),
 }
 
 impl Token<'_> {
@@ -22,7 +21,7 @@ impl Token<'_> {
             ) => format!("<symbol: {} >", sym),
             _ => self.word.clone()
         };
-        write!(formatter, "Tok[{} {}:{}]", word, self.row, self.col)
+        write!(formatter, "Tok[{} {}:{}]", word, self.pos.0, self.pos.1)
     }
 }
 
@@ -46,8 +45,7 @@ mod test {
         let mut token = super::Token {
             word: String::from("keyword"),
             path: &path,
-            row: 1,
-            col: 2
+            pos: (1, 2)
         };
         assert_eq!(format!("{}", token), String::from("Tok[keyword 1:2]"));
         token.word = String::from("[");

@@ -1,23 +1,26 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::collections::HashMap;
 
 use crate::rules::Rules;
 use crate::compiler::lexer::Lexer;
 
-pub struct Compiler {
+pub struct Compiler<AST> {
     pub name: String,
     pub rules: Rules,
     pub code: String,
-    pub path: String
+    pub path: String,
+    pub code_tree: HashMap<String, AST>
 }
 
-impl Compiler {
+impl<AST> Compiler<AST> {
     pub fn new(name: &str, rules: Rules) -> Self {
         Compiler {
             name: String::from(name),
             rules,
             code: String::new(),
-            path: String::from("[code]")
+            path: String::from("[code]"),
+            code_tree: HashMap::new()
         }
     }
 
