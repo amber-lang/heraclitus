@@ -86,8 +86,8 @@ impl<'a> Lexer<'a> {
             }
         }
         self.add_word(word);
+        self.region.handle_region_open(self.path, &self.reader);
     }
-    // TODO: Handle lexing errors
 }
 
 #[cfg(test)]

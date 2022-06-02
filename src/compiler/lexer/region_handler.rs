@@ -1,4 +1,5 @@
 use crate::rules::{Region, Rules};
+use super::super::logger::Log;
 use super::reader::Reader;
 
 pub struct RegionHandler {
@@ -20,7 +21,19 @@ impl RegionHandler {
         self.region_stack.last()
     }
 
-    // TODO: Make tests for handle region
+    // Error if after code lexing 
+    // some region was left unclosed
+    pub fn handle_region_open(&self, path: &String, reader: &Reader) {
+        if let Some(region) = self.region_stack.last() {
+            if !region.allow_left_open {
+                let (row, col) = reader.get_position();
+                Log::new_err(path, row, col)
+                    .message(format!("Unclosed {}", region.name));
+            }
+        }
+    }
+
+    // Check where we are in code and open / close some region if matched
     pub fn handle_region(&mut self, reader: &Reader) -> bool {
         // If we are not in the global scope
         if let Some(region) = self.get_region() {
