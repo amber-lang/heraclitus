@@ -4,7 +4,8 @@ pub struct Region {
     pub begin: String,
     pub end: String,
     pub interp: Vec<String>,
-    pub preserve: bool
+    pub preserve: bool,
+    pub allow_left_open: bool
 }
 
 impl Region {
@@ -14,7 +15,12 @@ impl Region {
             begin: String::from(begin),
             end: String::from(end),
             interp: vec![],
-            preserve: true
+            // This field determines if the contents
+            // of the region should be tokenized
+            preserve: true,
+            // This field can allow to leave region 
+            // unclosed after parsing has finished
+            allow_left_open: false
         }
     }
 
@@ -35,21 +41,22 @@ mod test {
     fn region_parses_correctly() {
         // Sloppy Region initialization
         let left = super::Region {
-            name: String::from("module-name"),
-            begin: String::from("{"),
-            end: String::from("}"),
+            name: String::from("Array literal"),
+            begin: String::from("["),
+            end: String::from("]"),
             interp: vec![
-                String::from("sub-module-1"),
-                String::from("sub-module-2"),
-                String::from("sub-module-3")
+                String::from("Sub module 1"),
+                String::from("Sub module 2"),
+                String::from("Sub module 3")
             ],
-            preserve: false
+            preserve: false,
+            allow_left_open: false
         };
         // Clean Region initialization using struct implementation
-        let right = super::Region::new("module-name", "{", "}")
-            .add_interp("sub-module-1")
-            .add_interp("sub-module-2")
-            .add_interp("sub-module-3")
+        let right = super::Region::new("Array literal", "[", "]")
+            .add_interp("Sub module 1")
+            .add_interp("Sub module 2")
+            .add_interp("Sub module 3")
             .tokenize_inner();
         assert_eq!(left, right);
     }
