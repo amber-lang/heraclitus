@@ -15,7 +15,7 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(cc: &'a Compiler) -> Self {
+    pub fn new<AST>(cc: &'a Compiler<AST>) -> Self {
         Lexer {
             symbols: &cc.rules.symbols,
             region: RegionHandler::new(&cc.rules),
@@ -32,8 +32,7 @@ impl<'a> Lexer<'a> {
             self.lexem.push(Token {
                 word,
                 path: self.path,
-                row,
-                col
+                pos: (row, col)
             });
             String::new()
         }
@@ -47,8 +46,7 @@ impl<'a> Lexer<'a> {
             self.lexem.push(Token {
                 word,
                 path: self.path,
-                row,
-                col: col + 1
+                pos: (row, col + 1)
             });
             String::new()
         }
@@ -95,6 +93,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use crate::rules::{ Region, Rules };
+    use super::Compiler;
 
     #[test]
     fn test_lexer() {
@@ -112,15 +111,16 @@ mod test {
             ("32".to_string(), 1, 15),
             (")".to_string(), 1, 17)
         ];
+        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc = super::Compiler::new("TestScript", rules);
+        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
         cc.load("let a = (12 + 32)");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
         lexer.run();
         for lex in lexer.lexem {
-            result.push((lex.word, lex.row, lex.col));
+            result.push((lex.word, lex.pos.0, lex.pos.1));
         }
         assert_eq!(expected, result);
     }
