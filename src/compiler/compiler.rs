@@ -18,8 +18,8 @@ impl<AST> Compiler<AST> {
         Compiler {
             name: String::from(name),
             rules,
-            code: String::new(),
-            path: String::from("[code]"),
+            code: format!(""),
+            path: format!("[code]"),
             code_tree: HashMap::new()
         }
     }
