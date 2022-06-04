@@ -28,7 +28,8 @@ impl RegionHandler {
             if !region.allow_left_open {
                 let (row, col) = reader.get_position();
                 Log::new_err(path, row, col)
-                    .message(format!("Unclosed {}", region.name))
+                    .attach_message(format!("Unclosed {}", region.name))
+                    .attach_code(reader.code)
                     .send();
             }
         }
