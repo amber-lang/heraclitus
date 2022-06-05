@@ -1,4 +1,10 @@
 #[derive(Debug, PartialEq, Clone)]
+pub struct GlobalRegion {
+    pub interp: Vec<String>
+}
+
+// TODO: Modify the "Region" struct
+#[derive(Debug, PartialEq, Clone)]
 pub struct Region {
     pub name: String,
     pub begin: String,
@@ -8,12 +14,24 @@ pub struct Region {
     pub allow_left_open: bool
 }
 
+// By default all options are set to 'false'
+// If you want to set a change - set one to 'true'
+#[derive(Debug, PartialEq, Clone)]
+pub struct CustomRegion {
+    pub name: String,
+    pub begin: String,
+    pub end: String,
+    pub interp: Vec<String>,
+    pub tokenize: bool,
+    pub allow_left_open: bool
+}
+
 impl Region {
-    pub fn new(name: &str, begin: &str, end: &str) -> Self {
+    pub fn new<T: AsRef<str>>(name: T, begin: T, end: T) -> Self {
         Region {
-            name: String::from(name),
-            begin: String::from(begin),
-            end: String::from(end),
+            name: String::from(name.as_ref()),
+            begin: String::from(begin.as_ref()),
+            end: String::from(end.as_ref()),
             interp: vec![],
             // This field determines if the contents
             // of the region should be tokenized
@@ -24,8 +42,8 @@ impl Region {
         }
     }
 
-    pub fn add_interp(mut self, name: &str) -> Self {
-        self.interp.push(String::from(name));
+    pub fn add_interp<T: AsRef<str>>(mut self, name: T) -> Self {
+        self.interp.push(String::from(name.as_ref()));
         self
     }
 
