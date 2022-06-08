@@ -1,5 +1,5 @@
 use crate::compiler::{ Compiler, Token };
-use super::region_handler::RegionHandler;
+use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
 
 // This is just an estimation of token amount
@@ -53,9 +53,9 @@ impl<'a> Lexer<'a> {
         else { word }
     }
 
-    fn is_region(&self, is_matched: bool) -> bool {
+    fn is_region(&self, reaction: Reaction) -> bool {
         if let Some(region) = self.region.get_region() {
-            region.preserve && !is_matched
+            !region.tokenize && reaction == Reaction::Pass
         }
         else { false }
     }
@@ -63,25 +63,43 @@ impl<'a> Lexer<'a> {
     pub fn run(&mut self) {
         let mut word = String::new();
         while let Some(letter) = self.reader.next() {
-            let is_matched = self.region.handle_region(&self.reader);
-            // Handle region scope
-            if self.is_region(is_matched) {
-                word.push(letter);
-            }
-            else {
-                // Skip whitespace
-                if vec![' ', '\t'].contains(&letter) {
+            // Reaction stores the reaction of the region handler
+            // Have we just opened or closed some region?
+            let reaction = self.region.handle_region(&self.reader);
+            match reaction {
+                // If the region has been opened
+                // Finish the part that we have been parsing
+                Reaction::Open => {
                     word = self.add_word(word);
-                }
-                // Handle special symbols
-                else if self.symbols.contains(&letter) {
-                    word = self.add_word(word);
+                    word.push(letter);
+                },
+                // If the region has been closed
+                // Add the closing region and finish the word
+                Reaction::Close => {
                     word.push(letter);
                     word = self.add_word_inclusively(word);
                 }
-                // Handle word
-                else {
-                    word.push(letter);
+                Reaction::Pass => {
+                    // Handle region scope
+                    if self.is_region(reaction) {
+                        word.push(letter);
+                    }
+                    else {
+                        // Skip whitespace
+                        if vec![' ', '\t'].contains(&letter) {
+                            word = self.add_word(word);
+                        }
+                        // Handle special symbols
+                        else if self.symbols.contains(&letter) {
+                            word = self.add_word(word);
+                            word.push(letter);
+                            word = self.add_word_inclusively(word);
+                        }
+                        // Handle word
+                        else {
+                            word.push(letter);
+                        }
+                    }
                 }
             }
         }
@@ -93,14 +111,23 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use crate::rules::{ Region, Rules };
+    use crate::reg;
     use super::Compiler;
 
     #[test]
-    fn test_lexer() {
+    fn test_lexer_base() {
         let symbols = vec!['(', ')'];
-        let regions = vec![
-            Region::new("string", "'", "'")
-        ];
+        let regions = reg!([
+            reg!(string as "String literal" => {
+                begin: "'",
+                end: "'"
+            } in [
+                reg!(array as "Array Literal" => {
+                    begin: "[",
+                    end: "]"
+                })
+            ])
+        ]);
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
@@ -123,5 +150,46 @@ mod test {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_lexer_string_interp() {
+        let symbols = vec!['(', ')'];
+        let regions = reg!([
+            reg!(string_literal as "String literal" => {
+                begin: "'",
+                end: "'"
+            } in [
+                reg!(string_interp as "String interpolation" => {
+                    begin: "{",
+                    end: "}",
+                    tokenize: true
+                } ref global)
+            ])
+        ]);
+        let expected = vec![
+            ("let".to_string(), 1, 1),
+            ("a".to_string(), 1, 5),
+            ("=".to_string(), 1, 7),
+            ("(".to_string(), 1, 9),
+            ("12".to_string(), 1, 10),
+            ("+".to_string(), 1, 13),
+            ("32".to_string(), 1, 15),
+            (")".to_string(), 1, 17)
+        ];
+        type AST = ();
+        let rules = Rules::new(symbols, regions);
+        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
+        cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
+        let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
+        lexer.run();
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        println!("{result:?}");
+        // TODO: Finish string test
+        // assert_eq!(expected, result);
     }
 }
