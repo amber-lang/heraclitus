@@ -1,3 +1,4 @@
+#[macro_use]
 mod rules;
 mod region;
 
