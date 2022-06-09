@@ -85,7 +85,8 @@ impl Region {
 
 #[cfg(test)]
 mod test {
-    use super::Region;
+    use std::collections::HashMap;
+    use super::{ Region, RegionMap };
 
     #[test]
     fn region_parses_correctly() {
@@ -139,6 +140,82 @@ mod test {
 
     #[test]
     fn region_map_correctly() {
+        let mut expected: RegionMap = HashMap::new();
+        expected.insert("string_interp".to_string(), Region {
+            id: "string_interp".to_string(),
+            name: "String Interpolation".to_string(),
+            begin: "${".to_string(),
+            end: "}".to_string(),
+            interp: vec![],
+            tokenize: true,
+            allow_left_open: false,
+            global: false,
+            references: Some(
+                "global".to_string(),
+            ),
+        });
+        expected.insert("global".to_string(), Region {
+                id: "global".to_string(),
+                name: "Global context".to_string(),
+                begin: "".to_string(),
+                end: "".to_string(),
+                interp: vec![
+                    Region {
+                        id: "string".to_string(),
+                        name: "String Literal".to_string(),
+                        begin: "'".to_string(),
+                        end: "'".to_string(),
+                        interp: vec![
+                            Region {
+                                id: "string_interp".to_string(),
+                                name: "String Interpolation".to_string(),
+                                begin: "${".to_string(),
+                                end: "}".to_string(),
+                                interp: vec![],
+                                tokenize: true,
+                                allow_left_open: false,
+                                global: false,
+                                references: Some(
+                                    "global".to_string(),
+                                ),
+                            },
+                        ],
+                        tokenize: false,
+                        allow_left_open: false,
+                        global: false,
+                        references: None,
+                    },
+                ],
+                tokenize: true,
+                allow_left_open: true,
+                global: true,
+                references: None,
+        });
+        expected.insert("string".to_string(), Region {
+            id: "string".to_string(),
+            name: "String Literal".to_string(),
+            begin: "'".to_string(),
+            end: "'".to_string(),
+            interp: vec![
+                Region {
+                    id: "string_interp".to_string(),
+                    name: "String Interpolation".to_string(),
+                    begin: "${".to_string(),
+                    end: "}".to_string(),
+                    interp: vec![],
+                    tokenize: true,
+                    allow_left_open: false,
+                    global: false,
+                    references: Some(
+                        "global".to_string(),
+                    ),
+                },
+            ],
+            tokenize: false,
+            allow_left_open: false,
+            global: false,
+            references: None,
+        });
         let region = reg!([
             reg!(string as "String Literal" => {
                 begin: "'",
@@ -151,7 +228,7 @@ mod test {
                 } ref global)
             ])
         ]);
-        // TODO: Create region map test
-        println!("{:#?}", region.generate_region_map());
+        let result = region.generate_region_map();
+        assert_eq!(expected, result);
     }
 }

@@ -171,11 +171,15 @@ mod test {
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
             ("=".to_string(), 1, 7),
-            ("(".to_string(), 1, 9),
-            ("12".to_string(), 1, 10),
-            ("+".to_string(), 1, 13),
-            ("32".to_string(), 1, 15),
-            (")".to_string(), 1, 17)
+            ("'this ".to_string(), 1, 9),
+            ("{".to_string(), 1, 15),
+            ("'is ".to_string(), 1, 16),
+            ("{".to_string(), 1, 20),
+            ("'reeeeaaaally'".to_string(), 1, 21),
+            ("}".to_string(), 1, 35),
+            (" long'".to_string(), 1, 36),
+            ("}".to_string(), 1, 42),
+            (" text'".to_string(), 1, 43)
         ];
         type AST = ();
         let rules = Rules::new(symbols, regions);
@@ -188,8 +192,6 @@ mod test {
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
-        println!("{result:?}");
-        // TODO: Finish string test
-        // assert_eq!(expected, result);
+        assert_eq!(expected, result);
     }
 }
