@@ -1,4 +1,4 @@
-use crate::compiler::{ Compiler, Token };
+use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
 
@@ -11,7 +11,9 @@ pub struct Lexer<'a> {
     region: RegionHandler,
     reader: Reader<'a>,
     lexem: Vec<Token<'a>>,
-    path: &'a String
+    path: &'a String,
+    separator_mode: SeparatorMode,
+    scoping_mode: ScopingMode
 }
 
 impl<'a> Lexer<'a> {
@@ -21,7 +23,9 @@ impl<'a> Lexer<'a> {
             region: RegionHandler::new(&cc.rules),
             reader: Reader::new(&cc.code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
-            path: &cc.path
+            path: &cc.path,
+            separator_mode: cc.separator_mode.clone(),
+            scoping_mode: cc.scoping_mode.clone()
         }
     }
 
@@ -112,7 +116,7 @@ impl<'a> Lexer<'a> {
 mod test {
     use crate::rules::{ Region, Rules };
     use crate::reg;
-    use super::Compiler;
+    use crate::compiler::{ Compiler };
 
     #[test]
     fn test_lexer_base() {

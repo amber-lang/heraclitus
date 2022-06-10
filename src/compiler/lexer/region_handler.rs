@@ -10,7 +10,7 @@ pub enum Reaction {
 }
 
 pub struct RegionHandler {
-    pub region_stack: Vec<Region>,
+    region_stack: Vec<Region>,
     region_map: RegionMap,
     escape: char
 }
