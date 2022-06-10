@@ -2,6 +2,22 @@ use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
 
+macro_rules! action {
+    ("add symbol", $self:expr, $word:expr, $letter:expr) => {{
+        $word = $self.add_word($word);
+        $word.push($letter);
+        $word = $self.add_word_inclusively($word);
+    }};
+    ("begin region", $self:expr, $word:expr, $letter:expr) => {{
+        $word = $self.add_word($word);
+        $word.push($letter);
+    }};
+    ("end region", $self:expr, $word:expr, $letter:expr) => {{
+        $word.push($letter);
+        $word = $self.add_word_inclusively($word);
+    }};
+}
+
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
 const AVG_TOKEN_AMOUNT: usize = 1024;
@@ -29,7 +45,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // Add word that has been completed in previous iteration to the lexem
+    /// Add word that has been completed in previous iteration to the lexem
     fn add_word(&mut self, word: String) -> String {
         if word.len() > 0 {
             let (row, col) = self.reader.get_word_position(&word);
@@ -43,7 +59,7 @@ impl<'a> Lexer<'a> {
         else { word }
     }
 
-    // Add word that has been completed in current iteration to the lexem
+    /// Add word that has been completed in current iteration to the lexem
     fn add_word_inclusively(&mut self, word: String) -> String {
         if word.len() > 0 {
             let (row, col) = self.reader.get_word_position(&word);
@@ -57,15 +73,40 @@ impl<'a> Lexer<'a> {
         else { word }
     }
 
-    fn is_region(&self, reaction: Reaction) -> bool {
+    /// Checks whether this is a nontokenizable region
+    fn is_non_token_region(&self, reaction: Reaction) -> bool {
         if let Some(region) = self.region.get_region() {
             !region.tokenize && reaction == Reaction::Pass
         }
         else { false }
     }
 
+    /// Pattern code for adding a symbol
+    /// **[*]**
+    fn pattern_add_symbol(&mut self, mut word: String, letter: char) -> String {
+        word = self.add_word(word);
+        word.push(letter);
+        self.add_word_inclusively(word)
+    }
+
+    /// Pattern code for beginning a new region
+    /// **[**
+    fn pattern_begin_region(&mut self, mut word: String, letter: char) -> String {
+        word = self.add_word(word);
+        word.push(letter);
+        word
+    }
+
+    /// Pattern code for ending current region
+    /// **]**
+    fn pattern_end_region(&mut self, mut word: String, letter: char) -> String {
+        word.push(letter);
+        self.add_word_inclusively(word)
+    }
+
     pub fn run(&mut self) {
         let mut word = String::new();
+        let mut is_indenting = false;
         while let Some(letter) = self.reader.next() {
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
@@ -73,31 +114,77 @@ impl<'a> Lexer<'a> {
             match reaction {
                 // If the region has been opened
                 // Finish the part that we have been parsing
-                Reaction::Open => {
-                    word = self.add_word(word);
-                    word.push(letter);
+                Reaction::Begin => {
+                    // This is supposed to prevent overshadowing new line
+                    // character if region rule opens with newline
+                    if letter == '\n' {
+                        word = self.pattern_add_symbol(word, letter);
+                    }
+                    word = self.pattern_begin_region(word, letter);
                 },
                 // If the region has been closed
                 // Add the closing region and finish the word
-                Reaction::Close => {
-                    word.push(letter);
-                    word = self.add_word_inclusively(word);
+                Reaction::End => {
+                    word = self.pattern_end_region(word, letter);
+                    // This is supposed to prevent overshadowing new line
+                    // character if region rule closes with newline
+                    if letter == '\n' {
+                        word = self.pattern_add_symbol(word, letter);
+                    }
                 }
                 Reaction::Pass => {
                     // Handle region scope
-                    if self.is_region(reaction) {
+                    if self.is_non_token_region(reaction) {
                         word.push(letter);
                     }
                     else {
+
+                        /******************/
+                        /* Mode modifiers */
+                        /******************/
+
+                        // Create indent regions: '\n   '
+                        if let ScopingMode::Indent = self.scoping_mode {
+                            // If we are still in the indent region - proceed
+                            if is_indenting && vec![' ', '\t'].contains(&letter) {
+                                word.push(letter);
+                            }
+                            // If it's the new line - start indent region
+                            if letter == '\n' {
+                                is_indenting = true;
+                                word = self.pattern_begin_region(word, letter);
+                            }
+                            // Check if the current letter
+                            // concludes current indent region
+                            if is_indenting {
+                                if let Some(next_char) = self.reader.peek() {
+                                    if !vec![' ', '\t'].contains(&next_char) {
+                                        word = self.add_word_inclusively(word);
+                                        is_indenting = false;
+                                    }
+                                }
+                                continue
+                            }
+                        }
+                        // Skip newline character if we want to manually insert semicolons
+                        if let SeparatorMode::Manual = self.separator_mode {
+                            if letter == '\n' {
+                                word = self.add_word(word);
+                                continue
+                            }
+                        }
+
+                        /*****************/
+                        /* Regular Lexer */
+                        /*****************/
+
                         // Skip whitespace
                         if vec![' ', '\t'].contains(&letter) {
                             word = self.add_word(word);
                         }
                         // Handle special symbols
                         else if self.symbols.contains(&letter) {
-                            word = self.add_word(word);
-                            word.push(letter);
-                            word = self.add_word_inclusively(word);
+                            word = self.pattern_add_symbol(word, letter);
                         }
                         // Handle word
                         else {

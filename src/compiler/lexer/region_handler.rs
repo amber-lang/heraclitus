@@ -4,8 +4,8 @@ use super::reader::Reader;
 
 #[derive(PartialEq)]
 pub enum Reaction {
-    Open,
-    Close,
+    Begin,
+    End,
     Pass
 }
 
@@ -58,7 +58,6 @@ impl RegionHandler {
                             match self.region_map.get(reference_name) {
                                 // If success, then we want to do the replace
                                 Some(target_region) => {
-                                    println!("LENGTH ASSIGNED: {}", target_region.interp.len());
                                     begin_region.interp = target_region.interp.clone();
                                 },
                                 // If fail then it means that we have invalid reference name
@@ -68,7 +67,7 @@ impl RegionHandler {
                             }
                         }
                         self.region_stack.push(begin_region);
-                        return Reaction::Open;
+                        return Reaction::Begin;
                     }
                 }
             }
@@ -76,7 +75,7 @@ impl RegionHandler {
             if let Some(end_region) = self.match_region_by_end(reader) {
                 if end_region.name == region.name {
                     self.region_stack.pop();
-                    return Reaction::Close;
+                    return Reaction::End;
                 }
             }
         }
@@ -199,7 +198,7 @@ mod test {
         // Simulate matching regions
         while let Some(_) = reader.next() {
             let region_mutated = rh.handle_region(&reader);
-            if let Reaction::Open | Reaction::Close = region_mutated {
+            if let Reaction::Begin | Reaction::End = region_mutated {
                 result.push(reader.get_index());
             }
         }
