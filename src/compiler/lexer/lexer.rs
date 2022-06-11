@@ -45,6 +45,22 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// Add indentation to the lexem
+    fn add_indent(&mut self, word: String) -> String {
+        if word.len() > 0 {
+            // Getting position by word here would attempt to
+            // substract with overflow since the new line character
+            // technically belongs to the previous line
+            let (row, _col) = self.reader.get_position();
+            self.lexem.push(Token {
+                word,
+                path: self.path,
+                pos: (row, 1)
+            });
+            String::new()
+        } else { word }
+    }
+
     /// Add word that has been completed in previous iteration to the lexem
     fn add_word(&mut self, word: String) -> String {
         if word.len() > 0 {
@@ -159,7 +175,7 @@ impl<'a> Lexer<'a> {
                             if is_indenting {
                                 if let Some(next_char) = self.reader.peek() {
                                     if !vec![' ', '\t'].contains(&next_char) {
-                                        word = self.add_word_inclusively(word);
+                                        word = self.add_indent(word);
                                         is_indenting = false;
                                     }
                                 }
@@ -183,7 +199,7 @@ impl<'a> Lexer<'a> {
                             word = self.add_word(word);
                         }
                         // Handle special symbols
-                        else if self.symbols.contains(&letter) {
+                        else if self.symbols.contains(&letter) || letter == '\n' {
                             word = self.pattern_add_symbol(word, letter);
                         }
                         // Handle word
@@ -203,7 +219,7 @@ impl<'a> Lexer<'a> {
 mod test {
     use crate::rules::{ Region, Rules };
     use crate::reg;
-    use crate::compiler::{ Compiler };
+    use crate::compiler::{ Compiler, ScopingMode };
 
     #[test]
     fn test_lexer_base() {
@@ -276,6 +292,40 @@ mod test {
         let rules = Rules::new(symbols, regions);
         let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
         cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
+        let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
+        lexer.run();
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_lexer_indent_mode() {
+        let symbols = vec![':'];
+        let regions = reg!([]);
+        let expected = vec![
+            ("if".to_string(), 1, 1),
+            ("condition".to_string(), 1, 4),
+            (":".to_string(), 1, 13),
+            ("\n    ".to_string(), 2, 1),
+            ("if".to_string(), 2, 5),
+            ("subcondition".to_string(), 2, 8),
+            (":".to_string(), 2, 20),
+            ("\n        ".to_string(), 3, 1),
+            ("pass".to_string(), 3, 9)
+        ];
+        type AST = ();
+        let rules = Rules::new(symbols, regions);
+        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        cc.scoping_mode = ScopingMode::Indent;
+        cc.load(vec![
+            "if condition:",
+            "    if subcondition:",
+            "        pass"
+        ].join("\n"));
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
