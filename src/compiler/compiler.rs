@@ -5,12 +5,30 @@ use std::collections::HashMap;
 use crate::rules::Rules;
 use crate::compiler::lexer::Lexer;
 
+// TODO: Create Block interface when building scoper
+type Block = ();
+
+#[derive(Clone, PartialEq)]
+pub enum SeparatorMode {
+    Manual,
+    SemiAutomatic,
+    Automatic
+}
+
+#[derive(Clone, PartialEq)]
+pub enum ScopingMode {
+    Block(Vec<Block>),
+    Indent
+}
+
 pub struct Compiler<AST> {
     pub name: String,
     pub rules: Rules,
     pub code: String,
     pub path: String,
-    pub code_tree: HashMap<String, AST>
+    pub code_tree: HashMap<String, AST>,
+    pub separator_mode: SeparatorMode,
+    pub scoping_mode: ScopingMode
 }
 
 impl<AST> Compiler<AST> {
@@ -20,7 +38,9 @@ impl<AST> Compiler<AST> {
             rules,
             code: format!(""),
             path: format!("[code]"),
-            code_tree: HashMap::new()
+            code_tree: HashMap::new(),
+            separator_mode: SeparatorMode::Automatic,
+            scoping_mode: ScopingMode::Block(vec![])
         }
     }
 

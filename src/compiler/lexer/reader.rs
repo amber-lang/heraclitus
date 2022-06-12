@@ -38,23 +38,23 @@ impl<'a> Reader<'a> {
         }
     }
 
-    // Return current index of the string
+    /// Return current index of the string
     pub fn get_index(&self) -> usize {
         self.index
     }
 
-    // Return current position in code
+    /// Return current position in code
     pub fn get_position(&self) -> (usize, usize) {
         (self.row, self.col)
     }
 
-    // Gets position of token that has been read
+    /// Gets position of token that has been read
     pub fn get_word_position(&self, word: &String) -> (usize, usize) {
         (self.row, self.col - word.len())
     }
 
-    // Get last n characters that were processed in correct order
-    // This function includes currently processed character
+    /// Get last n characters that were processed in correct order
+    /// This function includes currently processed character
     pub fn get_history(&self, n: usize) -> Option<&str> {
         let offset = self.index + 1;
         // Handle arithmetic overflow
@@ -63,7 +63,7 @@ impl<'a> Reader<'a> {
         Some(&self.code[begin..end])
     }
 
-    // Similar to `get_history` but returns a mutable String that can be owned
+    /// Similar to `get_history` but returns a mutable String that can be owned
     pub fn get_history_string(&self, n: usize) -> Option<String> {
         match self.get_history(n) {
             Some(value) => Some(String::from(value)),
@@ -71,7 +71,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    // Show next character that is going to be consumed
+    /// Show next character that is going to be consumed
     pub fn peek(&self) -> Option<char> {
         // Amount required to peek one item in the future
         let one_forward = 2;
@@ -81,8 +81,8 @@ impl<'a> Reader<'a> {
         }
     }
 
-    // Get next n characters that will be processed in correct order
-    // This function includes currently processed character
+    /// Get next n characters that will be processed in correct order
+    /// This function includes currently processed character
     pub fn get_future(&self, n: usize) -> Option<&str> {
         let begin = self.index;
         // Handle arithmetic overflow
@@ -90,7 +90,7 @@ impl<'a> Reader<'a> {
         Some(&self.code[begin..end])
     }
 
-    // Similar to `get_future` but returns a mutable String that can be owned
+    /// Similar to `get_future` but returns a mutable String that can be owned
     pub fn get_future_string(&self, n: usize) -> Option<String> {
         match self.get_future(n) {
             Some(value) => Some(String::from(value)),
