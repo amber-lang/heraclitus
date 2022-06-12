@@ -219,7 +219,7 @@ impl<'a> Lexer<'a> {
 mod test {
     use crate::rules::{ Region, Rules };
     use crate::reg;
-    use crate::compiler::{ Compiler, ScopingMode };
+    use crate::compiler::{ Compiler, ScopingMode, SeparatorMode };
 
     #[test]
     fn test_lexer_base() {
@@ -303,7 +303,7 @@ mod test {
     }
 
     #[test]
-    fn test_lexer_indent_mode() {
+    fn test_lexer_indent_scoping_mode() {
         let symbols = vec![':'];
         let regions = reg!([]);
         let expected = vec![
@@ -325,6 +325,38 @@ mod test {
             "if condition:",
             "    if subcondition:",
             "        pass"
+        ].join("\n"));
+        let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
+        lexer.run();
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_lexer_manual_separator_mode() {
+        let symbols = vec![';', '+', '='];
+        let regions = reg!([]);
+        let expected = vec![
+            ("let".to_string(), 1, 1),
+            ("age".to_string(), 1, 5),
+            ("=".to_string(), 1, 9),
+            ("12".to_string(), 1, 11),
+            ("+".to_string(), 2, 1),
+            ("12".to_string(), 3, 1),
+            (";".to_string(), 3, 3)
+        ];
+        type AST = ();
+        let rules = Rules::new(symbols, regions);
+        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        cc.separator_mode = SeparatorMode::Manual;
+        cc.load(vec![
+            "let age = 12",
+            "+",
+            "12;"
         ].join("\n"));
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
