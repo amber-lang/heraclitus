@@ -1,6 +1,7 @@
 use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
+use crate::compiler::logger::{ Log };
 
 macro_rules! action {
     ("add symbol", $self:expr, $word:expr, $letter:expr) => {{
@@ -151,6 +152,16 @@ impl<'a> Lexer<'a> {
                 Reaction::Pass => {
                     // Handle region scope
                     if self.is_non_token_region(reaction) {
+                        let region = self.region.get_region().unwrap();
+                        // Handle unspillable attribute
+                        if letter == '\n' && region.unspillable {
+                            let (row, col) = self.reader.get_position();
+                            Log::new_err(self.path, row, col)
+                                .attach_message(format!("{} cannot be multiline", region.name))
+                                .attach_code(self.reader.code)
+                                .send()
+                                .exit();
+                        }
                         word.push(letter);
                     }
                     else {
