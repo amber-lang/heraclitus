@@ -1,6 +1,8 @@
+use std::process;
 use crate::compiler::Token;
 use super::displayer::Displayer;
 
+#[derive(Clone)]
 pub enum LogType {
     Error,
     Warning,
@@ -81,17 +83,22 @@ impl<'a> Log<'a> {
 
     // Sends (renders) the message while giving 
     // the ownership to this object away
-    pub fn send(self) {
+    pub fn send(self) -> Self {
         let color = match &self.kind {
             LogType::Error => (255, 80, 80),
             LogType::Warning => (255, 180, 80),
             LogType::Info => (80, 80, 255)
         };
         Displayer::new(color, self.row, self.col)
-            .header(self.kind)
-            .text(self.message)
+            .header(self.kind.clone())
+            .text(self.message.clone())
             .path(self.path)
-            .padded_text(self.comment);
+            .padded_text(self.comment.clone());
+        self
+    }
+
+    pub fn exit(self) {
+        process::exit(1);
     }
 }
 

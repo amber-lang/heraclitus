@@ -37,7 +37,8 @@ impl RegionHandler {
                 Log::new_err(path, row, col)
                     .attach_message(format!("Unclosed {}", region.name))
                     .attach_code(reader.code)
-                    .send();
+                    .send()
+                    .exit();
             }
         }
     }
