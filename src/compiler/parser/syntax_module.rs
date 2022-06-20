@@ -1,11 +1,5 @@
 use crate::compiler::Token;
 
-macro_rules! pattern {
-    [$($items:expr),*] => [
-        vec![$($items),*]
-    ]
-}
-
 pub enum PresetKind {
     Variable,
     Number,
@@ -25,16 +19,26 @@ pub enum SyntaxSymbol<'a> {
 pub type SyntaxPattern<'a> = Vec<SyntaxSymbol<'a>>;
 
 pub trait SyntaxModule {
-    fn match_pattern(&self, expression: &[Token]) {
-        let mut symbols = self.pattern();
+    fn match_pattern(&self, expr: &[Token]) -> bool {
+        let mut index: usize = 0;
+        let symbols = self.pattern();
         for symbol in symbols.iter() {
             match symbol {
                 SyntaxSymbol::Token(text) => {
-                    // TODO: Finish
+                    match expr.get(index) {
+                        Some(token) => {
+                            if token.word != String::from(*text) {
+                                return false;
+                            }
+                            index += 1;
+                        }
+                        None => return false
+                    }
                 },
                 _ => {}
             }
         }
+        true
     }
 
     fn pattern<'a>(&self) -> SyntaxPattern<'a>;
@@ -47,12 +51,35 @@ mod test {
     struct Expression {}
     impl SyntaxModule for Expression {
         fn pattern<'a>(&self) -> SyntaxPattern<'a> {
-            use PresetKind::*;
             use SyntaxSymbol::*;
-            pattern![
-                Token("let"), Preset(Variable), Token("=")
+            vec![
+                Token("let")
             ]
         }
+    }
+
+    #[test]
+    fn test_token_match() {
+        let exp = Expression {};
+        let path = &format!("/path/to/file");
+        let dataset1 = vec![
+            Token {
+                word: format!("let"),
+                path: path,
+                pos: (0, 0)
+            }
+        ];
+        let dataset2 = vec![
+            Token {
+                word: format!("tell"),
+                path: path,
+                pos: (0, 0)
+            }
+        ];
+        let result1 = exp.match_pattern(&dataset1[..]);
+        let result2 = exp.match_pattern(&dataset2[..]);
+        assert!(result1);
+        assert!(!result2);
     }
 
 }
