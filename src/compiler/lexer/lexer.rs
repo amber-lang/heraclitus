@@ -3,22 +3,6 @@ use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
 use crate::compiler::logger::{ Log };
 
-macro_rules! action {
-    ("add symbol", $self:expr, $word:expr, $letter:expr) => {{
-        $word = $self.add_word($word);
-        $word.push($letter);
-        $word = $self.add_word_inclusively($word);
-    }};
-    ("begin region", $self:expr, $word:expr, $letter:expr) => {{
-        $word = $self.add_word($word);
-        $word.push($letter);
-    }};
-    ("end region", $self:expr, $word:expr, $letter:expr) => {{
-        $word.push($letter);
-        $word = $self.add_word_inclusively($word);
-    }};
-}
-
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
 const AVG_TOKEN_AMOUNT: usize = 1024;
