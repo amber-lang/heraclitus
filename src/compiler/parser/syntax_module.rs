@@ -11,65 +11,67 @@ pub enum PresetKind {
 }
 
 pub enum SyntaxSymbol<'a> {
+    And(Vec<SyntaxSymbol<'a>>),
+    Or(Vec<SyntaxSymbol<'a>>),
+    Optional(Box<SyntaxSymbol<'a>>),
     Token(&'a str),
     Preset(PresetKind),
     SyntaxModule(&'a dyn SyntaxModule),
-    Or(Vec<SyntaxSymbol<'a>>),
-    Custom(fn(&[Token]) -> (bool, usize)),
-    Block(&'a dyn SyntaxModule)
+    Block(&'a dyn SyntaxModule),
+    Custom(fn(&[Token]) -> (bool, usize))
 }
 
-pub type SyntaxPattern<'a> = Vec<SyntaxSymbol<'a>>;
-
 pub trait SyntaxModule {
-    fn match_pattern(&self, expr: &[Token]) -> bool {
-        let mut index: usize = 0;
-        let symbols = self.pattern();
-        for symbol in symbols.iter() {
-            match symbol {
-                // Match token - check if next token matches the string
-                SyntaxSymbol::Token(text) => {
-                    if !match_token(text, expr, &mut index) {
-                        return false;
-                    }
-                },
-                // Match preset - check if the token matches one of presets
-                SyntaxSymbol::Preset(preset) => {
-                    match preset {
-                        PresetKind::Variable => {
-                            if !preset::match_variable(expr, &mut index) {
-                                return false;
-                            }
-                        },
-                        PresetKind::Numeric => {
-                            if !preset::match_numeric(expr, &mut index) {
-                                return false;
-                            }
-                        },
-                        PresetKind::Number => {
-                            if !preset::match_number(expr, &mut index) {
-                                return false;
-                            }
-                        },
-                        PresetKind::Integer => {
-                            if !preset::match_integer(expr, &mut index) {
-                                return false;
-                            }
-                        },
-                        PresetKind::Float => {
-                            if !preset::match_float(expr, &mut index) {
-                                return false;
-                            }
-                        }
+
+    // Recursively match syntax symbol
+    fn match_pattern_recursive(&self, expr: &[Token], index: &mut usize, symbol: &SyntaxSymbol) -> bool {
+        match symbol {
+            // Match token - check if next token matches the string
+            SyntaxSymbol::Token(text) => match_token(text, expr, index),
+            // Match preset - check if the token matches one of presets
+            SyntaxSymbol::Preset(preset) => {
+                match preset {
+                    PresetKind::Variable => preset::match_variable(expr, index),
+                    PresetKind::Numeric => preset::match_numeric(expr, index),
+                    PresetKind::Number => preset::match_number(expr, index),
+                    PresetKind::Integer => preset::match_integer(expr, index),
+                    PresetKind::Float => preset::match_float(expr, index)
+                }
+            },
+            // Match one of the options
+            SyntaxSymbol::Or(options) => {
+                for option in options.iter() {
+                    if self.match_pattern_recursive(expr, index, option) {
+                        return true;
                     }
                 }
-                _ => {}
+                false
+            },
+            // Match all of the options
+            SyntaxSymbol::And(options) => {
+                for option in options.iter() {
+                    if !self.match_pattern_recursive(expr, index, option) {
+                        return false;
+                    }
+                }
+                true
+            },
+            SyntaxSymbol::Optional(symbol) => {
+                self.match_pattern_recursive(expr, index, symbol);
+                true
             }
+            _ => true
         }
-        true
     }
 
-    fn pattern<'a>(&self) -> SyntaxPattern<'a>;
+    // Match pattern
+    fn match_pattern(&self, expr: &[Token]) -> bool {
+        let mut index: usize = 0;
+        let symbol = self.pattern();
+        self.match_pattern_recursive(expr, &mut index, &symbol)
+    }
+
+    fn pattern<'a>(&self) -> SyntaxSymbol<'a>;
 }
 
 #[cfg(test)]
@@ -78,11 +80,11 @@ mod test {
 
     struct Expression {}
     impl SyntaxModule for Expression {
-        fn pattern<'a>(&self) -> SyntaxPattern<'a> {
+        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
             use SyntaxSymbol::*;
-            vec![
+            And(vec![
                 Token("let")
-            ]
+            ])
         }
     }
 
@@ -112,12 +114,12 @@ mod test {
 
     struct Preset {}
     impl SyntaxModule for Preset {
-        fn pattern<'a>(&self) -> SyntaxPattern<'a> {
+        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
             use SyntaxSymbol::*;
             use PresetKind::*;
-            vec![
+            And(vec![
                 Preset(Variable), Preset(Numeric), Preset(Number), Preset(Integer), Preset(Float)
-            ]
+            ])
         }
     }
 
@@ -125,7 +127,7 @@ mod test {
     fn test_preset_match() {
         let exp = Preset {};
         let path = &format!("/path/to/file");
-        let dataset1 = vec![
+        let dataset = vec![
             // Variable
             Token { word: format!("text"), path: path, pos: (0, 0) },
             // Numeric
@@ -143,7 +145,36 @@ mod test {
             Token { word: format!("."), path: path, pos: (0, 0) },
             Token { word: format!("681"), path: path, pos: (0, 0) }
         ];
-        let result = exp.match_pattern(&dataset1[..]);
+        let result = exp.match_pattern(&dataset[..]);
+        assert!(result);
+    }
+
+    struct OrAndOptional {}
+    impl SyntaxModule for OrAndOptional {
+        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
+            use SyntaxSymbol::*;
+            And(vec![
+                Or(vec![
+                    Token("apple"),
+                    Token("orange"),
+                    Token("banana")
+                ]),
+                Optional(Box::new(Token("optional"))),
+                Token("end")
+            ])
+        }
+    }
+
+    #[test]
+    fn test_or_and_optional_match() {
+        let exp = OrAndOptional {};
+        let path = &format!("/path/to/file");
+        let dataset = vec![
+            Token { word: format!("orange"), path: path, pos: (0, 0) },
+            Token { word: format!("optional"), path: path, pos: (0, 0) },
+            Token { word: format!("end"), path: path, pos: (0, 0) }
+        ];
+        let result = exp.match_pattern(&dataset[..]);
         assert!(result);
     }
 
