@@ -11,18 +11,18 @@ pub enum PresetKind {
 }
 
 pub enum SyntaxSymbol<'a> {
+    Token(&'a str),
+    Preset(PresetKind),
     And(Vec<SyntaxSymbol<'a>>),
     Or(Vec<SyntaxSymbol<'a>>),
     Optional(Box<SyntaxSymbol<'a>>),
-    Token(&'a str),
-    Preset(PresetKind),
-    SyntaxModule(&'a dyn SyntaxModule),
-    Block(&'a dyn SyntaxModule),
+    Repeat(Vec<SyntaxSymbol<'a>>, Vec<SyntaxSymbol<'a>>),
+    Syntax(&'a dyn SyntaxModule),
+    Block(Box<SyntaxSymbol<'a>>),
     Custom(fn(&[Token]) -> (bool, usize))
 }
 
 pub trait SyntaxModule {
-
     // Recursively match syntax symbol
     fn match_pattern_recursive(&self, expr: &[Token], index: &mut usize, symbol: &SyntaxSymbol) -> bool {
         match symbol {
@@ -47,10 +47,10 @@ pub trait SyntaxModule {
                 }
                 false
             },
-            // Match all of the options
-            SyntaxSymbol::And(options) => {
-                for option in options.iter() {
-                    if !self.match_pattern_recursive(expr, index, option) {
+            // Match all elements in the pattern
+            SyntaxSymbol::And(pattern) => {
+                for pattern in pattern.iter() {
+                    if !self.match_pattern_recursive(expr, index, pattern) {
                         return false;
                     }
                 }
@@ -59,16 +59,18 @@ pub trait SyntaxModule {
             SyntaxSymbol::Optional(symbol) => {
                 self.match_pattern_recursive(expr, index, symbol);
                 true
-            }
+            },
+            SyntaxSymbol::Syntax(module) => {
+                module.match_pattern(expr, index)
+            },
             _ => true
         }
     }
 
     // Match pattern
-    fn match_pattern(&self, expr: &[Token]) -> bool {
-        let mut index: usize = 0;
+    fn match_pattern(&self, expr: &[Token], index: &mut usize) -> bool {
         let symbol = self.pattern();
-        self.match_pattern_recursive(expr, &mut index, &symbol)
+        self.match_pattern_recursive(expr, index, &symbol)
     }
 
     fn pattern<'a>(&self) -> SyntaxSymbol<'a>;
@@ -106,8 +108,8 @@ mod test {
                 pos: (0, 0)
             }
         ];
-        let result1 = exp.match_pattern(&dataset1[..]);
-        let result2 = exp.match_pattern(&dataset2[..]);
+        let result1 = exp.match_pattern(&dataset1[..], &mut 0);
+        let result2 = exp.match_pattern(&dataset2[..], &mut 0);
         assert!(result1);
         assert!(!result2);
     }
@@ -145,7 +147,7 @@ mod test {
             Token { word: format!("."), path: path, pos: (0, 0) },
             Token { word: format!("681"), path: path, pos: (0, 0) }
         ];
-        let result = exp.match_pattern(&dataset[..]);
+        let result = exp.match_pattern(&dataset[..], &mut 0);
         assert!(result);
     }
 
@@ -160,6 +162,7 @@ mod test {
                     Token("banana")
                 ]),
                 Optional(Box::new(Token("optional"))),
+                Syntax(&Expression {}),
                 Token("end")
             ])
         }
@@ -172,9 +175,10 @@ mod test {
         let dataset = vec![
             Token { word: format!("orange"), path: path, pos: (0, 0) },
             Token { word: format!("optional"), path: path, pos: (0, 0) },
+            Token { word: format!("let"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
-        let result = exp.match_pattern(&dataset[..]);
+        let result = exp.match_pattern(&dataset[..], &mut 0);
         assert!(result);
     }
 
