@@ -2,30 +2,77 @@ use crate::compiler::Token;
 use super::pattern::*;
 use super::preset;
 
-macro_rules! pattern {
+macro_rules! pat {
     ($($exp:expr),*) => {
         SyntaxSymbol::And(vec![$($exp),*])
     };
-    (token => $exp:expr) => {
-        SyntaxSymbol::Token(&format!("{}", $exp))
+}
+
+macro_rules! any {
+    ($($exp:expr),*) => {
+        SyntaxSymbol::Any(vec![$($exp),*])
     };
-    (preset => $name:ident) => {
+}
+
+macro_rules! rep {
+    ($pat:expr, $sep:expr) => {
+        SyntaxSymbol::Repeat(Box::new($pat), Box::new($sep))
+    };
+    ($pat:expr) => {
+        SyntaxSymbol::Repeat(Box::new($pat), Box::new(SyntaxSymbol::And(vec![])))
+    };
+}
+
+macro_rules! tok {
+    ($exp:expr) => {
+        SyntaxSymbol::Token(format!("{}", $exp))
+    };
+}
+
+macro_rules! pre {
+    ($name:ident) => {
         SyntaxSymbol::Preset(PresetKind::$name)
     };
-    (either => [$($exp:expr),*]) => {
-        SyntaxSymbol::Either(vec![$($exp),*])
+}
+
+macro_rules! opt {
+    ($exp:expr) => {
+        SyntaxSymbol::Optional(Box::new($exp))
     };
-    // TODO: Implement rest of the syntax
+}
+
+macro_rules! cus {
+    ($exp:expr) => {
+        SyntaxSymbol::Custom($exp)
+    };
+}
+
+macro_rules! syn {
+    ($exp:expr) => {
+        SyntaxSymbol::Syntax(Box::new($exp))
+    };
+}
+
+// TODO: Create block pattern
+macro_rules! blc {
+    ($exp:expr) => {
+        SyntaxSymbol::Custom($exp)
+    };
 }
 
 // TODO: Remove this temporary function
 fn test() {
-    pattern![
-        pattern!(token => "fun"),
-        pattern!(preset => Variable),
-        pattern!(either => [
-            pattern!(token => "static")
-        ])
+    pat![
+        any![
+            tok!("static"),
+            tok!("async")
+        ],
+        tok!("fun"),
+        pre!(Variable),
+        opt!(tok!("macro")),
+        tok!("("),
+        rep!(pre!(Variable), tok!(",")),
+        tok!(")")
     ];
 }
 
@@ -40,13 +87,13 @@ pub enum PresetKind {
 
 #[derive(Clone)]
 pub enum SyntaxSymbol<'a> {
-    Token(&'a str),
+    Token(String),
     Preset(PresetKind),
     And(Vec<SyntaxSymbol<'a>>),
-    Either(Vec<SyntaxSymbol<'a>>),
+    Any(Vec<SyntaxSymbol<'a>>),
     Optional(Box<SyntaxSymbol<'a>>),
     Repeat(Box<SyntaxSymbol<'a>>, Box<SyntaxSymbol<'a>>),
-    Syntax(&'a dyn SyntaxModule),
+    Syntax(Box<&'a dyn SyntaxModule>),
     Block(Box<SyntaxSymbol<'a>>),
     Custom(fn(&[Token]) -> Option<usize>)
 }
@@ -68,7 +115,7 @@ pub trait SyntaxModule {
                 }
             },
             // Match one of the options
-            SyntaxSymbol::Either(options) => {
+            SyntaxSymbol::Any(options) => {
                 for option in options.iter() {
                     if self.match_pattern_recursive(expr, index, option) {
                         return true;
@@ -127,15 +174,14 @@ pub trait SyntaxModule {
 
 #[cfg(test)]
 mod test {
+    use std::char::ToLowercase;
+
     use super::*;
 
     struct Expression {}
     impl SyntaxModule for Expression {
         fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
-            use SyntaxSymbol::*;
-            And(vec![
-                Token("let")
-            ])
+            tok!["let"]
         }
     }
 
@@ -166,11 +212,13 @@ mod test {
     struct Preset {}
     impl SyntaxModule for Preset {
         fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
-            use SyntaxSymbol::*;
-            use PresetKind::*;
-            And(vec![
-                Preset(Variable), Preset(Numeric), Preset(Number), Preset(Integer), Preset(Float)
-            ])
+            pat![
+                pre!(Variable),
+                pre!(Numeric),
+                pre!(Number),
+                pre!(Integer),
+                pre!(Float)
+            ]
         }
     }
 
@@ -214,28 +262,28 @@ mod test {
             None => None
         }
     }
-    struct EitherAndOptional {}
-    impl SyntaxModule for EitherAndOptional {
+    struct AnyAndOptional {}
+    impl SyntaxModule for AnyAndOptional {
         fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
-            use SyntaxSymbol::*;
-            And(vec![
-                Either(vec![
-                    Token("apple"),
-                    Token("orange"),
-                    Token("banana")
-                ]),
-                Optional(Box::new(Token("optional"))),
-                Syntax(&Expression {}),
-                Repeat(Box::new(Token("this")), Box::new(Token(","))),
-                Custom(my_custom_pattern),
-                Token("end")
-            ])
+            pat![
+                any![
+                    tok!("apple"),
+                    tok!("orange"),
+                    tok!("banana")
+                ],
+                opt!(tok!("optional")),
+                syn!(&Expression {}),
+                rep!(tok!("this"), tok!(",")),
+                cus!(my_custom_pattern),
+                tok!("end")
+                
+            ]
         }
     }
 
     #[test]
     fn rest_match() {
-        let exp = EitherAndOptional {};
+        let exp = AnyAndOptional {};
         let path = &format!("/path/to/file");
         // Everything should pass
         let dataset1 = vec![

@@ -47,7 +47,7 @@ pub fn match_numeric(expr: &[Token], index: &mut usize) -> bool {
 pub fn match_integer(expr: &[Token], index: &mut usize) -> bool {
     // Save index in case if this function fails
     let mut new_index = index.clone();
-    match_token(&"-", expr, &mut new_index);
+    match_token(&"-".to_string(), expr, &mut new_index);
     *index = new_index;
     match_numeric(expr, index)
 }
@@ -57,12 +57,12 @@ pub fn match_float(expr: &[Token], index: &mut usize) -> bool {
     // Save index in case if this function fails
     let mut new_index = index.clone();
     if match_integer(expr, &mut new_index) {
-        match_token(&".", expr, &mut new_index);
+        match_token(&".".to_string(), expr, &mut new_index);
         *index = new_index;
         match_numeric(expr, index)
     } else {
-        match_token(&"-", expr, &mut new_index);
-        match_token(&".", expr, &mut new_index);
+        match_token(&"-".to_string(), expr, &mut new_index);
+        match_token(&".".to_string(), expr, &mut new_index);
         *index = new_index;
         match_numeric(expr, index)
     }
