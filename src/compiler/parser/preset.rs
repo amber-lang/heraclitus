@@ -11,13 +11,13 @@ pub fn match_variable(expr: &[Token], index: &mut usize) -> bool {
             for letter in token.word.chars() {
                 // Check if rest of the letters are alphanumeric
                 if is_later {
-                    if !letter.is_alphanumeric() {
+                    if !(letter.is_alphanumeric() || letter == '_') {
                         return false;
                     }
                 }
                 // Check if first letter is alphabetic
                 else {
-                    if !letter.is_alphabetic() {
+                    if !(letter.is_alphabetic() || letter == '_') {
                         return false;
                     }
                     is_later = true;

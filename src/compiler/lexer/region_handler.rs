@@ -143,12 +143,12 @@ mod test {
         ];
         let code = lines.join(" ");
         let mut reader = Reader::new(&code);
-        let region = reg!([
+        let region = reg![
             reg!(module as "Module literal" => {
                 begin: "begin",
                 end: "end"
             })
-        ]);
+        ];
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()],
             region_map: region.generate_region_map(),
@@ -178,17 +178,17 @@ mod test {
             0, 12, 17, 19
         ];
         let code = lines.join("\n");
-        let region = reg!([
+        let region = reg![
             reg!(string as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(interp as "Interpolation" => {
                     begin: "{",
                     end: "}"
                 })
             ])
-        ]);
+        ];
         let mut reader = Reader::new(&code);
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()], 

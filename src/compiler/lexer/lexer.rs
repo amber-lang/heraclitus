@@ -219,17 +219,17 @@ mod test {
     #[test]
     fn test_lexer_base() {
         let symbols = vec!['(', ')'];
-        let regions = reg!([
+        let regions = reg![
             reg!(string as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(array as "Array Literal" => {
                     begin: "[",
                     end: "]"
                 })
             ])
-        ]);
+        ];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
@@ -257,18 +257,18 @@ mod test {
     #[test]
     fn test_lexer_string_interp() {
         let symbols = vec!['(', ')'];
-        let regions = reg!([
+        let regions = reg![
             reg!(string_literal as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(string_interp as "String interpolation" => {
                     begin: "{",
                     end: "}",
                     tokenize: true
                 } ref global)
             ])
-        ]);
+        ];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
@@ -300,7 +300,7 @@ mod test {
     #[test]
     fn test_lexer_indent_scoping_mode() {
         let symbols = vec![':'];
-        let regions = reg!([]);
+        let regions = reg![];
         let expected = vec![
             ("if".to_string(), 1, 1),
             ("condition".to_string(), 1, 4),
@@ -334,7 +334,7 @@ mod test {
     #[test]
     fn test_lexer_manual_separator_mode() {
         let symbols = vec![';', '+', '='];
-        let regions = reg!([]);
+        let regions = reg![];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("age".to_string(), 1, 5),
