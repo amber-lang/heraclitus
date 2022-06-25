@@ -4,7 +4,7 @@ use super::preset;
 
 macro_rules! pat {
     ($($exp:expr),*) => {
-        SyntaxSymbol::And(vec![$($exp),*])
+        SyntaxSymbol::Pattern(vec![$($exp),*])
     };
 }
 
@@ -19,7 +19,7 @@ macro_rules! rep {
         SyntaxSymbol::Repeat(Box::new($pat), Box::new($sep))
     };
     ($pat:expr) => {
-        SyntaxSymbol::Repeat(Box::new($pat), Box::new(SyntaxSymbol::And(vec![])))
+        SyntaxSymbol::Repeat(Box::new($pat), Box::new(SyntaxSymbol::Pattern(vec![])))
     };
 }
 
@@ -94,7 +94,7 @@ pub enum PresetKind {
 pub enum SyntaxSymbol<'a> {
     Token(String),
     Preset(PresetKind),
-    And(Vec<SyntaxSymbol<'a>>),
+    Pattern(Vec<SyntaxSymbol<'a>>),
     Any(Vec<SyntaxSymbol<'a>>),
     Optional(Box<SyntaxSymbol<'a>>),
     Repeat(Box<SyntaxSymbol<'a>>, Box<SyntaxSymbol<'a>>),
@@ -131,7 +131,7 @@ pub trait SyntaxModule {
                 false
             },
             // Match all elements in the pattern
-            SyntaxSymbol::And(pattern) => {
+            SyntaxSymbol::Pattern(pattern) => {
                 let mut new_index = index.clone();
                 for pattern in pattern.iter() {
                     if !self.match_pattern_recursive(expr, &mut new_index, pattern) {
@@ -148,7 +148,7 @@ pub trait SyntaxModule {
             },
             // Match repeating pattern
             SyntaxSymbol::Repeat(pattern, separator) => {
-                let both = SyntaxSymbol::And(vec![*separator.clone(), *pattern.clone()]);
+                let both = SyntaxSymbol::Pattern(vec![*separator.clone(), *pattern.clone()]);
                 self.match_pattern_recursive(expr, index, pattern);
                 loop {
                     if !self.match_pattern_recursive(expr, index, &both) {
@@ -261,8 +261,8 @@ mod test {
             None => None
         }
     }
-    struct AnyAndOptional {}
-    impl SyntaxModule for AnyAndOptional {
+    struct PatternModule {}
+    impl SyntaxModule for PatternModule {
         fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
             pat![
                 any![
@@ -282,7 +282,7 @@ mod test {
 
     #[test]
     fn rest_match() {
-        let exp = AnyAndOptional {};
+        let exp = PatternModule {};
         let path = &format!("/path/to/file");
         // Everything should pass
         let dataset1 = vec![
