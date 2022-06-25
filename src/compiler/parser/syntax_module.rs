@@ -31,7 +31,10 @@ macro_rules! tok {
 
 macro_rules! pre {
     ($name:ident) => {
-        SyntaxSymbol::Preset(PresetKind::$name)
+        SyntaxSymbol::Preset(PresetKind::$name(vec![]))
+    };
+    ($name:ident, [$($params:expr),*]) => {
+        SyntaxSymbol::Preset(PresetKind::$name(vec![$($params),*]))
     };
 }
 
@@ -78,11 +81,13 @@ fn test() {
 
 #[derive(Clone)]
 pub enum PresetKind {
-    Variable,
-    Numeric,
-    Number,
-    Integer,
-    Float
+    Variable(Vec<char>),
+    Alphabetic(Vec<char>),
+    Alphanumeric(Vec<char>),
+    Numeric(Vec<char>),
+    Number(Vec<char>),
+    Integer(Vec<char>),
+    Float(Vec<char>)
 }
 
 #[derive(Clone)]
@@ -107,18 +112,20 @@ pub trait SyntaxModule {
             // Match preset - check if the token matches one of presets
             SyntaxSymbol::Preset(preset) => {
                 match preset {
-                    PresetKind::Variable => preset::match_variable(expr, index),
-                    PresetKind::Numeric => preset::match_numeric(expr, index),
-                    PresetKind::Number => preset::match_number(expr, index),
-                    PresetKind::Integer => preset::match_integer(expr, index),
-                    PresetKind::Float => preset::match_float(expr, index)
+                    PresetKind::Variable(extend) => preset::match_variable(expr, index, extend),
+                    PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, index, extend),
+                    PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, index, extend),
+                    PresetKind::Numeric(extend) => preset::match_numeric(expr, index, extend),
+                    PresetKind::Number(extend) => preset::match_number(expr, index, extend),
+                    PresetKind::Integer(extend) => preset::match_integer(expr, index, extend),
+                    PresetKind::Float(extend) => preset::match_float(expr, index, extend)
                 }
             },
             // Match one of the options
             SyntaxSymbol::Any(options) => {
                 for option in options.iter() {
                     if self.match_pattern_recursive(expr, index, option) {
-                        return true;
+                        return true
                     }
                 }
                 false
@@ -128,7 +135,7 @@ pub trait SyntaxModule {
                 let mut new_index = index.clone();
                 for pattern in pattern.iter() {
                     if !self.match_pattern_recursive(expr, &mut new_index, pattern) {
-                        return false;
+                        return false
                     }
                 }
                 *index = new_index;
@@ -145,7 +152,7 @@ pub trait SyntaxModule {
                 self.match_pattern_recursive(expr, index, pattern);
                 loop {
                     if !self.match_pattern_recursive(expr, index, &both) {
-                        return true;
+                        return true
                     }
                 }
             },
@@ -174,8 +181,6 @@ pub trait SyntaxModule {
 
 #[cfg(test)]
 mod test {
-    use std::char::ToLowercase;
-
     use super::*;
 
     struct Expression {}
@@ -213,7 +218,7 @@ mod test {
     impl SyntaxModule for Preset {
         fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
             pat![
-                pre!(Variable),
+                pre!(Variable, ['_']),
                 pre!(Numeric),
                 pre!(Number),
                 pre!(Integer),
@@ -232,17 +237,11 @@ mod test {
             // Numeric
             Token { word: format!("12321"), path: path, pos: (0, 0) },
             // Number
-            Token { word: format!("-"), path: path, pos: (0, 0) },
-            Token { word: format!("123"), path: path, pos: (0, 0) },
-            Token { word: format!("."), path: path, pos: (0, 0) },
-            Token { word: format!("12"), path: path, pos: (0, 0) },
+            Token { word: format!("-123.12"), path: path, pos: (0, 0) },
             // Integer
-            Token { word: format!("-"), path: path, pos: (0, 0) },
-            Token { word: format!("12"), path: path, pos: (0, 0) },
+            Token { word: format!("-12"), path: path, pos: (0, 0) },
             // Float
-            Token { word: format!("-"), path: path, pos: (0, 0)},
-            Token { word: format!("."), path: path, pos: (0, 0) },
-            Token { word: format!("681"), path: path, pos: (0, 0) }
+            Token { word: format!("-.681"), path: path, pos: (0, 0)}
         ];
         let result = exp.match_pattern(&dataset[..], &mut 0);
         assert!(result);
