@@ -3,22 +3,6 @@ use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
 use crate::compiler::logger::{ Log };
 
-macro_rules! action {
-    ("add symbol", $self:expr, $word:expr, $letter:expr) => {{
-        $word = $self.add_word($word);
-        $word.push($letter);
-        $word = $self.add_word_inclusively($word);
-    }};
-    ("begin region", $self:expr, $word:expr, $letter:expr) => {{
-        $word = $self.add_word($word);
-        $word.push($letter);
-    }};
-    ("end region", $self:expr, $word:expr, $letter:expr) => {{
-        $word.push($letter);
-        $word = $self.add_word_inclusively($word);
-    }};
-}
-
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
 const AVG_TOKEN_AMOUNT: usize = 1024;
@@ -235,17 +219,17 @@ mod test {
     #[test]
     fn test_lexer_base() {
         let symbols = vec!['(', ')'];
-        let regions = reg!([
+        let regions = reg![
             reg!(string as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(array as "Array Literal" => {
                     begin: "[",
                     end: "]"
                 })
             ])
-        ]);
+        ];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
@@ -273,18 +257,18 @@ mod test {
     #[test]
     fn test_lexer_string_interp() {
         let symbols = vec!['(', ')'];
-        let regions = reg!([
+        let regions = reg![
             reg!(string_literal as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(string_interp as "String interpolation" => {
                     begin: "{",
                     end: "}",
                     tokenize: true
                 } ref global)
             ])
-        ]);
+        ];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("a".to_string(), 1, 5),
@@ -316,7 +300,7 @@ mod test {
     #[test]
     fn test_lexer_indent_scoping_mode() {
         let symbols = vec![':'];
-        let regions = reg!([]);
+        let regions = reg![];
         let expected = vec![
             ("if".to_string(), 1, 1),
             ("condition".to_string(), 1, 4),
@@ -350,7 +334,7 @@ mod test {
     #[test]
     fn test_lexer_manual_separator_mode() {
         let symbols = vec![';', '+', '='];
-        let regions = reg!([]);
+        let regions = reg![];
         let expected = vec![
             ("let".to_string(), 1, 1),
             ("age".to_string(), 1, 5),

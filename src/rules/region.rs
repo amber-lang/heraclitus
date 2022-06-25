@@ -3,9 +3,9 @@ pub type RegionMap = HashMap<String,Region>;
 
 #[macro_export]
 macro_rules! reg {
-    ($id:tt as $name:expr => {begin: $begin:expr, end: $end:expr $(, $option:tt: $value:expr)*} in [$($exp:expr)*]) => ({
+    ($id:tt as $name:expr => {begin: $begin:expr, end: $end:expr $(, $option:tt: $value:expr)*} => [$($exp:expr),*]) => ({
         #[allow(unused_mut)]
-        let mut region = Region::new(stringify!($id), $name, $begin, $end, vec![$($exp)*], None);
+        let mut region = Region::new(stringify!($id), $name, $begin, $end, vec![$($exp),*], None);
         $(region.$option = $value;)*
         region
     });
@@ -21,8 +21,8 @@ macro_rules! reg {
         $(region.$option = $value;)*
         region
     });
-    ([$($expr:expr)*]) => (
-        Region::new_global(vec![$($expr)*])
+    ($($expr:expr),*) => (
+        Region::new_global(vec![$($expr),*])
     );
 }
 
@@ -131,18 +131,18 @@ mod test {
             unspillable: false,
             references: None
         };
-        let result = reg!([
+        let result = reg![
             reg!(string as "String Literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(string_interp as "String Interpolation" => {
                     begin: "${",
                     end: "}",
                     tokenize: true
                 } ref global)
             ])
-        ]);
+        ];
         assert_eq!(expected, result);
     }
 
@@ -230,18 +230,18 @@ mod test {
             unspillable: false,
             references: None,
         });
-        let region = reg!([
+        let region = reg![
             reg!(string as "String Literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(string_interp as "String Interpolation" => {
                     begin: "${",
                     end: "}",
                     tokenize: true
                 } ref global)
             ])
-        ]);
+        ];
         let result = region.generate_region_map();
         assert_eq!(expected, result);
     }

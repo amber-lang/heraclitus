@@ -68,7 +68,7 @@ impl RegionHandler {
                             }
                         }
                         self.region_stack.push(begin_region);
-                        return Reaction::Begin;
+                        return Reaction::Begin
                     }
                 }
             }
@@ -76,7 +76,7 @@ impl RegionHandler {
             if let Some(end_region) = self.match_region_by_end(reader) {
                 if end_region.name == region.name {
                     self.region_stack.pop();
-                    return Reaction::End;
+                    return Reaction::End
                 }
             }
         }
@@ -116,7 +116,7 @@ impl RegionHandler {
     fn get_region_by(&self, cb: impl Fn(&Region) -> bool, candidates: &Vec<Region>) -> Option<Region> {
         for region in candidates.iter() {
             if cb(region) {
-                return Some(region.clone());
+                return Some(region.clone())
             }
         }
         None
@@ -143,12 +143,12 @@ mod test {
         ];
         let code = lines.join(" ");
         let mut reader = Reader::new(&code);
-        let region = reg!([
+        let region = reg![
             reg!(module as "Module literal" => {
                 begin: "begin",
                 end: "end"
             })
-        ]);
+        ];
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()],
             region_map: region.generate_region_map(),
@@ -178,17 +178,17 @@ mod test {
             0, 12, 17, 19
         ];
         let code = lines.join("\n");
-        let region = reg!([
+        let region = reg![
             reg!(string as "String literal" => {
                 begin: "'",
                 end: "'"
-            } in [
+            } => [
                 reg!(interp as "Interpolation" => {
                     begin: "{",
                     end: "}"
                 })
             ])
-        ]);
+        ];
         let mut reader = Reader::new(&code);
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()], 
