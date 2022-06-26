@@ -63,22 +63,6 @@ macro_rules! blc {
     };
 }
 
-// TODO: Remove this temporary function
-fn test() {
-    pat![
-        any![
-            tok!("static"),
-            tok!("async")
-        ],
-        tok!("fun"),
-        pre!(Variable),
-        opt!(tok!("macro")),
-        tok!("("),
-        rep!(pre!(Variable), tok!(",")),
-        tok!(")")
-    ];
-}
-
 #[derive(Clone)]
 pub enum PresetKind {
     Variable(Vec<char>),
@@ -99,81 +83,130 @@ pub enum SyntaxSymbol<'a> {
     Optional(Box<SyntaxSymbol<'a>>),
     Repeat(Box<SyntaxSymbol<'a>>, Box<SyntaxSymbol<'a>>),
     Syntax(Box<&'a dyn SyntaxModule>),
-    Block(Box<SyntaxSymbol<'a>>),
+    IndentBlock(Box<SyntaxSymbol<'a>>),
     Custom(fn(&[Token]) -> Option<usize>)
+}
+
+pub struct SyntaxMetadata {
+    pub index: usize,
+    pub is_indent: bool,
+    pub indent_level: usize,
+    pub indent_stack: Vec<usize>
+}
+
+impl SyntaxMetadata {
+    fn new() -> Self {
+        SyntaxMetadata {
+            index: 0,
+            is_indent: false,
+            indent_level: 0,
+            indent_stack: vec![]
+        }
+    }
+}
+
+pub enum SyntaxResult {
+    Word(String),
+    Module(),
+    Pattern(Vec<SyntaxResult>),
+    Custom(Vec<String>),
+    Optional(Option<Box<SyntaxResult>>)
 }
 
 pub trait SyntaxModule {
     // Recursively match syntax symbol
-    fn match_pattern_recursive(&self, expr: &[Token], index: &mut usize, symbol: &SyntaxSymbol) -> bool {
+    fn match_pattern_recursive(&self, expr: &[Token], meta: &mut SyntaxMetadata, symbol: &SyntaxSymbol) -> Option<SyntaxResult> {
         match symbol {
             // Match token - check if next token matches the string
-            SyntaxSymbol::Token(text) => match_token(text, expr, index),
+            SyntaxSymbol::Token(text) => match_token(text, expr, meta),
             // Match preset - check if the token matches one of presets
             SyntaxSymbol::Preset(preset) => {
                 match preset {
-                    PresetKind::Variable(extend) => preset::match_variable(expr, index, extend),
-                    PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, index, extend),
-                    PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, index, extend),
-                    PresetKind::Numeric(extend) => preset::match_numeric(expr, index, extend),
-                    PresetKind::Number(extend) => preset::match_number(expr, index, extend),
-                    PresetKind::Integer(extend) => preset::match_integer(expr, index, extend),
-                    PresetKind::Float(extend) => preset::match_float(expr, index, extend)
+                    PresetKind::Variable(extend) => preset::match_variable(expr, meta, extend),
+                    PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, meta, extend),
+                    PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, meta, extend),
+                    PresetKind::Numeric(extend) => preset::match_numeric(expr, meta, extend),
+                    PresetKind::Number(extend) => preset::match_number(expr, meta, extend),
+                    PresetKind::Integer(extend) => preset::match_integer(expr, meta, extend),
+                    PresetKind::Float(extend) => preset::match_float(expr, meta, extend)
                 }
             },
             // Match one of the options
             SyntaxSymbol::Any(options) => {
                 for option in options.iter() {
-                    if self.match_pattern_recursive(expr, index, option) {
-                        return true
+                    if let Some(matched) = self.match_pattern_recursive(expr, meta, option) {
+                        return Some(matched)
                     }
                 }
-                false
+                None
             },
             // Match all elements in the pattern
             SyntaxSymbol::Pattern(pattern) => {
-                let mut new_index = index.clone();
+                let mut result = vec![];
+                let old_index = meta.index.clone();
                 for pattern in pattern.iter() {
-                    if !self.match_pattern_recursive(expr, &mut new_index, pattern) {
-                        return false
+                    if let Some(matched) = self.match_pattern_recursive(expr, meta, pattern) {
+                        result.push(matched);
+                        continue
+                    }
+                    else {
+                        meta.index = old_index;
+                        return None
                     }
                 }
-                *index = new_index;
-                true
+                Some(SyntaxResult::Pattern(result))
             },
             // Symbol that can happen but doesn't have to
             SyntaxSymbol::Optional(symbol) => {
-                self.match_pattern_recursive(expr, index, symbol);
-                true
+                if let Some(result) = self.match_pattern_recursive(expr, meta, symbol) {
+                    Some(SyntaxResult::Optional(Some(Box::new(result))))
+                } else { Some(SyntaxResult::Optional(None)) }
             },
             // Match repeating pattern
             SyntaxSymbol::Repeat(pattern, separator) => {
+                let mut result = vec![];
+                // Merge separator and pattern
                 let both = SyntaxSymbol::Pattern(vec![*separator.clone(), *pattern.clone()]);
-                self.match_pattern_recursive(expr, index, pattern);
+                // Match first element
+                if let Some (matched) = self.match_pattern_recursive(expr, meta, pattern) {
+                    result.push(matched);
+                } else { return Some(SyntaxResult::Pattern(result))}
+                // Match more elements
                 loop {
-                    if !self.match_pattern_recursive(expr, index, &both) {
-                        return true
-                    }
+                    if let Some(matched) = self.match_pattern_recursive(expr, meta, &both) {
+                        if let SyntaxResult::Pattern(matched_pattern) = matched {
+                            for pattern in matched_pattern {
+                                result.push(pattern);
+                            }
+                        }
+                    } else { return Some(SyntaxResult::Pattern(result)) }
                 }
             },
             // Match other syntax module
             SyntaxSymbol::Syntax(module) => {
-                module.match_pattern(expr, index)
+                if let Some(_result) = module.match_pattern(expr, meta) {
+                    return Some(SyntaxResult::Module())
+                } else { None }
             },
             // Match custom expression
             SyntaxSymbol::Custom(function) => {
-                if let Some(new_index) = function(&expr[*index..]) {
-                    *index += new_index;
-                    true
-                } else { false }
-            },
-            _ => true
+                if let Some(new_index) = function(&expr[meta.index..]) {
+                    let old_index = meta.index;
+                    meta.index += new_index;
+                    Some(SyntaxResult::Custom(expr[old_index..meta.index].iter().map(|item| item.word.clone()).collect()))
+                } else { None }
+            }
+            _ => None
         }
     }
 
-    fn match_pattern(&self, expr: &[Token], index: &mut usize) -> bool {
+    fn match_pattern(&self, expr: &[Token], meta: &mut SyntaxMetadata) -> Option<SyntaxResult> {
         let symbol = self.pattern();
-        self.match_pattern_recursive(expr, index, &symbol)
+        self.match_pattern_recursive(expr, meta, &symbol)
+    }
+
+    fn parse_pattern(&self) {
+        unimplemented!()
     }
 
     fn pattern<'a>(&self) -> SyntaxSymbol<'a>;
@@ -208,10 +241,10 @@ mod test {
                 pos: (0, 0)
             }
         ];
-        let result1 = exp.match_pattern(&dataset1[..], &mut 0);
-        let result2 = exp.match_pattern(&dataset2[..], &mut 0);
-        assert!(result1);
-        assert!(!result2);
+        let result1 = exp.match_pattern(&dataset1[..], &mut SyntaxMetadata::new());
+        let result2 = exp.match_pattern(&dataset2[..], &mut SyntaxMetadata::new());
+        assert!(result1.is_some());
+        assert!(result2.is_none());
     }
 
     struct Preset {}
@@ -243,8 +276,8 @@ mod test {
             // Float
             Token { word: format!("-.681"), path: path, pos: (0, 0)}
         ];
-        let result = exp.match_pattern(&dataset[..], &mut 0);
-        assert!(result);
+        let result = exp.match_pattern(&dataset[..], &mut SyntaxMetadata::new());
+        assert!(result.is_some());
     }
 
     // Function that can be used to express custom pattern
@@ -337,16 +370,16 @@ mod test {
             Token { word: format!("_abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
-        let result1 = exp.match_pattern(&dataset1[..], &mut 0);
-        let result2 = exp.match_pattern(&dataset2[..], &mut 0);
-        let result3 = exp.match_pattern(&dataset3[..], &mut 0);
-        let result4 = exp.match_pattern(&dataset4[..], &mut 0);
-        let result5 = exp.match_pattern(&dataset5[..], &mut 0);
-        assert!(result1);
-        assert!(!result2);
-        assert!(!result3);
-        assert!(!result4);
-        assert!(!result5);
+        let result1 = exp.match_pattern(&dataset1[..], &mut SyntaxMetadata::new());
+        let result2 = exp.match_pattern(&dataset2[..], &mut SyntaxMetadata::new());
+        let result3 = exp.match_pattern(&dataset3[..], &mut SyntaxMetadata::new());
+        let result4 = exp.match_pattern(&dataset4[..], &mut SyntaxMetadata::new());
+        let result5 = exp.match_pattern(&dataset5[..], &mut SyntaxMetadata::new());
+        assert!(result1.is_some());
+        assert!(result2.is_none());
+        assert!(result3.is_none());
+        assert!(result4.is_none());
+        assert!(result5.is_none());
     }
 
 }
