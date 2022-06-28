@@ -1,6 +1,5 @@
 use crate::compiler::Token;
 use super::pattern::*;
-use super::preset;
 
 macro_rules! pat {
     ($($exp:expr),*) => {
@@ -24,8 +23,11 @@ macro_rules! rep {
 }
 
 macro_rules! tok {
+    // ($exp:expr) => {
+    //     SyntaxSymbol::Token(format!("{}", $exp))
+    // };
     ($exp:expr) => {
-        SyntaxSymbol::Token(format!("{}", $exp))
+        match_token(text, meta)
     };
 }
 
@@ -75,151 +77,157 @@ pub enum PresetKind {
 }
 
 #[derive(Clone)]
-pub enum SyntaxSymbol<'a> {
+pub enum SyntaxSymbol {
     Token(String),
     Preset(PresetKind),
-    Pattern(Vec<SyntaxSymbol<'a>>),
-    Any(Vec<SyntaxSymbol<'a>>),
-    Optional(Box<SyntaxSymbol<'a>>),
-    Repeat(Box<SyntaxSymbol<'a>>, Box<SyntaxSymbol<'a>>),
-    Syntax(Box<&'a dyn SyntaxModule>),
-    IndentBlock(Box<SyntaxSymbol<'a>>),
+    Pattern(Vec<SyntaxSymbol>),
+    Any(Vec<SyntaxSymbol>),
+    Optional(Box<SyntaxSymbol>),
+    Repeat(Box<SyntaxSymbol>, Box<SyntaxSymbol>),
+    Syntax(Box<dyn SyntaxModule>),
+    IndentBlock(Box<SyntaxSymbol>),
     Custom(fn(&[Token]) -> Option<usize>)
 }
 
-pub struct SyntaxMetadata {
+pub struct SyntaxMetadata<'a> {
     pub index: usize,
     pub is_indent: bool,
     pub indent_level: usize,
-    pub indent_stack: Vec<usize>
+    pub indent_stack: Vec<usize>,
+    pub expr: &'a [Token<'a>]
 }
 
-impl SyntaxMetadata {
-    fn new() -> Self {
+impl<'a> SyntaxMetadata<'a> {
+    fn new(expression: &'a [Token]) -> Self {
         SyntaxMetadata {
             index: 0,
             is_indent: false,
             indent_level: 0,
-            indent_stack: vec![]
+            indent_stack: vec![],
+            expr: expression
         }
     }
 }
 
-pub enum SyntaxResult {
-    Word(String),
-    Module(),
-    Pattern(Vec<SyntaxResult>),
-    Custom(Vec<String>),
-    Optional(Option<Box<SyntaxResult>>)
+struct Synax;
+
+impl SyntaxModule for Synax {
+    fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        let res = token(meta, "let")?;
+
+        Ok(())
+    }
 }
+
+pub type SyntaxResult = Result<(),()>;
 
 pub trait SyntaxModule {
     // Recursively match syntax symbol
-    fn match_pattern_recursive(&self, expr: &[Token], meta: &mut SyntaxMetadata, symbol: &SyntaxSymbol) -> Option<SyntaxResult> {
-        match symbol {
-            // Match token - check if next token matches the string
-            SyntaxSymbol::Token(text) => match_token(text, expr, meta),
-            // Match preset - check if the token matches one of presets
-            SyntaxSymbol::Preset(preset) => {
-                match preset {
-                    PresetKind::Variable(extend) => preset::match_variable(expr, meta, extend),
-                    PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, meta, extend),
-                    PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, meta, extend),
-                    PresetKind::Numeric(extend) => preset::match_numeric(expr, meta, extend),
-                    PresetKind::Number(extend) => preset::match_number(expr, meta, extend),
-                    PresetKind::Integer(extend) => preset::match_integer(expr, meta, extend),
-                    PresetKind::Float(extend) => preset::match_float(expr, meta, extend)
-                }
-            },
-            // Match one of the options
-            SyntaxSymbol::Any(options) => {
-                for option in options.iter() {
-                    if let Some(matched) = self.match_pattern_recursive(expr, meta, option) {
-                        return Some(matched)
-                    }
-                }
-                None
-            },
-            // Match all elements in the pattern
-            SyntaxSymbol::Pattern(pattern) => {
-                let mut result = vec![];
-                let old_index = meta.index.clone();
-                for pattern in pattern.iter() {
-                    if let Some(matched) = self.match_pattern_recursive(expr, meta, pattern) {
-                        result.push(matched);
-                        continue
-                    }
-                    else {
-                        meta.index = old_index;
-                        return None
-                    }
-                }
-                Some(SyntaxResult::Pattern(result))
-            },
-            // Symbol that can happen but doesn't have to
-            SyntaxSymbol::Optional(symbol) => {
-                if let Some(result) = self.match_pattern_recursive(expr, meta, symbol) {
-                    Some(SyntaxResult::Optional(Some(Box::new(result))))
-                } else { Some(SyntaxResult::Optional(None)) }
-            },
-            // Match repeating pattern
-            SyntaxSymbol::Repeat(pattern, separator) => {
-                let mut result = vec![];
-                // Merge separator and pattern
-                let both = SyntaxSymbol::Pattern(vec![*separator.clone(), *pattern.clone()]);
-                // Match first element
-                if let Some (matched) = self.match_pattern_recursive(expr, meta, pattern) {
-                    result.push(matched);
-                } else { return Some(SyntaxResult::Pattern(result))}
-                // Match more elements
-                loop {
-                    if let Some(matched) = self.match_pattern_recursive(expr, meta, &both) {
-                        if let SyntaxResult::Pattern(matched_pattern) = matched {
-                            for pattern in matched_pattern {
-                                result.push(pattern);
-                            }
-                        }
-                    } else { return Some(SyntaxResult::Pattern(result)) }
-                }
-            },
-            // Match other syntax module
-            SyntaxSymbol::Syntax(module) => {
-                if let Some(_result) = module.match_pattern(expr, meta) {
-                    return Some(SyntaxResult::Module())
-                } else { None }
-            },
-            // Match custom expression
-            SyntaxSymbol::Custom(function) => {
-                if let Some(new_index) = function(&expr[meta.index..]) {
-                    let old_index = meta.index;
-                    meta.index += new_index;
-                    Some(SyntaxResult::Custom(expr[old_index..meta.index].iter().map(|item| item.word.clone()).collect()))
-                } else { None }
-            }
-            _ => None
-        }
-    }
+    // fn match_pattern_recursive(&self, expr: &[Token], meta: &mut SyntaxMetadata, symbol: &SyntaxSymbol) -> Option<SyntaxResult> {
+    //     match symbol {
+    //         // Match token - check if next token matches the string
+    //         SyntaxSymbol::Token(text) => match_token(text, meta),
+    //         // Match preset - check if the token matches one of presets
+    //         SyntaxSymbol::Preset(preset) => {
+    //             match preset {
+    //                 PresetKind::Variable(extend) => preset::match_variable(expr, meta, extend),
+    //                 PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, meta, extend),
+    //                 PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, meta, extend),
+    //                 PresetKind::Numeric(extend) => preset::match_numeric(expr, meta, extend),
+    //                 PresetKind::Number(extend) => preset::match_number(expr, meta, extend),
+    //                 PresetKind::Integer(extend) => preset::match_integer(expr, meta, extend),
+    //                 PresetKind::Float(extend) => preset::match_float(expr, meta, extend)
+    //             }
+    //         },
+    //         // Match one of the options
+    //         SyntaxSymbol::Any(options) => {
+    //             for option in options.iter() {
+    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, option) {
+    //                     return Some(matched)
+    //                 }
+    //             }
+    //             None
+    //         },
+    //         // Match all elements in the pattern
+    //         SyntaxSymbol::Pattern(pattern) => {
+    //             let mut result = vec![];
+    //             let old_index = meta.index.clone();
+    //             for pattern in pattern.iter() {
+    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, pattern) {
+    //                     result.push(matched);
+    //                     continue
+    //                 }
+    //                 else {
+    //                     meta.index = old_index;
+    //                     return None
+    //                 }
+    //             }
+    //             Some(SyntaxResult::Pattern(result))
+    //         },
+    //         // Symbol that can happen but doesn't have to
+    //         SyntaxSymbol::Optional(symbol) => {
+    //             if let Some(result) = self.match_pattern_recursive(expr, meta, symbol) {
+    //                 Some(SyntaxResult::Optional(Some(Box::new(result))))
+    //             } else { Some(SyntaxResult::Optional(None)) }
+    //         },
+    //         // Match repeating pattern
+    //         SyntaxSymbol::Repeat(pattern, separator) => {
+    //             let mut result = vec![];
+    //             // Merge separator and pattern
+    //             let both = SyntaxSymbol::Pattern(vec![*separator.clone(), *pattern.clone()]);
+    //             // Match first element
+    //             if let Some (matched) = self.match_pattern_recursive(expr, meta, pattern) {
+    //                 result.push(matched);
+    //             } else { return Some(SyntaxResult::Pattern(result))}
+    //             // Match more elements
+    //             loop {
+    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, &both) {
+    //                     if let SyntaxResult::Pattern(matched_pattern) = matched {
+    //                         for pattern in matched_pattern {
+    //                             result.push(pattern);
+    //                         }
+    //                     }
+    //                 } else { return Some(SyntaxResult::Pattern(result)) }
+    //             }
+    //         },
+    //         // Match other syntax module
+    //         SyntaxSymbol::Syntax(module) => {
+    //             if let Some(result) = module.match_pattern(expr, meta) {
+    //                 module.parse(result);
+    //                 // Some(SyntaxResult::Module(Box::new(module.as_any())))
+    //                 None
+    //             } else { None }
+    //         },
+    //         // Match custom expression
+    //         SyntaxSymbol::Custom(function) => {
+    //             if let Some(new_index) = function(&expr[meta.index..]) {
+    //                 let old_index = meta.index;
+    //                 meta.index += new_index;
+    //                 Some(SyntaxResult::Custom(expr[old_index..meta.index].iter().map(|item| item.word.clone()).collect()))
+    //             } else { None }
+    //         }
+    //         _ => None
+    //     }
+    // }
+    // 
+    // fn match_pattern(&self, expr: &[Token], meta: &mut SyntaxMetadata) -> Option<SyntaxResult> {
+    //     let symbol = self.pattern();
+    //     self.match_pattern_recursive(expr, meta, &symbol)
+    // }
 
-    fn match_pattern(&self, expr: &[Token], meta: &mut SyntaxMetadata) -> Option<SyntaxResult> {
-        let symbol = self.pattern();
-        self.match_pattern_recursive(expr, meta, &symbol)
-    }
-
-    fn parse_pattern(&self) {
-        unimplemented!()
-    }
-
-    fn pattern<'a>(&self) -> SyntaxSymbol<'a>;
+    fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult;
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use super::super::preset::*;
 
     struct Expression {}
     impl SyntaxModule for Expression {
-        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
-            tok!["let"]
+        fn parse<'a>(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+            token(meta, "let")?;
+            Ok(())
         }
     }
 
@@ -241,22 +249,21 @@ mod test {
                 pos: (0, 0)
             }
         ];
-        let result1 = exp.match_pattern(&dataset1[..], &mut SyntaxMetadata::new());
-        let result2 = exp.match_pattern(&dataset2[..], &mut SyntaxMetadata::new());
-        assert!(result1.is_some());
-        assert!(result2.is_none());
+        let result1 = exp.parse(&mut SyntaxMetadata::new(&dataset1));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(&dataset2));
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
     }
 
     struct Preset {}
     impl SyntaxModule for Preset {
-        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
-            pat![
-                pre!(Variable, ['_']),
-                pre!(Numeric),
-                pre!(Number),
-                pre!(Integer),
-                pre!(Float)
-            ]
+        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+            variable(meta, vec!['_'])?;
+            numeric(meta, vec![])?;
+            number(meta, vec![])?;
+            integer(meta, vec![])?;
+            float(meta, vec![])?;
+            Ok(())
         }
     }
 
@@ -276,8 +283,8 @@ mod test {
             // Float
             Token { word: format!("-.681"), path: path, pos: (0, 0)}
         ];
-        let result = exp.match_pattern(&dataset[..], &mut SyntaxMetadata::new());
-        assert!(result.is_some());
+        let result = exp.parse(&mut SyntaxMetadata::new(&dataset));
+        assert!(result.is_ok());
     }
 
     // Function that can be used to express custom pattern
@@ -296,7 +303,7 @@ mod test {
     }
     struct PatternModule {}
     impl SyntaxModule for PatternModule {
-        fn pattern<'a>(&self) -> SyntaxSymbol<'a> {
+        fn pattern(&self) -> SyntaxSymbol {
             pat![
                 any![
                     tok!("apple"),
@@ -308,9 +315,11 @@ mod test {
                 rep!(tok!("this"), tok!(",")),
                 cus!(my_custom_pattern),
                 tok!("end")
-                
             ]
         }
+
+        fn parse<'a>(&self, result: SyntaxResult) {}
+        fn as_any(&self) -> &dyn Any { self }
     }
 
     #[test]

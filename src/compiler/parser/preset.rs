@@ -1,9 +1,8 @@
-use super::{SyntaxMetadata, SyntaxResult};
-use crate::compiler::Token;
+use super::{ SyntaxMetadata };
 
 // Matches one token with a word that would be considered as a variable name
-pub fn match_variable(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn variable(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             // This boolean stores false if we are past
             // the first letter otherwise it's true
@@ -12,66 +11,66 @@ pub fn match_variable(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<ch
                 // Check if rest of the letters are alphanumeric
                 if is_later {
                     if !(letter.is_alphanumeric() || extend.contains(&letter)) {
-                        return None
+                        return Err(())
                     }
                 }
                 // Check if first letter is alphabetic
                 else {
                     if !(letter.is_alphabetic() || extend.contains(&letter)) {
-                        return None
+                        return Err(())
                     }
                     is_later = true;
                 }
             }
             meta.index += 1;
-            Some(SyntaxResult::Word(token.word.clone()))
+            Ok(token.word.clone())
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches one token with a word that consists of letters only
-pub fn match_alphabetic(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn alphabetic(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphabetic() || extend.contains(&letter)) {
                 meta.index += 1;
-                Some(SyntaxResult::Word(token.word.clone()))
-            } else { None }
+                Ok(token.word.clone())
+            } else { Err(()) }
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches one token with a word that consists of letters or numbers only
-pub fn match_alphanumeric(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn match_alphanumeric(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphanumeric() || extend.contains(&letter)) {
                 meta.index += 1;
-                Some(SyntaxResult::Word(token.word.clone()))
-            } else { None }
+                Ok(token.word.clone())
+            } else { Err(()) }
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches a token of which word is a string of digits
-pub fn match_numeric(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn numeric(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_numeric() || extend.contains(&letter)) {
                 meta.index += 1;
-                Some(SyntaxResult::Word(token.word.clone()))
-            } else { None }
+                Ok(token.word.clone())
+            } else { Err(()) }
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches a positive or negetive integer
-pub fn match_integer(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn integer(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume
@@ -81,19 +80,19 @@ pub fn match_integer(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<cha
             // For each further letter match a digit
             for letter in word.chars() {
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return None
+                    return Err(())
                 }
             }
             meta.index += 1;
-            Some(SyntaxResult::Word(token.word.clone()))
+            Ok(token.word.clone())
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches a number that contains a floating point (has a dot in notation)
-pub fn match_float(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    match expr.get(meta.index) {
+pub fn float(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    match meta.expr.get(meta.index) {
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume
@@ -105,24 +104,24 @@ pub fn match_float(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>
             for letter in word.chars() {
                 if letter == '.' {
                     // Set fraction if dot - exit match otherwise
-                    is_frac = if is_frac { return None } else { true };
+                    is_frac = if is_frac { return Err(()) } else { true };
                     continue
                 }
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return None
+                    return Err(())
                 }
             }
             meta.index += 1;
-            Some(SyntaxResult::Word(token.word.clone()))
+            Ok(token.word.clone())
         }
-        None => None
+        None => Err(())
     }
 }
 
 // Matches a number that is an integer or float
-pub fn match_number(expr: &[Token], meta: &mut SyntaxMetadata, extend: &Vec<char>) -> Option<SyntaxResult> {
-    if let Some(integer) = match_integer(expr, meta, extend) {
-        return Some(integer);
+pub fn number(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
+    if let Ok(integer) = integer(meta, extend) {
+        return Ok(integer);
     }
-    return match_float(expr, meta, extend)
+    float(meta, extend)
 }
