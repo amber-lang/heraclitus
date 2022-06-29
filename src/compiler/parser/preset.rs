@@ -120,7 +120,7 @@ pub fn float(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> 
 
 // Matches a number that is an integer or float
 pub fn number(meta: &mut SyntaxMetadata, extend: Vec<char>) -> Result<String,()> {
-    if let Ok(integer) = integer(meta, extend) {
+    if let Ok(integer) = integer(meta, extend.clone()) {
         return Ok(integer);
     }
     float(meta, extend)

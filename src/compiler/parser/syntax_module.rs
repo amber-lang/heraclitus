@@ -1,93 +1,28 @@
 use crate::compiler::Token;
-use super::pattern::*;
 
-macro_rules! pat {
-    ($($exp:expr),*) => {
-        SyntaxSymbol::Pattern(vec![$($exp),*])
-    };
-}
+// #[derive(Clone)]
+// pub enum PresetKind {
+//     Variable(Vec<char>),
+//     Alphabetic(Vec<char>),
+//     Alphanumeric(Vec<char>),
+//     Numeric(Vec<char>),
+//     Number(Vec<char>),
+//     Integer(Vec<char>),
+//     Float(Vec<char>)
+// }
 
-macro_rules! any {
-    ($($exp:expr),*) => {
-        SyntaxSymbol::Any(vec![$($exp),*])
-    };
-}
-
-macro_rules! rep {
-    ($pat:expr, $sep:expr) => {
-        SyntaxSymbol::Repeat(Box::new($pat), Box::new($sep))
-    };
-    ($pat:expr) => {
-        SyntaxSymbol::Repeat(Box::new($pat), Box::new(SyntaxSymbol::Pattern(vec![])))
-    };
-}
-
-macro_rules! tok {
-    // ($exp:expr) => {
-    //     SyntaxSymbol::Token(format!("{}", $exp))
-    // };
-    ($exp:expr) => {
-        match_token(text, meta)
-    };
-}
-
-macro_rules! pre {
-    ($name:ident) => {
-        SyntaxSymbol::Preset(PresetKind::$name(vec![]))
-    };
-    ($name:ident, [$($params:expr),*]) => {
-        SyntaxSymbol::Preset(PresetKind::$name(vec![$($params),*]))
-    };
-}
-
-macro_rules! opt {
-    ($exp:expr) => {
-        SyntaxSymbol::Optional(Box::new($exp))
-    };
-}
-
-macro_rules! cus {
-    ($exp:expr) => {
-        SyntaxSymbol::Custom($exp)
-    };
-}
-
-macro_rules! syn {
-    ($exp:expr) => {
-        SyntaxSymbol::Syntax(Box::new($exp))
-    };
-}
-
-// TODO: Create block pattern
-macro_rules! blc {
-    ($exp:expr) => {
-        SyntaxSymbol::Custom($exp)
-    };
-}
-
-#[derive(Clone)]
-pub enum PresetKind {
-    Variable(Vec<char>),
-    Alphabetic(Vec<char>),
-    Alphanumeric(Vec<char>),
-    Numeric(Vec<char>),
-    Number(Vec<char>),
-    Integer(Vec<char>),
-    Float(Vec<char>)
-}
-
-#[derive(Clone)]
-pub enum SyntaxSymbol {
-    Token(String),
-    Preset(PresetKind),
-    Pattern(Vec<SyntaxSymbol>),
-    Any(Vec<SyntaxSymbol>),
-    Optional(Box<SyntaxSymbol>),
-    Repeat(Box<SyntaxSymbol>, Box<SyntaxSymbol>),
-    Syntax(Box<dyn SyntaxModule>),
-    IndentBlock(Box<SyntaxSymbol>),
-    Custom(fn(&[Token]) -> Option<usize>)
-}
+// #[derive(Clone)]
+// pub enum SyntaxSymbol {
+//     Token(String),
+//     Preset(PresetKind),
+//     Pattern(Vec<SyntaxSymbol>),
+//     Any(Vec<SyntaxSymbol>),
+//     Optional(Box<SyntaxSymbol>),
+//     Repeat(Box<SyntaxSymbol>, Box<SyntaxSymbol>),
+//     Syntax(Box<dyn SyntaxModule>),
+//     IndentBlock(Box<SyntaxSymbol>),
+//     Custom(fn(&[Token]) -> Option<usize>)
+// }
 
 pub struct SyntaxMetadata<'a> {
     pub index: usize,
@@ -106,16 +41,6 @@ impl<'a> SyntaxMetadata<'a> {
             indent_stack: vec![],
             expr: expression
         }
-    }
-}
-
-struct Synax;
-
-impl SyntaxModule for Synax {
-    fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
-        let res = token(meta, "let")?;
-
-        Ok(())
     }
 }
 
@@ -220,12 +145,15 @@ pub trait SyntaxModule {
 
 #[cfg(test)]
 mod test {
+    use std::os::macos::fs::MetadataExt;
+
     use super::*;
-    use super::super::preset::*;
+    use crate::compiler::parser::pattern::*;
+    use crate::compiler::parser::preset::*;
 
     struct Expression {}
     impl SyntaxModule for Expression {
-        fn parse<'a>(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             token(meta, "let")?;
             Ok(())
         }
@@ -313,13 +241,29 @@ mod test {
                 opt!(tok!("optional")),
                 syn!(&Expression {}),
                 rep!(tok!("this"), tok!(",")),
-                cus!(my_custom_pattern),
                 tok!("end")
             ]
         }
 
-        fn parse<'a>(&self, result: SyntaxResult) {}
-        fn as_any(&self) -> &dyn Any { self }
+        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+            // Any
+            if let Ok(_) = token(meta, "apple") {}
+            else if let Ok(_) = token(meta, "orange") {}
+            else if let Ok(_) = token(meta, "banana") {}
+            else { return Err(()) }
+            // Optional
+            token(meta, "optional");
+            // Syntax
+            syntax(meta, Expression {})?;
+            // Repeat
+            loop {
+                token(meta, "test");
+                token(meta, ",");
+            }
+            // End token
+            token(meta, "end");
+            Ok(())
+        }
     }
 
     #[test]
@@ -365,7 +309,7 @@ mod test {
             Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!(","), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
+            Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!("abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
