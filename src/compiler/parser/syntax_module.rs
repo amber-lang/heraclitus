@@ -1,29 +1,5 @@
 use crate::compiler::Token;
 
-// #[derive(Clone)]
-// pub enum PresetKind {
-//     Variable(Vec<char>),
-//     Alphabetic(Vec<char>),
-//     Alphanumeric(Vec<char>),
-//     Numeric(Vec<char>),
-//     Number(Vec<char>),
-//     Integer(Vec<char>),
-//     Float(Vec<char>)
-// }
-
-// #[derive(Clone)]
-// pub enum SyntaxSymbol {
-//     Token(String),
-//     Preset(PresetKind),
-//     Pattern(Vec<SyntaxSymbol>),
-//     Any(Vec<SyntaxSymbol>),
-//     Optional(Box<SyntaxSymbol>),
-//     Repeat(Box<SyntaxSymbol>, Box<SyntaxSymbol>),
-//     Syntax(Box<dyn SyntaxModule>),
-//     IndentBlock(Box<SyntaxSymbol>),
-//     Custom(fn(&[Token]) -> Option<usize>)
-// }
-
 pub struct SyntaxMetadata<'a> {
     pub index: usize,
     pub is_indent: bool,
@@ -33,7 +9,7 @@ pub struct SyntaxMetadata<'a> {
 }
 
 impl<'a> SyntaxMetadata<'a> {
-    fn new(expression: &'a [Token]) -> Self {
+    pub fn new(expression: &'a [Token]) -> Self {
         SyntaxMetadata {
             index: 0,
             is_indent: false,
@@ -47,106 +23,11 @@ impl<'a> SyntaxMetadata<'a> {
 pub type SyntaxResult = Result<(),()>;
 
 pub trait SyntaxModule {
-    // Recursively match syntax symbol
-    // fn match_pattern_recursive(&self, expr: &[Token], meta: &mut SyntaxMetadata, symbol: &SyntaxSymbol) -> Option<SyntaxResult> {
-    //     match symbol {
-    //         // Match token - check if next token matches the string
-    //         SyntaxSymbol::Token(text) => match_token(text, meta),
-    //         // Match preset - check if the token matches one of presets
-    //         SyntaxSymbol::Preset(preset) => {
-    //             match preset {
-    //                 PresetKind::Variable(extend) => preset::match_variable(expr, meta, extend),
-    //                 PresetKind::Alphabetic(extend) => preset::match_alphabetic(expr, meta, extend),
-    //                 PresetKind::Alphanumeric(extend) => preset::match_alphanumeric(expr, meta, extend),
-    //                 PresetKind::Numeric(extend) => preset::match_numeric(expr, meta, extend),
-    //                 PresetKind::Number(extend) => preset::match_number(expr, meta, extend),
-    //                 PresetKind::Integer(extend) => preset::match_integer(expr, meta, extend),
-    //                 PresetKind::Float(extend) => preset::match_float(expr, meta, extend)
-    //             }
-    //         },
-    //         // Match one of the options
-    //         SyntaxSymbol::Any(options) => {
-    //             for option in options.iter() {
-    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, option) {
-    //                     return Some(matched)
-    //                 }
-    //             }
-    //             None
-    //         },
-    //         // Match all elements in the pattern
-    //         SyntaxSymbol::Pattern(pattern) => {
-    //             let mut result = vec![];
-    //             let old_index = meta.index.clone();
-    //             for pattern in pattern.iter() {
-    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, pattern) {
-    //                     result.push(matched);
-    //                     continue
-    //                 }
-    //                 else {
-    //                     meta.index = old_index;
-    //                     return None
-    //                 }
-    //             }
-    //             Some(SyntaxResult::Pattern(result))
-    //         },
-    //         // Symbol that can happen but doesn't have to
-    //         SyntaxSymbol::Optional(symbol) => {
-    //             if let Some(result) = self.match_pattern_recursive(expr, meta, symbol) {
-    //                 Some(SyntaxResult::Optional(Some(Box::new(result))))
-    //             } else { Some(SyntaxResult::Optional(None)) }
-    //         },
-    //         // Match repeating pattern
-    //         SyntaxSymbol::Repeat(pattern, separator) => {
-    //             let mut result = vec![];
-    //             // Merge separator and pattern
-    //             let both = SyntaxSymbol::Pattern(vec![*separator.clone(), *pattern.clone()]);
-    //             // Match first element
-    //             if let Some (matched) = self.match_pattern_recursive(expr, meta, pattern) {
-    //                 result.push(matched);
-    //             } else { return Some(SyntaxResult::Pattern(result))}
-    //             // Match more elements
-    //             loop {
-    //                 if let Some(matched) = self.match_pattern_recursive(expr, meta, &both) {
-    //                     if let SyntaxResult::Pattern(matched_pattern) = matched {
-    //                         for pattern in matched_pattern {
-    //                             result.push(pattern);
-    //                         }
-    //                     }
-    //                 } else { return Some(SyntaxResult::Pattern(result)) }
-    //             }
-    //         },
-    //         // Match other syntax module
-    //         SyntaxSymbol::Syntax(module) => {
-    //             if let Some(result) = module.match_pattern(expr, meta) {
-    //                 module.parse(result);
-    //                 // Some(SyntaxResult::Module(Box::new(module.as_any())))
-    //                 None
-    //             } else { None }
-    //         },
-    //         // Match custom expression
-    //         SyntaxSymbol::Custom(function) => {
-    //             if let Some(new_index) = function(&expr[meta.index..]) {
-    //                 let old_index = meta.index;
-    //                 meta.index += new_index;
-    //                 Some(SyntaxResult::Custom(expr[old_index..meta.index].iter().map(|item| item.word.clone()).collect()))
-    //             } else { None }
-    //         }
-    //         _ => None
-    //     }
-    // }
-    // 
-    // fn match_pattern(&self, expr: &[Token], meta: &mut SyntaxMetadata) -> Option<SyntaxResult> {
-    //     let symbol = self.pattern();
-    //     self.match_pattern_recursive(expr, meta, &symbol)
-    // }
-
     fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult;
 }
 
 #[cfg(test)]
 mod test {
-    use std::os::macos::fs::MetadataExt;
-
     use super::*;
     use crate::compiler::parser::pattern::*;
     use crate::compiler::parser::preset::*;
@@ -215,36 +96,9 @@ mod test {
         assert!(result.is_ok());
     }
 
-    // Function that can be used to express custom pattern
-    fn my_custom_pattern(expr: &[Token]) -> Option<usize> {
-        match expr.get(0) {
-            Some(token) => {
-                for letter in token.word.chars() {
-                    if !letter.is_alphabetic() {
-                        return None
-                    }
-                }
-                Some(1)
-            }
-            None => None
-        }
-    }
     struct PatternModule {}
     impl SyntaxModule for PatternModule {
-        fn pattern(&self) -> SyntaxSymbol {
-            pat![
-                any![
-                    tok!("apple"),
-                    tok!("orange"),
-                    tok!("banana")
-                ],
-                opt!(tok!("optional")),
-                syn!(&Expression {}),
-                rep!(tok!("this"), tok!(",")),
-                tok!("end")
-            ]
-        }
-
+        #[allow(unused_must_use)]
         fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             // Any
             if let Ok(_) = token(meta, "apple") {}
@@ -257,8 +111,12 @@ mod test {
             syntax(meta, Expression {})?;
             // Repeat
             loop {
-                token(meta, "test");
-                token(meta, ",");
+                if let Err(()) = token(meta, "test") {
+                    break;
+                }
+                if let Err(()) = token(meta, ",") {
+                    break;
+                }
             }
             // End token
             token(meta, "end");
@@ -278,7 +136,6 @@ mod test {
             Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!(","), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
         // Token should fail
@@ -289,7 +146,6 @@ mod test {
             Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!(","), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
         // Syntax should fail
@@ -299,7 +155,6 @@ mod test {
             Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!(","), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
         // Token should fail because of repeat matching (this , this) ,
@@ -310,29 +165,16 @@ mod test {
             Token { word: format!(","), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
             Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("abc"), path: path, pos: (0, 0) },
             Token { word: format!("end"), path: path, pos: (0, 0) }
         ];
-        // Custom pattern should fail because passed word is not an alphabetical word
-        let dataset5 = vec![
-            Token { word: format!("orange"), path: path, pos: (0, 0) },
-            Token { word: format!("tell"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("_abc"), path: path, pos: (0, 0) },
-            Token { word: format!("end"), path: path, pos: (0, 0) }
-        ];
-        let result1 = exp.match_pattern(&dataset1[..], &mut SyntaxMetadata::new());
-        let result2 = exp.match_pattern(&dataset2[..], &mut SyntaxMetadata::new());
-        let result3 = exp.match_pattern(&dataset3[..], &mut SyntaxMetadata::new());
-        let result4 = exp.match_pattern(&dataset4[..], &mut SyntaxMetadata::new());
-        let result5 = exp.match_pattern(&dataset5[..], &mut SyntaxMetadata::new());
-        assert!(result1.is_some());
-        assert!(result2.is_none());
-        assert!(result3.is_none());
-        assert!(result4.is_none());
-        assert!(result5.is_none());
+        let result1 = exp.parse(&mut SyntaxMetadata::new(&dataset1));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(&dataset2));
+        let result3 = exp.parse(&mut SyntaxMetadata::new(&dataset3));
+        let result4 = exp.parse(&mut SyntaxMetadata::new(&dataset4));
+        assert!(result1.is_ok());
+        assert!(result2.is_err());
+        assert!(result3.is_err());
+        assert!(result4.is_err());
     }
 
 }

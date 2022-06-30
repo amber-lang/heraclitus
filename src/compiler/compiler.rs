@@ -1,12 +1,9 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::collections::HashMap;
-
 use crate::rules::Rules;
 use crate::compiler::lexer::Lexer;
-
-// TODO: Create Block interface when building scoper
-type Block = ();
+use crate::compiler::parser::{ SyntaxModule, SyntaxMetadata };
 
 #[derive(Clone, PartialEq)]
 pub enum SeparatorMode {
@@ -17,7 +14,7 @@ pub enum SeparatorMode {
 
 #[derive(Clone, PartialEq)]
 pub enum ScopingMode {
-    Block(Vec<Block>),
+    Block,
     Indent
 }
 
@@ -28,7 +25,7 @@ pub struct Compiler<AST> {
     pub path: String,
     pub code_tree: HashMap<String, AST>,
     pub separator_mode: SeparatorMode,
-    pub scoping_mode: ScopingMode
+    pub scoping_mode: ScopingMode,
 }
 
 impl<AST> Compiler<AST> {
@@ -40,7 +37,7 @@ impl<AST> Compiler<AST> {
             path: format!("[code]"),
             code_tree: HashMap::new(),
             separator_mode: SeparatorMode::Automatic,
-            scoping_mode: ScopingMode::Block(vec![])
+            scoping_mode: ScopingMode::Block
         }
     }
 
@@ -59,8 +56,9 @@ impl<AST> Compiler<AST> {
         self.path = file_path;
     }
 
-    pub fn compile(&self) {
+    pub fn compile(&self, module: impl SyntaxModule) -> Result<(), ()> {
         let mut lexer = Lexer::new(&self);
         lexer.run();
+        module.parse(&mut SyntaxMetadata::new(&lexer.lexem[..]))
     }
 }

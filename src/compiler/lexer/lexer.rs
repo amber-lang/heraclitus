@@ -11,7 +11,7 @@ pub struct Lexer<'a> {
     symbols: &'a Vec<char>,
     region: RegionHandler,
     reader: Reader<'a>,
-    lexem: Vec<Token<'a>>,
+    pub lexem: Vec<Token<'a>>,
     path: &'a String,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode
