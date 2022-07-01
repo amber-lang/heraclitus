@@ -23,7 +23,7 @@ impl<'a> SyntaxMetadata<'a> {
 pub type SyntaxResult = Result<(),()>;
 
 pub trait SyntaxModule {
-    fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult;
+    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult;
 }
 
 #[cfg(test)]
@@ -34,7 +34,7 @@ mod test {
 
     struct Expression {}
     impl SyntaxModule for Expression {
-        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             token(meta, "let")?;
             Ok(())
         }
@@ -42,7 +42,7 @@ mod test {
 
     #[test]
     fn test_token_match() {
-        let exp = Expression {};
+        let mut exp = Expression {};
         let path = &format!("/path/to/file");
         let dataset1 = vec![
             Token {
@@ -66,7 +66,7 @@ mod test {
 
     struct Preset {}
     impl SyntaxModule for Preset {
-        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             variable(meta, vec!['_'])?;
             numeric(meta, vec![])?;
             number(meta, vec![])?;
@@ -78,7 +78,7 @@ mod test {
 
     #[test]
     fn test_preset_match() {
-        let exp = Preset {};
+        let mut exp = Preset {};
         let path = &format!("/path/to/file");
         let dataset = vec![
             // Variable
@@ -99,7 +99,7 @@ mod test {
     struct PatternModule {}
     impl SyntaxModule for PatternModule {
         #[allow(unused_must_use)]
-        fn parse(&self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             // Any
             if let Ok(_) = token(meta, "apple") {}
             else if let Ok(_) = token(meta, "orange") {}
@@ -126,7 +126,7 @@ mod test {
 
     #[test]
     fn rest_match() {
-        let exp = PatternModule {};
+        let mut exp = PatternModule {};
         let path = &format!("/path/to/file");
         // Everything should pass
         let dataset1 = vec![

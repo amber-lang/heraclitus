@@ -1,2 +1,5 @@
-pub mod rules;
-pub mod compiler;
+mod rules;
+mod compiler;
+
+pub use compiler::*;
+pub use rules::*;

@@ -18,7 +18,7 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new<AST>(cc: &'a Compiler<AST>) -> Self {
+    pub fn new(cc: &'a Compiler) -> Self {
         Lexer {
             symbols: &cc.rules.symbols,
             region: RegionHandler::new(&cc.rules),
@@ -240,9 +240,8 @@ mod test {
             ("32".to_string(), 1, 15),
             (")".to_string(), 1, 17)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
+        let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = (12 + 32)");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
@@ -283,9 +282,8 @@ mod test {
             ("}".to_string(), 1, 42),
             (" text'".to_string(), 1, 43)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
+        let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
@@ -312,9 +310,8 @@ mod test {
             ("\n        ".to_string(), 3, 1),
             ("pass".to_string(), 3, 9)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.scoping_mode = ScopingMode::Indent;
         cc.load(vec![
             "if condition:",
@@ -344,9 +341,8 @@ mod test {
             ("12".to_string(), 3, 1),
             (";".to_string(), 3, 3)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.separator_mode = SeparatorMode::Manual;
         cc.load(vec![
             "let age = 12",

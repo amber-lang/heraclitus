@@ -18,24 +18,22 @@ pub enum ScopingMode {
     Indent
 }
 
-pub struct Compiler<AST> {
+pub struct Compiler {
     pub name: String,
     pub rules: Rules,
     pub code: String,
     pub path: String,
-    pub code_tree: HashMap<String, AST>,
     pub separator_mode: SeparatorMode,
     pub scoping_mode: ScopingMode,
 }
 
-impl<AST> Compiler<AST> {
+impl Compiler {
     pub fn new(name: &str, rules: Rules) -> Self {
         Compiler {
             name: String::from(name),
             rules,
             code: format!(""),
             path: format!("[code]"),
-            code_tree: HashMap::new(),
             separator_mode: SeparatorMode::Automatic,
             scoping_mode: ScopingMode::Block
         }
@@ -56,7 +54,7 @@ impl<AST> Compiler<AST> {
         self.path = file_path;
     }
 
-    pub fn compile(&self, module: impl SyntaxModule) -> Result<(), ()> {
+    pub fn compile(&self, mut module: impl SyntaxModule) -> Result<(), ()> {
         let mut lexer = Lexer::new(&self);
         lexer.run();
         module.parse(&mut SyntaxMetadata::new(&lexer.lexem[..]))
