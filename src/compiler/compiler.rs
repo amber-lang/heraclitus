@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::HashMap;
 use crate::rules::Rules;
 use crate::compiler::lexer::Lexer;
 use crate::compiler::parser::{ SyntaxModule, SyntaxMetadata };

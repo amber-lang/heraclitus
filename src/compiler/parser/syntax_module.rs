@@ -108,7 +108,7 @@ mod test {
             // Optional
             token(meta, "optional");
             // Syntax
-            syntax(meta, Expression {})?;
+            syntax(meta, Box::new(Expression {}))?;
             // Repeat
             loop {
                 if let Err(()) = token(meta, "test") {
