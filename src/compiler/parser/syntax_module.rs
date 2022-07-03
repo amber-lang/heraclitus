@@ -23,6 +23,7 @@ impl<'a> SyntaxMetadata<'a> {
 pub type SyntaxResult = Result<(),()>;
 
 pub trait SyntaxModule {
+    fn new() -> Self;
     fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult;
 }
 
@@ -34,6 +35,9 @@ mod test {
 
     struct Expression {}
     impl SyntaxModule for Expression {
+        fn new() -> Self {
+            Expression {  }
+        }
         fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             token(meta, "let")?;
             Ok(())
@@ -66,6 +70,9 @@ mod test {
 
     struct Preset {}
     impl SyntaxModule for Preset {
+        fn new() -> Self {
+            Preset {  }
+        }
         fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             variable(meta, vec!['_'])?;
             numeric(meta, vec![])?;
@@ -98,6 +105,9 @@ mod test {
 
     struct PatternModule {}
     impl SyntaxModule for PatternModule {
+        fn new() -> Self {
+            PatternModule {  }
+        }
         #[allow(unused_must_use)]
         fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             // Any
@@ -108,7 +118,7 @@ mod test {
             // Optional
             token(meta, "optional");
             // Syntax
-            syntax(meta, Box::new(Expression {}))?;
+            syntax(meta, &mut Expression {})?;
             // Repeat
             loop {
                 if let Err(()) = token(meta, "test") {

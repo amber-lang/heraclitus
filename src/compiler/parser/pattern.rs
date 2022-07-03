@@ -12,10 +12,10 @@ pub fn token<T: AsRef<str>>(meta: &mut SyntaxMetadata, text: T) -> Result<String
 }
 
 // Parses syntax and returns it's result
-pub fn syntax(meta: &mut SyntaxMetadata, mut module: Box<dyn SyntaxModule>) -> Result<Box<dyn SyntaxModule>,()> {
+pub fn syntax(meta: &mut SyntaxMetadata, module: &mut impl SyntaxModule) -> Result<(),()> {
     let index = meta.index;
     if let Err(()) = module.parse(meta) {
         meta.index = index;
         Err(())
-    } else { Ok(module) }
+    } else { Ok(()) }
 }
