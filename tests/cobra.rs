@@ -1,4 +1,4 @@
-use heraclitus::{*, patterns::{syntax, number, token}};
+use heraclitus::{*, patterns::{syntax, number, token, token_by}};
 
 struct Number {}
 impl SyntaxModule for Number {
@@ -6,33 +6,21 @@ impl SyntaxModule for Number {
         Number {  }
     }
     fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
-        number(meta, vec![])?;
+        token_by(meta, |word| word.starts_with('\'') && word.ends_with('\''))?;
         Ok(())
     }
 }
 
-struct Add {
+struct String {
     left: Option<Number>,
     right: Option<Expr>
 }
-impl SyntaxModule for Add {
+impl SyntaxModule for String {
     fn new() -> Self {
-        Add { left: None, right: None }
+        String { left: None, right: None }
     }
     fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
-        match meta.expr.get(meta.index) {
-            Some(_) => {
-                let mut  left = Number::new();
-                let mut right = Expr::new();
-                syntax(meta, &mut left)?;
-                self.left = Some(left);
-                token(meta, "+")?;
-                syntax(meta, &mut right)?;
-                self.right = Some(right);
-                Ok(())
-            }
-            None => Err(())
-        }
+        
     }
 }
 
@@ -83,7 +71,7 @@ impl SyntaxModule for Expr {
 }
 
 #[test]
-fn arith() {
+fn cobra() {
     let symbols = vec!['+'];
     let region = reg![
         reg!(string as "string literal" => {
@@ -93,6 +81,7 @@ fn arith() {
     ];
     let rules = Rules::new(symbols, region);
     let mut compiler = Compiler::new("Arith", rules);
-    compiler.load("12.24 +.123 + 12");
-    assert!(compiler.compile(Expr { expr: None }).is_ok());
+    compiler.load("'this is a test'");
+    println!("{:?}", compiler.tokenize());
+    // assert!(compiler.compile(Expr { expr: None }).is_ok());
 }

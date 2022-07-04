@@ -1,8 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use crate::rules::Rules;
-use crate::compiler::lexer::Lexer;
-use crate::compiler::parser::{ SyntaxModule, SyntaxMetadata };
+use crate::{ Token, Rules, Lexer, SyntaxModule, SyntaxMetadata };
 
 #[derive(Clone, PartialEq)]
 pub enum SeparatorMode {
@@ -51,6 +49,12 @@ impl Compiler {
 
     pub fn set_path(&mut self, file_path: String) {
         self.path = file_path;
+    }
+
+    pub fn tokenize(&self) -> Vec<Token> {
+        let mut lexer = Lexer::new(&self);
+        lexer.run();
+        lexer.lexem
     }
 
     pub fn compile(&self, mut module: impl SyntaxModule) -> Result<(), ()> {

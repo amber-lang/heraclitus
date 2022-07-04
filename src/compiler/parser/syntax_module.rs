@@ -9,7 +9,7 @@ pub struct SyntaxMetadata<'a> {
 }
 
 impl<'a> SyntaxMetadata<'a> {
-    pub fn new(expression: &'a [Token]) -> Self {
+    pub fn new(expression: &'a [Token<'a>]) -> Self {
         SyntaxMetadata {
             index: 0,
             is_indent: false,
@@ -18,6 +18,24 @@ impl<'a> SyntaxMetadata<'a> {
             expr: expression
         }
     }
+}
+
+impl<'a> Metadata for SyntaxMetadata<'a> {
+    fn get_index(&self) -> usize {
+        self.index
+    }
+    fn set_index(&mut self, index: usize) {
+        self.index = index
+    }
+    fn get_expr(&self) -> &[Token] {
+        self.expr
+    }
+}
+
+trait Metadata {
+    fn get_expr(&self) -> &[Token];
+    fn get_index(&self) -> usize;
+    fn set_index(&mut self, index: usize);
 }
 
 pub type SyntaxResult = Result<(),()>;
