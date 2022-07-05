@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::process;
 use crate::compiler::Token;
 use super::displayer::Displayer;
@@ -49,18 +50,18 @@ impl<'a> Log<'a> {
     }
 
     /// Create an error using a token to supply essential information
-    pub fn new_err_at_token(token: Token<'a>) -> Self {
-        Log::new_err(token.path, token.pos.0, token.pos.1)
+    pub fn new_err_at_token(path: &'a String, token: Token) -> Self {
+        Log::new_err(path, token.pos.0, token.pos.1)
     }
 
     /// Create a warning using a token to supply essential information
-    pub fn new_warn_at_token(token: Token<'a>) -> Self {
-        Log::new_warn(token.path, token.pos.0, token.pos.1)
+    pub fn new_warn_at_token(path: &'a String, token: Token) -> Self {
+        Log::new_warn(path, token.pos.0, token.pos.1)
     }
 
     /// Create an info using a token to supply essential information
-    pub fn new_info_at_token(token: Token<'a>) -> Self {
-        Log::new_info(token.path, token.pos.0, token.pos.1)
+    pub fn new_info_at_token(path: &'a String, token: Token) -> Self {
+        Log::new_info(path, token.pos.0, token.pos.1)
     }
 
     /// Add message to an existing log

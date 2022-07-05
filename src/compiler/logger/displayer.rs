@@ -1,7 +1,7 @@
+#![allow(dead_code)]
 use colored::Colorize;
 use pad::PadStr;
 use crate::compiler::logger::LogType;
-
 pub struct Displayer {
     color: (u8, u8, u8),
     row: usize,

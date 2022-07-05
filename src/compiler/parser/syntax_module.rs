@@ -1,48 +1,44 @@
 use crate::compiler::Token;
 
-pub struct SyntaxMetadata<'a> {
+pub struct SyntaxMetadata {
     pub index: usize,
-    pub is_indent: bool,
-    pub indent_level: usize,
-    pub indent_stack: Vec<usize>,
-    pub expr: &'a [Token<'a>]
+    pub expr: Vec<Token>
 }
 
-impl<'a> SyntaxMetadata<'a> {
-    pub fn new(expression: &'a [Token<'a>]) -> Self {
+impl SyntaxMetadata {
+    pub fn new(expression: Vec<Token>) -> Self {
         SyntaxMetadata {
             index: 0,
-            is_indent: false,
-            indent_level: 0,
-            indent_stack: vec![],
             expr: expression
         }
     }
 }
 
-impl<'a> Metadata for SyntaxMetadata<'a> {
-    fn get_index(&self) -> usize {
-        self.index
+impl Metadata for SyntaxMetadata {
+    fn get_token_at(&self, index: usize) -> Option<Token> {
+        if let Some(token) = self.expr.get(index) {
+            return Some(token.clone())
+        } else { None }
     }
     fn set_index(&mut self, index: usize) {
         self.index = index
     }
-    fn get_expr(&self) -> &[Token] {
-        self.expr
+    fn get_index(&self) -> usize {
+        self.index
     }
 }
 
-trait Metadata {
-    fn get_expr(&self) -> &[Token];
+pub trait Metadata {
+    fn get_token_at(&self, index: usize) -> Option<Token>;
     fn get_index(&self) -> usize;
     fn set_index(&mut self, index: usize);
 }
 
 pub type SyntaxResult = Result<(),()>;
 
-pub trait SyntaxModule {
+pub trait SyntaxModule<M> {
     fn new() -> Self;
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult;
+    fn parse(&mut self, meta: &mut M) -> SyntaxResult;
 }
 
 #[cfg(test)]
@@ -52,7 +48,7 @@ mod test {
     use crate::compiler::parser::preset::*;
 
     struct Expression {}
-    impl SyntaxModule for Expression {
+    impl SyntaxModule<SyntaxMetadata> for Expression {
         fn new() -> Self {
             Expression {  }
         }
@@ -65,18 +61,15 @@ mod test {
     #[test]
     fn test_token_match() {
         let mut exp = Expression {};
-        let path = &format!("/path/to/file");
         let dataset1 = vec![
             Token {
                 word: format!("let"),
-                path: path,
                 pos: (0, 0)
             }
         ];
         let dataset2 = vec![
             Token {
                 word: format!("tell"),
-                path: path,
                 pos: (0, 0)
             }
         ];
@@ -87,7 +80,7 @@ mod test {
     }
 
     struct Preset {}
-    impl SyntaxModule for Preset {
+    impl SyntaxModule<SyntaxMetadata> for Preset {
         fn new() -> Self {
             Preset {  }
         }
@@ -107,22 +100,22 @@ mod test {
         let path = &format!("/path/to/file");
         let dataset = vec![
             // Variable
-            Token { word: format!("_text"), path: path, pos: (0, 0) },
+            Token { word: format!("_text"), pos: (0, 0) },
             // Numeric
-            Token { word: format!("12321"), path: path, pos: (0, 0) },
+            Token { word: format!("12321"), pos: (0, 0) },
             // Number
-            Token { word: format!("-123.12"), path: path, pos: (0, 0) },
+            Token { word: format!("-123.12"), pos: (0, 0) },
             // Integer
-            Token { word: format!("-12"), path: path, pos: (0, 0) },
+            Token { word: format!("-12"), pos: (0, 0) },
             // Float
-            Token { word: format!("-.681"), path: path, pos: (0, 0)}
+            Token { word: format!("-.681"), pos: (0, 0)}
         ];
         let result = exp.parse(&mut SyntaxMetadata::new(&dataset));
         assert!(result.is_ok());
     }
 
     struct PatternModule {}
-    impl SyntaxModule for PatternModule {
+    impl SyntaxModule<SyntaxMetadata> for PatternModule {
         fn new() -> Self {
             PatternModule {  }
         }
@@ -158,42 +151,42 @@ mod test {
         let path = &format!("/path/to/file");
         // Everything should pass
         let dataset1 = vec![
-            Token { word: format!("orange"), path: path, pos: (0, 0) },
-            Token { word: format!("optional"), path: path, pos: (0, 0) },
-            Token { word: format!("let"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("end"), path: path, pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0) },
+            Token { word: format!("optional"), pos: (0, 0) },
+            Token { word: format!("let"), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!(","), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!("end"), pos: (0, 0) }
         ];
         // Token should fail
         let dataset2 = vec![
-            Token { word: format!("kiwi"), path: path, pos: (0, 0) },
-            Token { word: format!("optional"), path: path, pos: (0, 0) },
-            Token { word: format!("let"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("end"), path: path, pos: (0, 0) }
+            Token { word: format!("kiwi"), pos: (0, 0) },
+            Token { word: format!("optional"), pos: (0, 0) },
+            Token { word: format!("let"), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!(","), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!("end"), pos: (0, 0) }
         ];
         // Syntax should fail
         let dataset3 = vec![
-            Token { word: format!("orange"), path: path, pos: (0, 0) },
-            Token { word: format!("tell"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("end"), path: path, pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0) },
+            Token { word: format!("tell"), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!(","), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!("end"), pos: (0, 0) }
         ];
         // Token should fail because of repeat matching (this , this) ,
         let dataset4 = vec![
-            Token { word: format!("orange"), path: path, pos: (0, 0) },
-            Token { word: format!("tell"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!(","), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("this"), path: path, pos: (0, 0) },
-            Token { word: format!("end"), path: path, pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0) },
+            Token { word: format!("tell"), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!(","), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!("this"), pos: (0, 0) },
+            Token { word: format!("end"), pos: (0, 0) }
         ];
         let result1 = exp.parse(&mut SyntaxMetadata::new(&dataset1));
         let result2 = exp.parse(&mut SyntaxMetadata::new(&dataset2));

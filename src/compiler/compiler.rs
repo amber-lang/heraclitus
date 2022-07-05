@@ -36,6 +36,10 @@ impl Compiler {
         }
     }
 
+    pub fn use_indents(&mut self) {
+        self.scoping_mode = ScopingMode::Indent
+    }
+
     pub fn load_file(mut self, file_path: String) -> std::io::Result<()> {
         let mut file = File::open(&file_path)?;
         file.read_to_string(&mut self.code)?;
@@ -57,7 +61,7 @@ impl Compiler {
         lexer.lexem
     }
 
-    pub fn compile(&self, mut module: impl SyntaxModule) -> Result<(), ()> {
+    pub fn compile(&self, module: &mut impl SyntaxModule) -> Result<(), ()> {
         let mut lexer = Lexer::new(&self);
         lexer.run();
         module.parse(&mut SyntaxMetadata::new(&lexer.lexem[..]))

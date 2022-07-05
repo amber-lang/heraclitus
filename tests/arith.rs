@@ -1,9 +1,9 @@
-use heraclitus::{*, patterns::{syntax, number, token}};
+use heraclitus::prelude::*;
 
 struct Number {}
 impl SyntaxModule for Number {
     fn new() -> Self {
-        Number {  }
+        Number { }
     }
     fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
         number(meta, vec![])?;
@@ -19,7 +19,7 @@ impl SyntaxModule for Add {
     fn new() -> Self {
         Add { left: None, right: None }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut impl Metadata) -> SyntaxResult {
         match meta.expr.get(meta.index) {
             Some(_) => {
                 let mut  left = Number::new();
@@ -45,7 +45,7 @@ struct Expr {
     expr: Option<Box<ExprType>>
 }
 impl Expr {
-    fn get<T: SyntaxModule>(&mut self, meta: &mut SyntaxMetadata, mut module: T, cb: fn(T) -> ExprType) -> SyntaxResult {
+    fn get<T: SyntaxModule>(&mut self, meta: &mut SyntaxMetadata, mut module: T, cb: impl Fn(T) -> ExprType) -> SyntaxResult {
         if let Ok(()) = syntax(meta, &mut module) {
             self.expr = Some(Box::new(cb(module)));
             Ok(())
@@ -94,5 +94,5 @@ fn arith() {
     let rules = Rules::new(symbols, region);
     let mut compiler = Compiler::new("Arith", rules);
     compiler.load("12.24 +.123 + 12");
-    assert!(compiler.compile(Expr { expr: None }).is_ok());
+    assert!(compiler.compile(&mut Expr::new()).is_ok());
 }

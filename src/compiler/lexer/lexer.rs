@@ -11,7 +11,7 @@ pub struct Lexer<'a> {
     symbols: &'a Vec<char>,
     region: RegionHandler,
     reader: Reader<'a>,
-    pub lexem: Vec<Token<'a>>,
+    pub lexem: Vec<Token>,
     path: &'a String,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode
@@ -39,7 +39,6 @@ impl<'a> Lexer<'a> {
             let (row, _col) = self.reader.get_position();
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, 1)
             });
             String::new()
@@ -52,7 +51,6 @@ impl<'a> Lexer<'a> {
             let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, col)
             });
             String::new()
@@ -66,7 +64,6 @@ impl<'a> Lexer<'a> {
             let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, col + 1)
             });
             String::new()

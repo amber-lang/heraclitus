@@ -1,10 +1,11 @@
-use super::{ SyntaxMetadata, SyntaxModule };
+use super::{ Metadata, SyntaxModule };
+use super::util::meta_index_increment;
 
 // Matches one token with given word
-pub fn token<T: AsRef<str>>(meta: &mut SyntaxMetadata, text: T) -> Result<String,()> {
-    match meta.expr.get(meta.index) {
+pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,()> {
+    match meta.get_token_at(meta.get_index()) {
         Some(token) => if token.word == text.as_ref() {
-            meta.index += 1;
+            meta_index_increment(meta);
             Ok(token.word.clone())
         } else { Err(()) }
         None => Err(())
@@ -12,10 +13,10 @@ pub fn token<T: AsRef<str>>(meta: &mut SyntaxMetadata, text: T) -> Result<String
 }
 
 // Matches one token with given word
-pub fn token_by(meta: &mut SyntaxMetadata, cb: fn(&String) -> bool) -> Result<String,()> {
-    match meta.expr.get(meta.index) {
+pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Result<String,()> {
+    match meta.get_token_at(meta.get_index()) {
         Some(token) => if cb(&token.word) {
-            meta.index += 1;
+            meta_index_increment(meta);
             Ok(token.word.clone())
         } else { Err(()) }
         None => Err(())
@@ -23,10 +24,49 @@ pub fn token_by(meta: &mut SyntaxMetadata, cb: fn(&String) -> bool) -> Result<St
 }
 
 // Parses syntax and returns it's result
-pub fn syntax(meta: &mut SyntaxMetadata, module: &mut impl SyntaxModule) -> Result<(),()> {
-    let index = meta.index;
+pub fn syntax(meta: &mut impl Metadata, module: &mut impl SyntaxModule) -> Result<(),()> {
+    let index = meta.get_index();
     if let Err(()) = module.parse(meta) {
-        meta.index = index;
+        meta.set_index(index);
         Err(())
     } else { Ok(()) }
+}
+
+// Parses indentation
+pub fn indent(meta: &mut impl Metadata) -> Result<usize, ()> {
+    let fun = |word: &String| word.starts_with('\n') && word.get(1..).unwrap().chars().all(|letter| letter == ' ');
+    if let Ok(word) = token_by(meta, fun) {
+        Ok(word.get(1..).unwrap().len())
+    } else { Err(()) }
+}
+
+// Parses indentation
+pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<String, ()> {
+    let fun = |word: &String| word.starts_with('\n')
+        && word.get(1..).unwrap().chars().all(|letter| letter == ' ')
+        && word.get(1..).unwrap().len() == size;
+    token_by(meta, fun)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{SyntaxMetadata, Token};
+    use super::*;
+
+    #[test]
+    fn indent_test() {
+        let expr = vec![Token {word: format!("\n    "), pos: (0, 0)}];
+        let mut meta = SyntaxMetadata::new(&expr);
+        let res = indent(&mut meta);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), 4);
+    }
+
+    #[test]
+    fn indent_with_test() {
+        let expr = vec![Token { word: format!("\n    "), pos: (0, 0) }];
+        let mut meta = SyntaxMetadata::new(&expr);
+        let res = indent_with(&mut meta, 4);
+        assert!(res.is_ok());
+    }
 }

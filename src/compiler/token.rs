@@ -1,12 +1,12 @@
 use std::fmt::{Formatter, Display, Result, Debug};
 
-pub struct Token <'a> {
+#[derive(Clone)]
+pub struct Token {
     pub word: String,
-    pub path: &'a String,
     pub pos: (usize, usize),
 }
 
-impl Token<'_> {
+impl Token {
     fn format(&self, formatter: &mut Formatter) -> Result {
         let word = match self.word.as_str() {
             "\n" => String::from("<new_line>"),
@@ -25,13 +25,13 @@ impl Token<'_> {
     }
 }
 
-impl Display for Token<'_> {
+impl Display for Token {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         self.format(formatter)
     }
 }
 
-impl Debug for Token<'_> {
+impl Debug for Token {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         self.format(formatter)
     }
@@ -44,7 +44,6 @@ mod test {
         let path = "/path/to/my/file".to_string();
         let mut token = super::Token {
             word: String::from("keyword"),
-            path: &path,
             pos: (1, 2)
         };
         assert_eq!(format!("{}", token), String::from("Tok[keyword 1:2]"));
