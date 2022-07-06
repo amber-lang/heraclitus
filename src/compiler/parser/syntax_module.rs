@@ -5,16 +5,13 @@ pub struct SyntaxMetadata {
     pub expr: Vec<Token>
 }
 
-impl SyntaxMetadata {
-    pub fn new(expression: Vec<Token>) -> Self {
+impl Metadata for SyntaxMetadata {
+    fn new(expression: Vec<Token>) -> Self {
         SyntaxMetadata {
             index: 0,
             expr: expression
         }
     }
-}
-
-impl Metadata for SyntaxMetadata {
     fn get_token_at(&self, index: usize) -> Option<Token> {
         if let Some(token) = self.expr.get(index) {
             return Some(token.clone())
@@ -29,6 +26,7 @@ impl Metadata for SyntaxMetadata {
 }
 
 pub trait Metadata {
+    fn new(expression: Vec<Token>) -> Self;
     fn get_token_at(&self, index: usize) -> Option<Token>;
     fn get_index(&self) -> usize;
     fn set_index(&mut self, index: usize);
@@ -73,8 +71,8 @@ mod test {
                 pos: (0, 0)
             }
         ];
-        let result1 = exp.parse(&mut SyntaxMetadata::new(&dataset1));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(&dataset2));
+        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2));
         assert!(result1.is_ok());
         assert!(result2.is_err());
     }
@@ -110,7 +108,7 @@ mod test {
             // Float
             Token { word: format!("-.681"), pos: (0, 0)}
         ];
-        let result = exp.parse(&mut SyntaxMetadata::new(&dataset));
+        let result = exp.parse(&mut SyntaxMetadata::new(dataset));
         assert!(result.is_ok());
     }
 
@@ -129,7 +127,7 @@ mod test {
             // Optional
             token(meta, "optional");
             // Syntax
-            syntax(meta, &mut Expression {})?;
+            syntax(meta, &mut Expression::new())?;
             // Repeat
             loop {
                 if let Err(()) = token(meta, "test") {
@@ -188,10 +186,10 @@ mod test {
             Token { word: format!("this"), pos: (0, 0) },
             Token { word: format!("end"), pos: (0, 0) }
         ];
-        let result1 = exp.parse(&mut SyntaxMetadata::new(&dataset1));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(&dataset2));
-        let result3 = exp.parse(&mut SyntaxMetadata::new(&dataset3));
-        let result4 = exp.parse(&mut SyntaxMetadata::new(&dataset4));
+        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2));
+        let result3 = exp.parse(&mut SyntaxMetadata::new(dataset3));
+        let result4 = exp.parse(&mut SyntaxMetadata::new(dataset4));
         assert!(result1.is_ok());
         assert!(result2.is_err());
         assert!(result3.is_err());

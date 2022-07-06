@@ -6,7 +6,7 @@ pub struct IfStatement {
     cond: Expr,
     block: Block
 }
-impl SyntaxModule for IfStatement {
+impl SyntaxModule<SyntaxMetadata> for IfStatement {
     fn new() -> Self {
         IfStatement { cond: Expr::new(), block: Block::new() }
     }
@@ -15,7 +15,9 @@ impl SyntaxModule for IfStatement {
         syntax(meta, &mut self.cond)?;
         token(meta, ":")?;
         let size = indent(meta)?;
+        println!("size: {size}");
         self.block.set_indent_size(size);
+        meta.index -= 1;
         syntax(meta, &mut self.block)?;
         Ok(())
     }

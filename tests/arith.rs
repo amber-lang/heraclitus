@@ -1,7 +1,7 @@
 use heraclitus::prelude::*;
 
 struct Number {}
-impl SyntaxModule for Number {
+impl SyntaxModule<SyntaxMetadata> for Number {
     fn new() -> Self {
         Number { }
     }
@@ -15,11 +15,11 @@ struct Add {
     left: Option<Number>,
     right: Option<Expr>
 }
-impl SyntaxModule for Add {
+impl SyntaxModule<SyntaxMetadata> for Add {
     fn new() -> Self {
         Add { left: None, right: None }
     }
-    fn parse(&mut self, meta: &mut impl Metadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
         match meta.expr.get(meta.index) {
             Some(_) => {
                 let mut  left = Number::new();
@@ -45,7 +45,11 @@ struct Expr {
     expr: Option<Box<ExprType>>
 }
 impl Expr {
-    fn get<T: SyntaxModule>(&mut self, meta: &mut SyntaxMetadata, mut module: T, cb: impl Fn(T) -> ExprType) -> SyntaxResult {
+    fn get<M,S>(&mut self, meta: &mut M, mut module: S, cb: impl Fn(S) -> ExprType) -> SyntaxResult
+    where
+        M: Metadata,
+        S: SyntaxModule<M>
+    {
         if let Ok(()) = syntax(meta, &mut module) {
             self.expr = Some(Box::new(cb(module)));
             Ok(())
@@ -59,7 +63,7 @@ impl Expr {
         Err(())
     }
 }
-impl SyntaxModule for Expr {
+impl SyntaxModule<SyntaxMetadata> for Expr {
     fn new() -> Self {
         Expr { expr: None }
     }

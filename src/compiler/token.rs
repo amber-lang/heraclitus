@@ -41,7 +41,6 @@ impl Debug for Token {
 mod test {
     #[test]
     fn display_token() {
-        let path = "/path/to/my/file".to_string();
         let mut token = super::Token {
             word: String::from("keyword"),
             pos: (1, 2)

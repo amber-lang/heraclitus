@@ -4,7 +4,7 @@ use heraclitus::*;
 pub struct Text {
     value: String
 }
-impl SyntaxModule for Text {
+impl SyntaxModule<SyntaxMetadata> for Text {
     fn new() -> Self {
         Text { value: format!("") }
     }

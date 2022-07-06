@@ -18,8 +18,6 @@ fn cobra() {
         "  'do this'",
         "  'do that'"
     ].join("\n"));
-    println!("{:?}", compiler.tokenize());
     let mut ast = cobra_modules::IfStatement::new();
     assert!(compiler.compile(&mut ast).is_ok());
-    println!("{:#?}", ast);
 }

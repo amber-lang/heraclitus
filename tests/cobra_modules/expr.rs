@@ -11,7 +11,11 @@ pub struct Expr {
     expr: Option<Box<ExprType>>
 }
 impl Expr {
-    fn get<T: SyntaxModule>(&mut self, meta: &mut SyntaxMetadata, mut module: T, cb: fn(T) -> ExprType) -> SyntaxResult {
+    fn get<M,S>(&mut self, meta: &mut S, mut module: M, cb: fn(M) -> ExprType) -> SyntaxResult
+    where
+        M: SyntaxModule<S>,
+        S: Metadata
+    {
         if let Ok(()) = syntax(meta, &mut module) {
             self.expr = Some(Box::new(cb(module)));
             Ok(())
@@ -24,7 +28,7 @@ impl Expr {
         Err(())
     }
 }
-impl SyntaxModule for Expr {
+impl SyntaxModule<SyntaxMetadata> for Expr {
     fn new() -> Self {
         Expr { expr: None }
     }

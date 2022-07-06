@@ -24,7 +24,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 }
 
 // Parses syntax and returns it's result
-pub fn syntax(meta: &mut impl Metadata, module: &mut impl SyntaxModule) -> Result<(),()> {
+pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> Result<(),()> {
     let index = meta.get_index();
     if let Err(()) = module.parse(meta) {
         meta.set_index(index);
@@ -41,11 +41,17 @@ pub fn indent(meta: &mut impl Metadata) -> Result<usize, ()> {
 }
 
 // Parses indentation
-pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<String, ()> {
-    let fun = |word: &String| word.starts_with('\n')
-        && word.get(1..).unwrap().chars().all(|letter| letter == ' ')
-        && word.get(1..).unwrap().len() == size;
-    token_by(meta, fun)
+pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Ordering, ()> {
+    let index = meta.get_index();
+    let fun = |word: &String| word.starts_with('\n') && word.get(1..).unwrap().chars().all(|letter| letter == ' ');
+    if let Ok(word) = token_by(meta, fun) {
+        let spaces = word.len() - 1;
+        Ok(spaces.cmp(&size))
+    }
+    else {
+        meta.set_index(index);
+        Err(())
+    }
 }
 
 #[cfg(test)]
@@ -56,7 +62,7 @@ mod test {
     #[test]
     fn indent_test() {
         let expr = vec![Token {word: format!("\n    "), pos: (0, 0)}];
-        let mut meta = SyntaxMetadata::new(&expr);
+        let mut meta = SyntaxMetadata::new(expr);
         let res = indent(&mut meta);
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), 4);
@@ -65,7 +71,7 @@ mod test {
     #[test]
     fn indent_with_test() {
         let expr = vec![Token { word: format!("\n    "), pos: (0, 0) }];
-        let mut meta = SyntaxMetadata::new(&expr);
+        let mut meta = SyntaxMetadata::new(expr);
         let res = indent_with(&mut meta, 4);
         assert!(res.is_ok());
     }
