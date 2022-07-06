@@ -1,12 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::HashMap;
-
-use crate::rules::Rules;
-use crate::compiler::lexer::Lexer;
-
-// TODO: Create Block interface when building scoper
-type Block = ();
+use crate::{ Token, Rules, Lexer, SyntaxModule, Metadata };
 
 #[derive(Clone, PartialEq)]
 pub enum SeparatorMode {
@@ -17,31 +11,33 @@ pub enum SeparatorMode {
 
 #[derive(Clone, PartialEq)]
 pub enum ScopingMode {
-    Block(Vec<Block>),
+    Block,
     Indent
 }
 
-pub struct Compiler<AST> {
+pub struct Compiler {
     pub name: String,
     pub rules: Rules,
     pub code: String,
     pub path: String,
-    pub code_tree: HashMap<String, AST>,
     pub separator_mode: SeparatorMode,
-    pub scoping_mode: ScopingMode
+    pub scoping_mode: ScopingMode,
 }
 
-impl<AST> Compiler<AST> {
+impl Compiler {
     pub fn new(name: &str, rules: Rules) -> Self {
         Compiler {
             name: String::from(name),
             rules,
             code: format!(""),
             path: format!("[code]"),
-            code_tree: HashMap::new(),
             separator_mode: SeparatorMode::Automatic,
-            scoping_mode: ScopingMode::Block(vec![])
+            scoping_mode: ScopingMode::Block
         }
+    }
+
+    pub fn use_indents(&mut self) {
+        self.scoping_mode = ScopingMode::Indent
     }
 
     pub fn load_file(mut self, file_path: String) -> std::io::Result<()> {
@@ -59,8 +55,17 @@ impl<AST> Compiler<AST> {
         self.path = file_path;
     }
 
-    pub fn compile(&self) {
+    pub fn tokenize(&self) -> Vec<Token> {
         let mut lexer = Lexer::new(&self);
         lexer.run();
+        lexer.lexem
+    }
+
+    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ()> {
+        let mut lexer = Lexer::new(&self);
+        lexer.run();
+        let mut meta = M::new(lexer.lexem);
+        module.parse(&mut meta)?;
+        Ok(meta)
     }
 }

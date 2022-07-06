@@ -1,7 +1,7 @@
+#![allow(dead_code)]
 use colored::Colorize;
 use pad::PadStr;
 use crate::compiler::logger::LogType;
-
 pub struct Displayer {
     color: (u8, u8, u8),
     row: usize,
@@ -9,6 +9,7 @@ pub struct Displayer {
 }
 
 impl Displayer {
+    /// Create a new Displayer instance
     pub fn new(color: (u8, u8, u8), row: usize, col: usize) -> Self {
         Displayer {
             color,
@@ -17,7 +18,7 @@ impl Displayer {
         }
     }
 
-    // Render header of your information
+    /// Render header of your information
     pub fn header(self, kind: LogType) -> Self {
         let (r, g, b) = self.color;
         let name = match kind {
@@ -33,7 +34,7 @@ impl Displayer {
         self
     }
 
-    // Render text with supplied coloring
+    /// Render text with supplied coloring
     pub fn text(self, text: Option<String>) -> Self {
         let (r, g, b) = self.color;
         if let Some(text) = text {
@@ -42,7 +43,7 @@ impl Displayer {
         self
     }
 
-    // Render padded text with supplied coloring
+    /// Render padded text with supplied coloring
     pub fn padded_text(self, text: Option<String>) -> Self {
         let (r, g, b) = self.color;
         if let Some(text) = text {
@@ -51,7 +52,7 @@ impl Displayer {
         self
     }
 
-    // Render location details with supplied coloring
+    /// Render location details with supplied coloring
     pub fn path(self, path: &String) -> Self {
         let (r, g, b) = self.color;
         let formatted = format!("at {}:{}:{}", path, self.row, self.col)
@@ -108,7 +109,7 @@ impl Displayer {
         }
     }
 
-    // Render snippet of the code if the message is contextual to it
+    /// Render snippet of the code if the message is contextual to it
     pub fn snippet<T: AsRef<str>>(self, code: T, length: usize) {
         let index = self.row - 1;
         let code: String = String::from(code.as_ref());

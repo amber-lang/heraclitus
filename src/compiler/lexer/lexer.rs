@@ -11,14 +11,14 @@ pub struct Lexer<'a> {
     symbols: &'a Vec<char>,
     region: RegionHandler,
     reader: Reader<'a>,
-    lexem: Vec<Token<'a>>,
+    pub lexem: Vec<Token>,
     path: &'a String,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new<AST>(cc: &'a Compiler<AST>) -> Self {
+    pub fn new(cc: &'a Compiler) -> Self {
         Lexer {
             symbols: &cc.rules.symbols,
             region: RegionHandler::new(&cc.rules),
@@ -39,7 +39,6 @@ impl<'a> Lexer<'a> {
             let (row, _col) = self.reader.get_position();
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, 1)
             });
             String::new()
@@ -52,7 +51,6 @@ impl<'a> Lexer<'a> {
             let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, col)
             });
             String::new()
@@ -66,7 +64,6 @@ impl<'a> Lexer<'a> {
             let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                path: self.path,
                 pos: (row, col + 1)
             });
             String::new()
@@ -240,9 +237,8 @@ mod test {
             ("32".to_string(), 1, 15),
             (")".to_string(), 1, 17)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
+        let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = (12 + 32)");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
@@ -283,9 +279,8 @@ mod test {
             ("}".to_string(), 1, 42),
             (" text'".to_string(), 1, 43)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("TestScript", rules);
+        let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
@@ -312,9 +307,8 @@ mod test {
             ("\n        ".to_string(), 3, 1),
             ("pass".to_string(), 3, 9)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.scoping_mode = ScopingMode::Indent;
         cc.load(vec![
             "if condition:",
@@ -344,9 +338,8 @@ mod test {
             ("12".to_string(), 3, 1),
             (";".to_string(), 3, 3)
         ];
-        type AST = ();
         let rules = Rules::new(symbols, regions);
-        let mut cc: Compiler<AST> = Compiler::new("Testhon", rules);
+        let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.separator_mode = SeparatorMode::Manual;
         cc.load(vec![
             "let age = 12",
