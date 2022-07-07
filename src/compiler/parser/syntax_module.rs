@@ -1,37 +1,3 @@
-use crate::compiler::Token;
-
-pub struct SyntaxMetadata {
-    pub index: usize,
-    pub expr: Vec<Token>
-}
-
-impl Metadata for SyntaxMetadata {
-    fn new(expression: Vec<Token>) -> Self {
-        SyntaxMetadata {
-            index: 0,
-            expr: expression
-        }
-    }
-    fn get_token_at(&self, index: usize) -> Option<Token> {
-        if let Some(token) = self.expr.get(index) {
-            return Some(token.clone())
-        } else { None }
-    }
-    fn set_index(&mut self, index: usize) {
-        self.index = index
-    }
-    fn get_index(&self) -> usize {
-        self.index
-    }
-}
-
-pub trait Metadata {
-    fn new(expression: Vec<Token>) -> Self;
-    fn get_token_at(&self, index: usize) -> Option<Token>;
-    fn get_index(&self) -> usize;
-    fn set_index(&mut self, index: usize);
-}
-
 pub type SyntaxResult = Result<(),()>;
 
 pub trait SyntaxModule<M> {
@@ -44,6 +10,7 @@ mod test {
     use super::*;
     use crate::compiler::parser::pattern::*;
     use crate::compiler::parser::preset::*;
+    use crate::compiler::{ Token, SyntaxMetadata, Metadata };
 
     struct Expression {}
     impl SyntaxModule<SyntaxMetadata> for Expression {
@@ -95,7 +62,6 @@ mod test {
     #[test]
     fn test_preset_match() {
         let mut exp = Preset {};
-        let path = &format!("/path/to/file");
         let dataset = vec![
             // Variable
             Token { word: format!("_text"), pos: (0, 0) },
@@ -146,7 +112,6 @@ mod test {
     #[test]
     fn rest_match() {
         let mut exp = PatternModule {};
-        let path = &format!("/path/to/file");
         // Everything should pass
         let dataset1 = vec![
             Token { word: format!("orange"), pos: (0, 0) },
