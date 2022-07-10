@@ -1,5 +1,6 @@
 use heraclitus::prelude::*;
 
+#[derive(Debug)]
 pub struct Number {
     value: String
 }

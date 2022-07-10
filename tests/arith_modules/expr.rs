@@ -1,17 +1,19 @@
 use heraclitus::prelude::*;
 use super::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ExprId {
     Add = 0,
     Number
 }
 
+#[derive(Debug)]
 pub enum ExprType {
     Add(Add),
     Number(Number)
 }
 
+#[derive(Debug)]
 pub struct Expr {
     expr: Option<Box<ExprType>>,
     excludes: Option<ExprId>
@@ -27,13 +29,14 @@ impl Expr {
     {
         // Check if exclusion occurs
         if let Some(excludes) = &self.excludes {
-            if excludes.clone() as usize != id as usize {
-                // Match syntax
-                if let Ok(()) = syntax(meta, &mut module) {
-                    self.expr = Some(Box::new(cb(module)));
-                    return Ok(())
-                }
+            if excludes.clone() as usize == id as usize {
+                return Err(())
             }
+        }
+        // Match syntax
+        if let Ok(()) = syntax(meta, &mut module) {
+            self.expr = Some(Box::new(cb(module)));
+            return Ok(())
         }
         Err(())
     }
@@ -57,11 +60,6 @@ impl SyntaxModule<SyntaxMetadata> for Expr {
         ];
         for module in modules {
             if let Ok(()) = self.parse_module(meta, module) {
-                if let Some(tok) = meta.expr.get(meta.index) {
-                    if tok.word != "\n" {
-                        return Err(())
-                    }
-                }
                 return Ok(())
             }
         }
