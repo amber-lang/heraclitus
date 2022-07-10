@@ -12,6 +12,7 @@ fn arith() {
     ];
     let rules = Rules::new(symbols, region);
     let mut compiler = Compiler::new("Arith", rules);
-    compiler.load("12.24 +.123 + 12");
-    assert!(compiler.compile(&mut arith_modules::Expr::new()).is_ok());
+    compiler.load("12.24 +.123 + 12 + 321");
+    let mut expr = arith_modules::Expr::new();
+    assert!(compiler.compile(&mut expr).is_ok());
 }
