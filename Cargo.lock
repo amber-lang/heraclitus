@@ -14,6 +14,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "capitalize"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "702cfe2f052c6542d55a9924efef63dd315c168cc4f315a824fb0f47da4e11c8"
+
+[[package]]
 name = "colored"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -28,6 +34,7 @@ dependencies = [
 name = "heraclitus"
 version = "0.1.0"
 dependencies = [
+ "capitalize",
  "colored",
  "pad",
 ]

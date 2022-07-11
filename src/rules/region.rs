@@ -37,7 +37,7 @@ pub struct Region {
     pub allow_left_open: bool,
     pub global: bool,
     pub references: Option<String>,
-    pub unspillable: bool
+    pub singleline: bool
 }
 
 impl Region {
@@ -58,7 +58,7 @@ impl Region {
             global: false,
             // Determines if region cannot
             // go past the new line character
-            unspillable: false,
+            singleline: false,
             // Region can be a reference to some other region
             references: match references {
                 Some(value) => Some(String::from(value.as_ref())),
@@ -115,20 +115,20 @@ mod test {
                             interp: vec![],
                             tokenize: true,
                             allow_left_open: false,
-                            unspillable: false,
+                            singleline: false,
                             global: false,
                             references: Some(format!("global"))
                         }],
                     tokenize: false,
                     allow_left_open: false,
-                    unspillable: false,
+                    singleline: false,
                     global: false,
                     references: None
                 }],
             tokenize: true,
             allow_left_open: true,
             global: true,
-            unspillable: false,
+            singleline: false,
             references: None
         };
         let result = reg![
@@ -158,7 +158,7 @@ mod test {
             tokenize: true,
             allow_left_open: false,
             global: false,
-            unspillable: false,
+            singleline: false,
             references: Some(
                 "global".to_string(),
             ),
@@ -184,7 +184,7 @@ mod test {
                                 tokenize: true,
                                 allow_left_open: false,
                                 global: false,
-                                unspillable: false,
+                                singleline: false,
                                 references: Some(
                                     "global".to_string(),
                                 ),
@@ -193,14 +193,14 @@ mod test {
                         tokenize: false,
                         allow_left_open: false,
                         global: false,
-                        unspillable: false,
+                        singleline: false,
                         references: None,
                     },
                 ],
                 tokenize: true,
                 allow_left_open: true,
                 global: true,
-                unspillable: false,
+                singleline: false,
                 references: None,
         });
         expected.insert("string".to_string(), Region {
@@ -218,7 +218,7 @@ mod test {
                     tokenize: true,
                     allow_left_open: false,
                     global: false,
-                    unspillable: false,
+                    singleline: false,
                     references: Some(
                         "global".to_string(),
                     ),
@@ -227,7 +227,7 @@ mod test {
             tokenize: false,
             allow_left_open: false,
             global: false,
-            unspillable: false,
+            singleline: false,
             references: None,
         });
         let region = reg![

@@ -38,8 +38,9 @@ mod test {
                 pos: (0, 0)
             }
         ];
-        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2));
+        let path = Some(format!("path/to/file"));
+        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1, path.clone()));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2, path.clone()));
         assert!(result1.is_ok());
         assert!(result2.is_err());
     }
@@ -74,7 +75,8 @@ mod test {
             // Float
             Token { word: format!("-.681"), pos: (0, 0)}
         ];
-        let result = exp.parse(&mut SyntaxMetadata::new(dataset));
+        let path = Some(format!("path/to/file"));
+        let result = exp.parse(&mut SyntaxMetadata::new(dataset, path));
         assert!(result.is_ok());
     }
 
@@ -151,10 +153,11 @@ mod test {
             Token { word: format!("this"), pos: (0, 0) },
             Token { word: format!("end"), pos: (0, 0) }
         ];
-        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2));
-        let result3 = exp.parse(&mut SyntaxMetadata::new(dataset3));
-        let result4 = exp.parse(&mut SyntaxMetadata::new(dataset4));
+        let path = Some(format!("path/to/file"));
+        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1, path.clone()));
+        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2, path.clone()));
+        let result3 = exp.parse(&mut SyntaxMetadata::new(dataset3, path.clone()));
+        let result4 = exp.parse(&mut SyntaxMetadata::new(dataset4, path.clone()));
         assert!(result1.is_ok());
         assert!(result2.is_err());
         assert!(result3.is_err());

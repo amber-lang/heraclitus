@@ -30,17 +30,19 @@ impl RegionHandler {
 
     // Error if after code lexing 
     // some region was left unclosed
-    pub fn handle_region_open(&self, path: &String, reader: &Reader) {
+    pub fn is_region_closed(&self, reader: &Reader) -> Result<(),(usize, usize, Region)> {
         if let Some(region) = self.region_stack.last() {
             if !region.allow_left_open {
                 let (row, col) = reader.get_position();
-                Log::new_err(path, row, col)
-                    .attach_message(format!("Unclosed {}", region.name))
-                    .attach_code(reader.code)
-                    .send()
-                    .exit();
+                return Err((row, col, region.clone()));
+                // Log::new_err(path, row, col)
+                //     .attach_message(format!("Unclosed {}", region.name))
+                //     .attach_code(reader.code)
+                //     .send()
+                //     .exit();
             }
         }
+        Ok(())
     }
 
     // Check where we are in code and open / close some region if matched
