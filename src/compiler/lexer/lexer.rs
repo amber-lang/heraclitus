@@ -112,7 +112,7 @@ impl<'a> Lexer<'a> {
         self.add_word_inclusively(word)
     }
 
-    pub fn run(&mut self) -> Result<Vec<Token>,LexerMessage> {
+    pub fn run(&mut self) -> Result<(),LexerMessage> {
         let mut word = String::new();
         let mut is_indenting = false;
         while let Some(letter) = self.reader.next() {
@@ -151,7 +151,7 @@ impl<'a> Lexer<'a> {
                                 LexerError::Singleline,
                                 LogMessage::new(self.path.clone(), row, col)
                                     .attach_code(self.reader.code.clone())
-                                    .attach_metadata(region.name)
+                                    .attach_metadata(region.name.clone())
                             ))
                         }
                         word.push(letter);
@@ -222,7 +222,7 @@ impl<'a> Lexer<'a> {
                     .attach_metadata(region.name)
             ));
         }
-        Ok(self.lexem)
+        Ok(())
     }
 }
 

@@ -63,7 +63,10 @@ impl Compiler {
     /// Run just lexer
     pub fn tokenize(&self) -> Result<Vec<Token>, LexerMessage> {
         let mut lexer = Lexer::new(&self);
-        lexer.run()
+        if let Err(data) = lexer.run() {
+            return Err(data);
+        }
+        Ok(lexer.lexem)
     }
 
     /// Bulk run lexer and parser (used for testing purposes)
