@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use std::process;
-use crate::compiler::Token;
 use super::displayer::Displayer;
 
 #[derive(Clone)]
@@ -35,33 +34,18 @@ impl Log {
     }
 
     /// Create an error by supplying essential information about the location
-    pub fn new_err(path: String, row: usize, col: usize) -> Self {
+    pub fn new_err(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Error)
     }
 
     /// Create a warning by supplying essential information about the location
-    pub fn new_warn(path: String, row: usize, col: usize) -> Self {
+    pub fn new_warn(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Warning)
     }
 
     /// Create an info by supplying essential information about the location
-    pub fn new_info(path: String, row: usize, col: usize) -> Self {
+    pub fn new_info(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Info)
-    }
-
-    /// Create an error using a token to supply essential information
-    pub fn new_err_at_token(path: String, token: Token) -> Self {
-        Log::new_err(path, token.pos.0, token.pos.1)
-    }
-
-    /// Create a warning using a token to supply essential information
-    pub fn new_warn_at_token(path: String, token: Token) -> Self {
-        Log::new_warn(path, token.pos.0, token.pos.1)
-    }
-
-    /// Create an info using a token to supply essential information
-    pub fn new_info_at_token(path: String, token: Token) -> Self {
-        Log::new_info(path, token.pos.0, token.pos.1)
     }
 
     /// Add message to an existing log

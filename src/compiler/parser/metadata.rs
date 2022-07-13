@@ -32,4 +32,8 @@ pub trait Metadata {
     fn get_token_at(&self, index: usize) -> Option<Token>;
     fn get_index(&self) -> usize;
     fn set_index(&mut self, index: usize);
+    fn increment_index(&mut self) {
+        let index = self.get_index();
+        self.set_index(index + 1);
+    }
 }

@@ -1,5 +1,5 @@
-pub mod message;
+pub mod error_details;
 pub mod logger;
 mod displayer;
 pub use logger::*;
-pub use message::*;
+pub use error_details::*;

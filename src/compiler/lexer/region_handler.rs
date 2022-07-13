@@ -1,5 +1,4 @@
 use crate::rules::{Region, Rules, RegionMap};
-use super::super::logger::Log;
 use super::reader::Reader;
 
 #[derive(PartialEq)]
@@ -30,16 +29,11 @@ impl RegionHandler {
 
     // Error if after code lexing 
     // some region was left unclosed
-    pub fn is_region_closed(&self, reader: &Reader) -> Result<(),(usize, usize, Region)> {
+    pub fn is_region_closed(&self, reader: &Reader) -> Result<(),((usize, usize), Region)> {
         if let Some(region) = self.region_stack.last() {
             if !region.allow_left_open {
-                let (row, col) = reader.get_position();
-                return Err((row, col, region.clone()));
-                // Log::new_err(path, row, col)
-                //     .attach_message(format!("Unclosed {}", region.name))
-                //     .attach_code(reader.code)
-                //     .send()
-                //     .exit();
+                let pos = reader.get_position();
+                return Err((pos, region.clone()));
             }
         }
         Ok(())

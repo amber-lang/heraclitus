@@ -1,7 +1,8 @@
 use capitalize::Capitalize;
 use std::fs::File;
 use std::io::prelude::*;
-use crate::{ Token, Rules, Lexer, SyntaxModule, Metadata, LexerError, LexerMessage };
+use crate::{ Token, Rules, Lexer, SyntaxModule, Metadata, LexerErrorType, LexerError };
+use crate::logger::{Log, ErrorDetails};
 
 #[derive(Clone, PartialEq)]
 pub enum SeparatorMode {
@@ -61,7 +62,7 @@ impl Compiler {
     }
 
     /// Run just lexer
-    pub fn tokenize(&self) -> Result<Vec<Token>, LexerMessage> {
+    pub fn tokenize(&self) -> Result<Vec<Token>, LexerError> {
         let mut lexer = Lexer::new(&self);
         if let Err(data) = lexer.run() {
             return Err(data);
@@ -70,18 +71,33 @@ impl Compiler {
     }
 
     /// Bulk run lexer and parser (used for testing purposes)
-    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ()> {
-        let mut lexer = Lexer::new(&self);
-        if let Err((kind, message)) = lexer.run() {
-            let meta = message.metadata.clone().unwrap().capitalize();
-            let text = match kind {
-                LexerError::Singleline => format!("{meta} cannot be multiline"),
-                LexerError::Unclosed => format!("Unclosed {meta}"),
-            };
-            message.attach_message(text).show_error();
+    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ErrorDetails> {
+        match self.tokenize() {
+            Ok(lexem) => {
+                let mut meta = M::new(lexem, self.path.clone());
+                module.parse(&mut meta)?;
+                Ok(meta)
+            }
+            Err((kind, mut details)) => {
+                let data = details.data.clone().unwrap().capitalize();
+                // Create an error message
+                let message = match kind {
+                    LexerErrorType::Singleline => format!("{data} cannot be multiline"),
+                    LexerErrorType::Unclosed => format!("{data} unclosed"),
+                };
+                // Get actual path
+                let path = match self.path.clone() {
+                    Some(path) => path.clone(),
+                    None => format!("[file]")
+                };
+                // Send error
+                Log::new_err(path, details.get_pos_by_code(&self.code))
+                    .attach_message(message)
+                    .attach_code(self.code.clone())
+                    .show()
+                    .exit();
+                Err(details)
+            }
         }
-        let mut meta = M::new(lexer.lexem, self.path.clone());
-        module.parse(&mut meta)?;
-        Ok(meta)
     }
 }

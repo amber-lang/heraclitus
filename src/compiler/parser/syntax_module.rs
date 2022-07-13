@@ -1,4 +1,6 @@
-pub type SyntaxResult = Result<(),()>;
+use crate::compiler::logger::ErrorDetails;
+
+pub type SyntaxResult = Result<(),ErrorDetails>;
 
 pub trait SyntaxModule<M> {
     fn new() -> Self;
@@ -15,7 +17,7 @@ mod test {
     struct Expression {}
     impl SyntaxModule<SyntaxMetadata> for Expression {
         fn new() -> Self {
-            Expression {  }
+            Expression { }
         }
         fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
             token(meta, "let")?;
@@ -91,17 +93,21 @@ mod test {
             if let Ok(_) = token(meta, "apple") {}
             else if let Ok(_) = token(meta, "orange") {}
             else if let Ok(_) = token(meta, "banana") {}
-            else { return Err(()) }
+            else { 
+                if let Err(details) = token(meta, "banana") {
+                    return Err(details);
+                }
+            }
             // Optional
             token(meta, "optional");
             // Syntax
             syntax(meta, &mut Expression::new())?;
             // Repeat
             loop {
-                if let Err(()) = token(meta, "test") {
+                if let Err(_) = token(meta, "test") {
                     break;
                 }
-                if let Err(()) = token(meta, ",") {
+                if let Err(_) = token(meta, ",") {
                     break;
                 }
             }

@@ -15,17 +15,19 @@ impl Expr {
         M: Metadata,
         S: SyntaxModule<M>
     {
-        if let Ok(()) = syntax(meta, &mut module) {
-            self.expr = Some(Box::new(cb(module)));
-            Ok(())
-        } else { Err(()) }
+        match syntax(meta, &mut module) {
+            Ok(()) => {
+                self.expr = Some(Box::new(cb(module)));
+                Ok(())    
+            }
+            Err(details) => Err(details)
+        }
     }
     fn parse_module(&mut self, meta: &mut SyntaxMetadata, module: ExprType) -> SyntaxResult {
         match module {
-            ExprType::Add(md) => if let Ok(()) = self.get(meta, md, |md| ExprType::Add(md)) { return Ok(()) },
-            ExprType::Number(md) => if let Ok(()) = self.get(meta, md, |md| ExprType::Number(md)) { return Ok(()) },
+            ExprType::Add(md) => self.get(meta, md, |md| ExprType::Add(md)),
+            ExprType::Number(md) => self.get(meta, md, |md| ExprType::Number(md))
         }
-        Err(())
     }
 }
 impl SyntaxModule<SyntaxMetadata> for Expr {
@@ -37,16 +39,15 @@ impl SyntaxModule<SyntaxMetadata> for Expr {
             ExprType::Add(Add::new()),
             ExprType::Number(Number::new())
         ];
+        let mut err = None;
         for module in modules {
-            if let Ok(()) = self.parse_module(meta, module) {
-                if let Some(tok) = meta.expr.get(meta.index) {
-                    if tok.word != "\n" {
-                        return Err(())
-                    }
+            match self.parse_module(meta, module) {
+                Ok(()) => return Ok(()),
+                Err(details) => {
+                    err = Some(details);
                 }
-                return Ok(())
             }
         }
-        Err(())
+        Err(err.unwrap())
     }
 }
