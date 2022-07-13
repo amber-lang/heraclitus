@@ -1,6 +1,10 @@
 use heraclitus::prelude::*;
 
-pub struct Number { value: String }
+#[derive(Debug)]
+pub struct Number {
+    value: String
+}
+
 impl SyntaxModule<SyntaxMetadata> for Number {
     fn new() -> Self {
         Number { value: format!("") }
