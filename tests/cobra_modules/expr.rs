@@ -11,21 +11,23 @@ pub struct Expr {
     expr: Option<Box<ExprType>>
 }
 impl Expr {
-    fn get<M,S>(&mut self, meta: &mut S, mut module: M, cb: fn(M) -> ExprType) -> SyntaxResult
+    fn get<M,S>(&mut self, meta: &mut M, mut module: S, cb: impl Fn(S) -> ExprType) -> SyntaxResult
     where
-        M: SyntaxModule<S>,
-        S: Metadata
+        M: Metadata,
+        S: SyntaxModule<M>
     {
-        if let Ok(()) = syntax(meta, &mut module) {
-            self.expr = Some(Box::new(cb(module)));
-            Ok(())
-        } else { Err(()) }
+        match syntax(meta, &mut module) {
+            Ok(()) => {
+                self.expr = Some(Box::new(cb(module)));
+                Ok(())    
+            }
+            Err(details) => Err(details)
+        }
     }
     fn parse_module(&mut self, meta: &mut SyntaxMetadata, module: ExprType) -> SyntaxResult {
         match module {
-            ExprType::Text(md) => if let Ok(()) = self.get(meta, md, |md| ExprType::Text(md)) { return Ok(()) },
+            ExprType::Text(md) => self.get(meta, md, |md| ExprType::Text(md))
         }
-        Err(())
     }
 }
 impl SyntaxModule<SyntaxMetadata> for Expr {
@@ -34,13 +36,17 @@ impl SyntaxModule<SyntaxMetadata> for Expr {
     }
     fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
         let modules: Vec<ExprType> = vec![
-            ExprType::Text(Text::new()),
+            ExprType::Text(Text::new())
         ];
+        let mut err = None;
         for module in modules {
-            if let Ok(()) = self.parse_module(meta, module) {
-                return Ok(())
+            match self.parse_module(meta, module) {
+                Ok(()) => return Ok(()),
+                Err(details) => {
+                    err = Some(details);
+                }
             }
         }
-        Err(())
+        Err(err.unwrap())
     }
 }

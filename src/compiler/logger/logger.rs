@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use std::process;
-use crate::compiler::Token;
 use super::displayer::Displayer;
 
 #[derive(Clone)]
@@ -10,19 +9,19 @@ pub enum LogType {
     Info
 }
 
-pub struct Log<'a> {
+pub struct Log {
     pub kind: LogType,
     pub row: usize,
     pub col: usize,
-    pub path: &'a String,
-    pub code: Option<&'a String>,
+    pub path: String,
+    pub code: Option<String>,
     pub message: Option<String>,
     pub comment: Option<String>
 }
 
-impl<'a> Log<'a> {
+impl Log {
     /// Create a new logger instance
-    pub fn new(path: &'a String, row: usize, col: usize, kind: LogType) -> Self {
+    pub fn new(path: String, row: usize, col: usize, kind: LogType) -> Self {
         Log {
             kind,
             path,
@@ -35,33 +34,18 @@ impl<'a> Log<'a> {
     }
 
     /// Create an error by supplying essential information about the location
-    pub fn new_err(path: &'a String, row: usize, col: usize) -> Self {
+    pub fn new_err(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Error)
     }
 
     /// Create a warning by supplying essential information about the location
-    pub fn new_warn(path: &'a String, row: usize, col: usize) -> Self {
+    pub fn new_warn(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Warning)
     }
 
     /// Create an info by supplying essential information about the location
-    pub fn new_info(path: &'a String, row: usize, col: usize) -> Self {
+    pub fn new_info(path: String, (row, col): (usize, usize)) -> Self {
         Log::new(path, row, col, LogType::Info)
-    }
-
-    /// Create an error using a token to supply essential information
-    pub fn new_err_at_token(path: &'a String, token: Token) -> Self {
-        Log::new_err(path, token.pos.0, token.pos.1)
-    }
-
-    /// Create a warning using a token to supply essential information
-    pub fn new_warn_at_token(path: &'a String, token: Token) -> Self {
-        Log::new_warn(path, token.pos.0, token.pos.1)
-    }
-
-    /// Create an info using a token to supply essential information
-    pub fn new_info_at_token(path: &'a String, token: Token) -> Self {
-        Log::new_info(path, token.pos.0, token.pos.1)
     }
 
     /// Add message to an existing log
@@ -77,14 +61,14 @@ impl<'a> Log<'a> {
     }
 
     /// Add code to an existing log
-    pub fn attach_code(mut self, code: &'a String) -> Self {
+    pub fn attach_code(mut self, code: String) -> Self {
         self.code = Some(code);
         self
     }
 
     /// Sends (renders) the message while giving 
     /// the ownership to this object away
-    pub fn send(self) -> Self {
+    pub fn show(self) -> Self {
         let color = match &self.kind {
             LogType::Error => (255, 80, 80),
             LogType::Warning => (255, 180, 80),
@@ -93,7 +77,7 @@ impl<'a> Log<'a> {
         Displayer::new(color, self.row, self.col)
             .header(self.kind.clone())
             .text(self.message.clone())
-            .path(self.path)
+            .path(&self.path)
             .padded_text(self.comment.clone());
         self
     }

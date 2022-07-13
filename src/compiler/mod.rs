@@ -1,7 +1,7 @@
 mod lexer;
 mod compiler;
 mod token;
-mod logger;
+pub mod logger;
 mod parser;
 
 pub use lexer::*;

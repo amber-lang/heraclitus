@@ -2,14 +2,16 @@ use crate::compiler::Token;
 
 pub struct SyntaxMetadata {
     pub index: usize,
-    pub expr: Vec<Token>
+    pub expr: Vec<Token>,
+    pub path: Option<String>
 }
 
 impl Metadata for SyntaxMetadata {
-    fn new(expression: Vec<Token>) -> Self {
+    fn new(expression: Vec<Token>, path: Option<String>) -> Self {
         SyntaxMetadata {
             index: 0,
-            expr: expression
+            expr: expression,
+            path
         }
     }
     fn get_token_at(&self, index: usize) -> Option<Token> {
@@ -26,8 +28,12 @@ impl Metadata for SyntaxMetadata {
 }
 
 pub trait Metadata {
-    fn new(expression: Vec<Token>) -> Self;
+    fn new(expression: Vec<Token>, path: Option<String>) -> Self;
     fn get_token_at(&self, index: usize) -> Option<Token>;
     fn get_index(&self) -> usize;
     fn set_index(&mut self, index: usize);
+    fn increment_index(&mut self) {
+        let index = self.get_index();
+        self.set_index(index + 1);
+    }
 }

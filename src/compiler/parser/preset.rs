@@ -1,7 +1,8 @@
-use super::{Metadata, util::meta_index_increment};
+use crate::compiler::logger::ErrorDetails;
+use super::Metadata;
 
 // Matches one token with a word that would be considered as a variable name
-pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             // This boolean stores false if we are past
@@ -11,65 +12,65 @@ pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()
                 // Check if rest of the letters are alphanumeric
                 if is_later {
                     if !(letter.is_alphanumeric() || extend.contains(&letter)) {
-                        return Err(())
+                        return Err(ErrorDetails::with_pos(token.pos))
                     }
                 }
                 // Check if first letter is alphabetic
                 else {
                     if !(letter.is_alphabetic() || extend.contains(&letter)) {
-                        return Err(())
+                        return Err(ErrorDetails::with_pos(token.pos))
                     }
                     is_later = true;
                 }
             }
-            meta_index_increment(meta);
+            meta.increment_index();
             Ok(token.word.clone())
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches one token with a word that consists of letters only
-pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphabetic() || extend.contains(&letter)) {
-                meta_index_increment(meta);
+                meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(()) }
+            } else { Err(ErrorDetails::with_pos(token.pos)) }
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches one token with a word that consists of letters or numbers only
-pub fn match_alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn match_alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphanumeric() || extend.contains(&letter)) {
-                meta_index_increment(meta);
+                meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(()) }
+            } else { Err(ErrorDetails::with_pos(token.pos)) }
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches a token of which word is a string of digits
-pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_numeric() || extend.contains(&letter)) {
-                meta_index_increment(meta);
+                meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(()) }
+            } else { Err(ErrorDetails::with_pos(token.pos)) }
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches a positive or negetive integer
-pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             let mut word = token.word.clone();
@@ -80,18 +81,18 @@ pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()>
             // For each further letter match a digit
             for letter in word.chars() {
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return Err(())
+                    return Err(ErrorDetails::with_pos(token.pos))
                 }
             }
-            meta_index_increment(meta);
+            meta.increment_index();
             Ok(token.word.clone())
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches a number that contains a floating point (has a dot in notation)
-pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     match meta.get_token_at(meta.get_index()) {
         Some(token) => {
             let mut word = token.word.clone();
@@ -104,22 +105,22 @@ pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
             for letter in word.chars() {
                 if letter == '.' {
                     // Set fraction if dot - exit match otherwise
-                    is_frac = if is_frac { return Err(()) } else { true };
+                    is_frac = if is_frac { return Err(ErrorDetails::with_pos(token.pos)) } else { true };
                     continue
                 }
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return Err(())
+                    return Err(ErrorDetails::with_pos(token.pos))
                 }
             }
-            meta_index_increment(meta);
+            meta.increment_index();
             Ok(token.word.clone())
         }
-        None => Err(())
+        None => Err(ErrorDetails::with_eof())
     }
 }
 
 // Matches a number that is an integer or float
-pub fn number(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,()> {
+pub fn number(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
     if let Ok(integer) = integer(meta, extend.clone()) {
         return Ok(integer);
     }

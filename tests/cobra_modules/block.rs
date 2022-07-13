@@ -22,7 +22,7 @@ impl SyntaxModule<SyntaxMetadata> for Block {
                 match cmp {
                     Ordering::Less => return Ok(()),
                     Ordering::Equal => {},
-                    Ordering::Greater => return Err(())
+                    Ordering::Greater => return Err(ErrorDetails::from_metadata(meta))
                 }
             }
             let mut expr = Expr::new();

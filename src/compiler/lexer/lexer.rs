@@ -1,18 +1,26 @@
 use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::region_handler::{ RegionHandler, Reaction };
 use super::reader::Reader;
-use crate::compiler::logger::{ Log };
+use crate::compiler::logger::ErrorDetails;
 
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
 const AVG_TOKEN_AMOUNT: usize = 1024;
+
+pub enum LexerErrorType {
+    // Unspillable region has been spilled
+    Singleline,
+    // Given region left unclosed
+    Unclosed
+}
+
+pub type LexerError = (LexerErrorType, ErrorDetails);
 
 pub struct Lexer<'a> {
     symbols: &'a Vec<char>,
     region: RegionHandler,
     reader: Reader<'a>,
     pub lexem: Vec<Token>,
-    path: &'a String,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode
 }
@@ -24,7 +32,6 @@ impl<'a> Lexer<'a> {
             region: RegionHandler::new(&cc.rules),
             reader: Reader::new(&cc.code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
-            path: &cc.path,
             separator_mode: cc.separator_mode.clone(),
             scoping_mode: cc.scoping_mode.clone()
         }
@@ -102,7 +109,7 @@ impl<'a> Lexer<'a> {
         self.add_word_inclusively(word)
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), LexerError> {
         let mut word = String::new();
         let mut is_indenting = false;
         while let Some(letter) = self.reader.next() {
@@ -134,14 +141,13 @@ impl<'a> Lexer<'a> {
                     // Handle region scope
                     if self.is_non_token_region(reaction) {
                         let region = self.region.get_region().unwrap();
-                        // Handle unspillable attribute
-                        if letter == '\n' && region.unspillable {
-                            let (row, col) = self.reader.get_position();
-                            Log::new_err(self.path, row, col)
-                                .attach_message(format!("{} cannot be multiline", region.name))
-                                .attach_code(self.reader.code)
-                                .send()
-                                .exit();
+                        // Handle singleline attribute
+                        if letter == '\n' && region.singleline {
+                            let pos = self.reader.get_position();
+                            return Err((
+                                LexerErrorType::Singleline,
+                                ErrorDetails::with_pos(pos).data(region.name.clone())
+                            ))
                         }
                         word.push(letter);
                     }
@@ -203,7 +209,14 @@ impl<'a> Lexer<'a> {
             }
         }
         self.add_word(word);
-        self.region.handle_region_open(self.path, &self.reader);
+        // If some region exists that was not closed
+        if let Err((pos, region)) = self.region.is_region_closed(&self.reader) {
+            return Err((
+                LexerErrorType::Unclosed,
+                ErrorDetails::with_pos(pos).data(region.name)
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -243,7 +256,8 @@ mod test {
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
-        lexer.run();
+        let res = lexer.run();
+        assert!(res.is_ok());
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
@@ -285,7 +299,8 @@ mod test {
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
-        lexer.run();
+        let res = lexer.run();
+        assert!(res.is_ok());
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
@@ -318,7 +333,8 @@ mod test {
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
-        lexer.run();
+        let res = lexer.run();
+        assert!(res.is_ok());
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
@@ -349,7 +365,8 @@ mod test {
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
-        lexer.run();
+        let res = lexer.run();
+        assert!(res.is_ok());
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }

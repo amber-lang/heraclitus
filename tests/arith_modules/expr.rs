@@ -30,22 +30,23 @@ impl Expr {
         // Check if exclusion occurs
         if let Some(excludes) = &self.excludes {
             if excludes.clone() as usize == id as usize {
-                return Err(())
+                return Err(ErrorDetails::from_metadata(meta))
             }
         }
         // Match syntax
-        if let Ok(()) = syntax(meta, &mut module) {
-            self.expr = Some(Box::new(cb(module)));
-            return Ok(())
+        match syntax(meta, &mut module) {
+            Ok(()) => {
+                self.expr = Some(Box::new(cb(module)));
+                Ok(())    
+            }
+            Err(details) => Err(details)
         }
-        Err(())
     }
     fn parse_module(&mut self, meta: &mut SyntaxMetadata, module: ExprType) -> SyntaxResult {
         match module {
-            ExprType::Add(md) => if let Ok(()) = self.get(meta, md, ExprType::Add, ExprId::Add) { return Ok(()) },
-            ExprType::Number(md) => if let Ok(()) = self.get(meta, md, ExprType::Number, ExprId::Number) { return Ok(()) },
+            ExprType::Add(md) => self.get(meta, md, ExprType::Add, ExprId::Add),
+            ExprType::Number(md) => self.get(meta, md, ExprType::Number, ExprId::Number)
         }
-        Err(())
     }
 }
 
@@ -58,11 +59,15 @@ impl SyntaxModule<SyntaxMetadata> for Expr {
             ExprType::Add(Add::new()),
             ExprType::Number(Number::new())
         ];
+        let mut err = None;
         for module in modules {
-            if let Ok(()) = self.parse_module(meta, module) {
-                return Ok(())
+            match self.parse_module(meta, module) {
+                Ok(()) => return Ok(()),
+                Err(details) => {
+                    err = Some(details);
+                }
             }
         }
-        Err(())
+        Err(err.unwrap())
     }
 }

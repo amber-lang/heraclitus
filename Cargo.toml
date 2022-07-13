@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 colored = "2.0.0"
 pad = "0.1.6"
+capitalize = "0.1.0"
+
