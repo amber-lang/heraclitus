@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::*;
 use crate::Metadata;
 
 #[derive(Debug)]
@@ -46,8 +48,11 @@ impl ErrorDetails {
         self
     }
 
-    pub fn get_pos_by_file(&mut self, filename: &String) -> (usize, usize) {
-        unimplemented!()
+    pub fn get_pos_by_file(&mut self, path: &String) -> std::io::Result<(usize, usize)> {
+        let mut code = format!("");
+        let mut file = File::open(path)?;
+        file.read_to_string(&mut code)?;
+        Ok(self.get_pos_by_code(&code))
     }
 
     /// Returns a position 
