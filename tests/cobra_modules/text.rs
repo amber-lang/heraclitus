@@ -1,4 +1,4 @@
-use heraclitus::*;
+use heraclitus::prelude::*;
 
 #[derive(Debug)]
 pub struct Text {

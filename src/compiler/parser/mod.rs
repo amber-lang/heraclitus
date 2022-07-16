@@ -1,7 +1,6 @@
 mod syntax_module;
 mod pattern;
 mod preset;
-mod util;
 mod metadata;
 
 pub use syntax_module::*;

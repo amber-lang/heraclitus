@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::*;
-use crate::Metadata;
+use crate::compiler::Metadata;
 
 #[derive(Debug)]
 pub enum ErrorLocation {

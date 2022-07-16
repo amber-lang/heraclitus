@@ -1,8 +1,9 @@
 use capitalize::Capitalize;
 use std::fs::File;
 use std::io::prelude::*;
-use crate::{ Token, Rules, Lexer, SyntaxModule, Metadata, LexerErrorType, LexerError };
-use crate::logger::{Log, ErrorDetails};
+use crate::rules::Rules;
+use crate::compiler::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
+use crate::compiler::logger::{Log, ErrorDetails};
 
 #[derive(Clone, PartialEq)]
 pub enum SeparatorMode {
@@ -27,9 +28,9 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn new(name: &str, rules: Rules) -> Self {
+    pub fn new<T: AsRef<str>>(name: T, rules: Rules) -> Self {
         Compiler {
-            name: String::from(name),
+            name: String::from(name.as_ref()),
             rules,
             code: format!(""),
             path: None,

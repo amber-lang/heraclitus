@@ -59,7 +59,7 @@ pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Or
 
 #[cfg(test)]
 mod test {
-    use crate::{SyntaxMetadata, Token};
+    use crate::compiler::{SyntaxMetadata, Token};
     use super::*;
 
     #[test]
