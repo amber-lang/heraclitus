@@ -1,6 +1,6 @@
 use crate::compiler::logger::ErrorDetails;
 
-pub type SyntaxResult = Result<(),ErrorDetails>;
+pub type SyntaxResult = Result<(), ErrorDetails>;
 
 pub trait SyntaxModule<M> {
     fn new() -> Self;
@@ -12,14 +12,14 @@ mod test {
     use super::*;
     use crate::compiler::parser::pattern::*;
     use crate::compiler::parser::preset::*;
-    use crate::compiler::{ Token, SyntaxMetadata, Metadata };
+    use crate::compiler::{ Token, DefaultMetadata, Metadata };
 
     struct Expression {}
-    impl SyntaxModule<SyntaxMetadata> for Expression {
+    impl SyntaxModule<DefaultMetadata> for Expression {
         fn new() -> Self {
             Expression { }
         }
-        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
             token(meta, "let")?;
             Ok(())
         }
@@ -41,18 +41,18 @@ mod test {
             }
         ];
         let path = Some(format!("path/to/file"));
-        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1, path.clone()));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2, path.clone()));
+        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, path.clone()));
+        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, path.clone()));
         assert!(result1.is_ok());
         assert!(result2.is_err());
     }
 
     struct Preset {}
-    impl SyntaxModule<SyntaxMetadata> for Preset {
+    impl SyntaxModule<DefaultMetadata> for Preset {
         fn new() -> Self {
             Preset {  }
         }
-        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
             variable(meta, vec!['_'])?;
             numeric(meta, vec![])?;
             number(meta, vec![])?;
@@ -78,17 +78,17 @@ mod test {
             Token { word: format!("-.681"), pos: (0, 0)}
         ];
         let path = Some(format!("path/to/file"));
-        let result = exp.parse(&mut SyntaxMetadata::new(dataset, path));
+        let result = exp.parse(&mut DefaultMetadata::new(dataset, path));
         assert!(result.is_ok());
     }
 
     struct PatternModule {}
-    impl SyntaxModule<SyntaxMetadata> for PatternModule {
+    impl SyntaxModule<DefaultMetadata> for PatternModule {
         fn new() -> Self {
             PatternModule {  }
         }
         #[allow(unused_must_use)]
-        fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+        fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
             // Any
             if let Ok(_) = token(meta, "apple") {}
             else if let Ok(_) = token(meta, "orange") {}
@@ -160,10 +160,10 @@ mod test {
             Token { word: format!("end"), pos: (0, 0) }
         ];
         let path = Some(format!("path/to/file"));
-        let result1 = exp.parse(&mut SyntaxMetadata::new(dataset1, path.clone()));
-        let result2 = exp.parse(&mut SyntaxMetadata::new(dataset2, path.clone()));
-        let result3 = exp.parse(&mut SyntaxMetadata::new(dataset3, path.clone()));
-        let result4 = exp.parse(&mut SyntaxMetadata::new(dataset4, path.clone()));
+        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, path.clone()));
+        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, path.clone()));
+        let result3 = exp.parse(&mut DefaultMetadata::new(dataset3, path.clone()));
+        let result4 = exp.parse(&mut DefaultMetadata::new(dataset4, path.clone()));
         assert!(result1.is_ok());
         assert!(result2.is_err());
         assert!(result3.is_err());

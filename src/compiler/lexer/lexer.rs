@@ -356,7 +356,6 @@ mod test {
         ];
         let rules = Rules::new(symbols, regions);
         let mut cc: Compiler = Compiler::new("Testhon", rules);
-        cc.separator_mode = SeparatorMode::Manual;
         cc.load(vec![
             "let age = 12",
             "+",

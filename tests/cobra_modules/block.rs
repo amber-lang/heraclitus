@@ -12,11 +12,11 @@ impl Block {
         self.indent_size = size;
     }
 }
-impl SyntaxModule<SyntaxMetadata> for Block {
+impl SyntaxModule<DefaultMetadata> for Block {
     fn new() -> Self {
         Block { statements: vec![], indent_size: 0 }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         loop {
             if let Ok(cmp) = indent_with(meta, self.indent_size) {
                 match cmp {

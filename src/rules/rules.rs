@@ -23,7 +23,7 @@ use super::region::Region;
 /// Rules::new(symbols, region);
 /// ```
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Rules {
     /// Symbols that should be separated (most commonly: (, ), +, -, ...)
     /// This handles situations like for instance if we want to parse `1+1` as

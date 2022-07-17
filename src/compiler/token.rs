@@ -1,6 +1,6 @@
 use std::fmt::{Formatter, Display, Result, Debug};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Token {
     pub word: String,
     pub pos: (usize, usize),

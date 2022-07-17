@@ -7,14 +7,14 @@ pub struct Add {
     right: Option<Expr>
 }
 
-impl SyntaxModule<SyntaxMetadata> for Add {
+impl SyntaxModule<DefaultMetadata> for Add {
     fn new() -> Self {
         Add {
             left: None,
             right: None
         }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         match meta.expr.get(meta.index) {
             Some(_) => {
                 let mut  left = Expr::new();
