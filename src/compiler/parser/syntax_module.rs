@@ -1,9 +1,18 @@
 use crate::compiler::logger::ErrorDetails;
 
+/// Result that should be returned in the parsing phase
 pub type SyntaxResult = Result<(), ErrorDetails>;
 
+/// Trait for parsing
+/// 
+/// Trait that should be implemented in order to parse tokens with heraklit
 pub trait SyntaxModule<M> {
+    /// Create a new default implementation of syntax module
     fn new() -> Self;
+    /// Parse and create AST
+    /// 
+    /// This method is fundamental in creating a functional AST node that can determine 
+    /// if tokens provided by metadata can be consumed to create this particular AST node.
     fn parse(&mut self, meta: &mut M) -> SyntaxResult;
 }
 

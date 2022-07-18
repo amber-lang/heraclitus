@@ -45,5 +45,5 @@ pub mod prelude {
     pub use crate::rules::*;
     pub use crate::compiler::*;
     pub use crate::compiler::patterns::*;
-    pub use crate::compiler::logger::{ErrorDetails, ErrorLocation};
+    pub use crate::compiler::{ErrorDetails, ErrorPosition};
 }

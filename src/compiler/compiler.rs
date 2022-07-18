@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use crate::rules::Rules;
 use crate::compiler::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
-use crate::compiler::logger::{Log, ErrorDetails};
+use crate::compiler::logger::{Logger, ErrorDetails};
 
 
 /// How do you want to separate expressions?
@@ -139,7 +139,7 @@ impl Compiler {
                     None => format!("[file]")
                 };
                 // Send error
-                Log::new_err(path, details.get_pos_by_code(&self.code))
+                Logger::new_err(path, details.get_pos_by_code(&self.code))
                     .attach_message(message)
                     .attach_code(self.code.clone())
                     .show()
