@@ -6,11 +6,11 @@ pub struct IfStatement {
     cond: Expr,
     block: Block
 }
-impl SyntaxModule<SyntaxMetadata> for IfStatement {
+impl SyntaxModule<DefaultMetadata> for IfStatement {
     fn new() -> Self {
         IfStatement { cond: Expr::new(), block: Block::new() }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         token(meta, "if")?;
         syntax(meta, &mut self.cond)?;
         token(meta, ":")?;

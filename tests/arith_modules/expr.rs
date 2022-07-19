@@ -42,7 +42,7 @@ impl Expr {
             Err(details) => Err(details)
         }
     }
-    fn parse_module(&mut self, meta: &mut SyntaxMetadata, module: ExprType) -> SyntaxResult {
+    fn parse_module(&mut self, meta: &mut DefaultMetadata, module: ExprType) -> SyntaxResult {
         match module {
             ExprType::Add(md) => self.get(meta, md, ExprType::Add, ExprId::Add),
             ExprType::Number(md) => self.get(meta, md, ExprType::Number, ExprId::Number)
@@ -50,11 +50,11 @@ impl Expr {
     }
 }
 
-impl SyntaxModule<SyntaxMetadata> for Expr {
+impl SyntaxModule<DefaultMetadata> for Expr {
     fn new() -> Self {
         Expr { expr: None, excludes: None }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         let modules: Vec<ExprType> = vec![
             ExprType::Add(Add::new()),
             ExprType::Number(Number::new())

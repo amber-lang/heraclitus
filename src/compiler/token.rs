@@ -1,8 +1,11 @@
 use std::fmt::{Formatter, Display, Result, Debug};
 
-#[derive(Clone)]
+/// The building block of the AST
+#[derive(Clone, PartialEq)]
 pub struct Token {
+    /// Value of the token
     pub word: String,
+    /// Position of the token (row, column)
     pub pos: (usize, usize),
 }
 

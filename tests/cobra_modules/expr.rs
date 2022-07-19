@@ -24,17 +24,17 @@ impl Expr {
             Err(details) => Err(details)
         }
     }
-    fn parse_module(&mut self, meta: &mut SyntaxMetadata, module: ExprType) -> SyntaxResult {
+    fn parse_module(&mut self, meta: &mut DefaultMetadata, module: ExprType) -> SyntaxResult {
         match module {
             ExprType::Text(md) => self.get(meta, md, |md| ExprType::Text(md))
         }
     }
 }
-impl SyntaxModule<SyntaxMetadata> for Expr {
+impl SyntaxModule<DefaultMetadata> for Expr {
     fn new() -> Self {
         Expr { expr: None }
     }
-    fn parse(&mut self, meta: &mut SyntaxMetadata) -> SyntaxResult {
+    fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         let modules: Vec<ExprType> = vec![
             ExprType::Text(Text::new())
         ];

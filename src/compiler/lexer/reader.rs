@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 const BEGINNING: (usize, usize) = (0, 1);
 
 pub struct Reader<'a> {
