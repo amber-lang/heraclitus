@@ -7,25 +7,35 @@ use crate::compiler::logger::ErrorDetails;
 // inside of a typical 200-lined file.
 const AVG_TOKEN_AMOUNT: usize = 1024;
 
+/// Lexer's error type
 pub enum LexerErrorType {
-    // Unspillable region has been spilled
+    /// Unspillable region has been spilled
     Singleline,
-    // Given region left unclosed
+    /// Given region left unclosed
     Unclosed
 }
 
+/// Type containing full error of lexer
 pub type LexerError = (LexerErrorType, ErrorDetails);
 
+/// The Lexer
+/// 
+/// Lexer takes source code in a form of a string and translates it to a list of tokens.
+/// This particular implementation requires additional metadata such as like regions or symbols.
+/// These can be supplied by the `Compiler` in a one cohesive package. Hence the API requires to
+/// pass a reference to the `Compiler`.
 pub struct Lexer<'a> {
     symbols: &'a Vec<char>,
     region: RegionHandler,
     reader: Reader<'a>,
+    /// This attribute stores parsed tokens by the lexer
     pub lexem: Vec<Token>,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode
 }
 
 impl<'a> Lexer<'a> {
+    /// Create a new Lexer based on the compiler metadata
     pub fn new(cc: &'a Compiler) -> Self {
         Lexer {
             symbols: &cc.rules.symbols,
@@ -109,6 +119,9 @@ impl<'a> Lexer<'a> {
         self.add_word_inclusively(word)
     }
 
+    /// Tokenize source code
+    /// 
+    /// Run lexer and tokenize code. The result is stored in the lexem attribute
     pub fn run(&mut self) -> Result<(), LexerError> {
         let mut word = String::new();
         let mut is_indenting = false;
@@ -224,7 +237,7 @@ impl<'a> Lexer<'a> {
 mod test {
     use crate::rules::{ Region, Rules };
     use crate::reg;
-    use crate::compiler::{ Compiler, ScopingMode, SeparatorMode };
+    use crate::compiler::{ Compiler, ScopingMode };
 
     #[test]
     fn test_lexer_base() {

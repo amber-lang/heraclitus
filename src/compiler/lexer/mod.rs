@@ -1,4 +1,8 @@
+//! Lexer module
+//! 
+//! This module holds all the lexer related modules
+
 mod region_handler;
 mod reader;
-pub mod lexer;
+mod lexer;
 pub use lexer::*;

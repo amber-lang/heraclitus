@@ -25,7 +25,7 @@ pub enum LogType {
 /// Log the message you want to show to the user
 /// # Example
 /// ```should_panic
-/// # use heraclitus::prelude::{*, logger::Logger};
+/// # use heraclitus::prelude::*;
 /// # let path = format!("path/to/file");
 /// # let position = (0, 0);
 /// # let guess = "type";

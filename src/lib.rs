@@ -41,6 +41,13 @@ pub mod rules;
 pub mod compiler;
 
 pub mod prelude {
+    //! Use all the necessary modules
+    //! 
+    //! This package loads all the most necessary modules into the global scope.
+    //! # Example
+    //! ```
+    //! use heraclitus::prelude::*;
+    //! ```
     pub use crate::*;
     pub use crate::rules::*;
     pub use crate::compiler::*;
