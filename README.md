@@ -3,6 +3,11 @@
 </div>
 
 # Heraclitus
+
+[![Crate](https://img.shields.io/crates/v/heraclitus-compiler.svg)](https://crates.io/crates/heraclitus-compiler)
+[![API](https://docs.rs/rand/badge.svg)](https://docs.rs/heraclitus-compiler/)
+
+
 Heraclitus is an open source compiler frontend written in rust. It's going to be used as a basis for programming languages such as [Amber](https://amber-lang.cc) and *Flame*.
 
 > **[Warning]**
