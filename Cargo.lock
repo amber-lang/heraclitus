@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "heraclitus"
+name = "heraclitus-compiler"
 version = "0.1.0"
 dependencies = [
  "capitalize",

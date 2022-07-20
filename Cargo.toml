@@ -1,10 +1,12 @@
 [package]
-name = "heraclitus"
+name = "heraclitus-compiler"
 version = "0.1.0"
 edition = "2021"
 description = "Compiler frontend for developing great programming languages"
 license = "MIT"
 repository = "https://github.com/Ph0enixKM/Heraclitus"
+authors = ["pawel.karas@icloud.com"]
+keywords = ["heraclitus", "compiler", "parser", "compiler frotend"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
