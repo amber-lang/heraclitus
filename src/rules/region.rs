@@ -17,7 +17,7 @@ pub type RegionMap = HashMap<String,Region>;
 /// You shall use this region only as a base for your region structure.
 /// This region's id is called "global" and should remain unique.
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// reg![
 ///     // insert other regions here
 /// ];
@@ -31,7 +31,7 @@ pub type RegionMap = HashMap<String,Region>;
 ///  - `singleline`
 /// 
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// reg!(str as "string literal" => {
 ///     begin: "'",
 ///     end: "'",
@@ -42,7 +42,7 @@ pub type RegionMap = HashMap<String,Region>;
 /// ## 3. Region with Interpolations
 /// This is a region that can have multiple interpolations of other regions
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// reg!(string as "string literal" => {
 ///     begin: "'",
 ///     end: "'"
@@ -55,7 +55,7 @@ pub type RegionMap = HashMap<String,Region>;
 /// This is a region that as interpolation references other region.
 /// 
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// reg!(string_interp as "String Interpolation" => {
 ///     begin: "${",
 ///     end: "}",
@@ -98,7 +98,7 @@ macro_rules! reg {
 /// 
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// reg!(str as "string literal" => {
 ///     begin: "'",
 ///     end: "'"

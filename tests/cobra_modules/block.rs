@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use heraclitus::prelude::*;
+use heraclitus_compiler::prelude::*;
 use super::*;
 
 #[derive(Debug)]

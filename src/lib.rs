@@ -19,7 +19,7 @@
 //! Ready to get started?
 //! # Example
 //! ```
-//! use heraclitus::prelude::*;
+//! use heraclitus_compiler::prelude::*;
 //! # let rules = Rules::new(vec![], reg![]);
 //! Compiler::new("HerbScript", rules);
 //! ```
@@ -28,7 +28,7 @@
 //! The `Compiler` requires lexer rules in order to exist.
 //! 
 //! ```
-//! # use heraclitus::prelude::*;
+//! # use heraclitus_compiler::prelude::*;
 //! # fn compiler() -> Result<(), LexerError> {
 //! # let rules = Rules::new(vec![], reg![]);
 //! let cc = Compiler::new("HerbScript", rules);
@@ -46,7 +46,7 @@ pub mod prelude {
     //! This package loads all the most necessary modules into the global scope.
     //! # Example
     //! ```
-    //! use heraclitus::prelude::*;
+    //! use heraclitus_compiler::prelude::*;
     //! ```
     pub use crate::*;
     pub use crate::rules::*;

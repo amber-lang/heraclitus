@@ -1,4 +1,4 @@
-use heraclitus::prelude::*;
+use heraclitus_compiler::prelude::*;
 use super::{Expr, Block};
 
 #[derive(Debug)]

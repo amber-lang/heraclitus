@@ -7,7 +7,7 @@ use super::{ Metadata, SyntaxModule };
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None);
 /// token(meta, "let")?;
@@ -30,7 +30,7 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None);
 /// let the_word = token_by(meta, |word| word.starts_with('@'))?;
@@ -53,7 +53,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # struct IfStatement {}
 /// # impl SyntaxModule<DefaultMetadata> for IfStatement {
 /// #   fn new() -> Self { IfStatement {} }
@@ -80,7 +80,7 @@ pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> R
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None);
 /// let spaces: usize = indent(meta)?;
@@ -102,7 +102,7 @@ pub fn indent(meta: &mut impl Metadata) -> Result<usize, ErrorDetails> {
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None);
 /// let cmp: std::cmp::Ordering = indent_with(meta, 6)?;
