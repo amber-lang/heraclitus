@@ -43,7 +43,7 @@ pub enum ScopingMode {
 /// 
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// # struct GlobalContext {}
 /// # impl SyntaxModule<DefaultMetadata> for GlobalContext {
 /// #   fn new() -> Self { GlobalContext {} }

@@ -1,4 +1,4 @@
-use heraclitus::prelude::*;
+use heraclitus_compiler::prelude::*;
 mod arith_modules;
 
 #[test]

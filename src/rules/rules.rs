@@ -12,7 +12,7 @@ use super::region::Region;
 /// 
 /// # Example
 /// ```
-/// # use heraclitus::prelude::*;
+/// # use heraclitus_compiler::prelude::*;
 /// let symbols = vec!['+', '-', '*', '/', '(', ')', '&', '|', '!'];
 /// let region = reg![
 ///     reg!(str as "string literal" => {

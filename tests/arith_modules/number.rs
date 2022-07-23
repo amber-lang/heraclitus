@@ -1,4 +1,4 @@
-use heraclitus::prelude::*;
+use heraclitus_compiler::prelude::*;
 
 #[derive(Debug)]
 pub struct Number {
