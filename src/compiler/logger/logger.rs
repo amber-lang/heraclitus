@@ -51,7 +51,9 @@ pub struct Logger {
     /// Optionally store message
     pub message: Option<String>,
     /// Optionally store comment
-    pub comment: Option<String>
+    pub comment: Option<String>,
+    /// Size of lines of code to see in the error message
+    pub code_len: usize
 }
 
 impl Logger {
@@ -64,8 +66,38 @@ impl Logger {
             col,
             code: None,
             message: None,
-            comment: None
+            comment: None,
+            code_len: 3
         }
+    }
+
+    /// Create a new logger instance with message (suited for messages not related with issues in code)
+    pub fn new_msg(message: impl AsRef<str>, kind: LogType) -> Self {
+        Logger {
+            kind,
+            row: 0,
+            col: 0,
+            path: format!(""),
+            code: None,
+            message: Some(message.as_ref().to_string()),
+            comment: None,
+            code_len: 3
+        }
+    }
+
+    /// Show error message that does not relate to code
+    pub fn new_err_msg(message: impl AsRef<str>) -> Self {
+        Logger::new_msg(message, LogType::Error)
+    }
+
+    /// Show warning message that does not relate to code
+    pub fn new_warn_msg(message: impl AsRef<str>) -> Self {
+        Logger::new_msg(message, LogType::Warning)
+    }
+
+    /// Show info message that does not relate to code
+    pub fn new_info_msg(message: impl AsRef<str>) -> Self {
+        Logger::new_msg(message, LogType::Info)
     }
 
     /// Create an error by supplying essential information about the location
@@ -110,11 +142,22 @@ impl Logger {
             LogType::Warning => (255, 180, 80),
             LogType::Info => (80, 80, 255)
         };
-        Displayer::new(color, self.row, self.col)
-            .header(self.kind.clone())
-            .text(self.message.clone())
-            .path(&self.path)
-            .padded_text(self.comment.clone());
+        // If this error is based in code
+        if self.row > 0 && self.col > 0 {
+            Displayer::new(color, self.row, self.col)
+                .header(self.kind.clone())
+                .text(self.message.clone())
+                .path(&self.path)
+                .padded_text(self.comment.clone())
+                .snippet(self.code.clone(), self.code_len)
+        }
+        // If this error is a message error
+        else {
+            Displayer::new(color, self.row, self.col)
+                .header(self.kind.clone())
+                .text(self.message.clone())
+                .padded_text(self.comment.clone());
+        }
         self
     }
 
@@ -124,6 +167,18 @@ impl Logger {
     }
 }
 
+#[cfg(test)]
+mod test {
+    
+    #[test]
+    fn test_logger() {
+        // use super::Logger;
+        // Logger::new_err_msg("This is not a message")
+        //     .attach_comment("Or is it?")
+        //     .show()
+        //     .exit();
+    }
+}
 
 
 

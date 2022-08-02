@@ -110,21 +110,23 @@ impl Displayer {
     }
 
     /// Render snippet of the code if the message is contextual to it
-    pub fn snippet<T: AsRef<str>>(self, code: T, length: usize) {
-        let index = self.row - 1;
-        let code: String = String::from(code.as_ref());
-        let code = code.split("\n")
-            .map(|item| item.to_string())
-            .collect::<Vec<String>>();
-        println!("");
-        // Show additional code above the snippet
-        if index > 0 {
-            println!("{}", self.get_snippet_row(&code, index, length, -1));
-        }
-        println!("{}", self.get_snippet_row(&code, index, length, 0));
-        // Show additional code below the snippet
-        if index < code.len() - 1 {
-            println!("{}", self.get_snippet_row(&code, index, length, 1));
+    pub fn snippet<T: AsRef<str>>(self, code: Option<T>, length: usize) {
+        if let Some(code) = code {
+            let index = self.row - 1;
+            let code: String = String::from(code.as_ref());
+            let code = code.split("\n")
+                .map(|item| item.to_string())
+                .collect::<Vec<String>>();
+            println!("");
+            // Show additional code above the snippet
+            if index > 0 {
+                println!("{}", self.get_snippet_row(&code, index, length, -1));
+            }
+            println!("{}", self.get_snippet_row(&code, index, length, 0));
+            // Show additional code below the snippet
+            if index < code.len() - 1 {
+                println!("{}", self.get_snippet_row(&code, index, length, 1));
+            }
         }
     }
 }
