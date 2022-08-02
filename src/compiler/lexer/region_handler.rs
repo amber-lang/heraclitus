@@ -2,7 +2,7 @@ use crate::rules::{Region, Rules, RegionMap};
 use super::reader::Reader;
 
 #[derive(PartialEq)]
-pub enum Reaction {
+pub enum RegionReaction {
     Begin,
     End,
     Pass
@@ -40,7 +40,7 @@ impl RegionHandler {
     }
 
     // Check where we are in code and open / close some region if matched
-    pub fn handle_region(&mut self, reader: &Reader) -> Reaction {
+    pub fn handle_region(&mut self, reader: &Reader) -> RegionReaction {
         // If we are not in the global scope
         if let Some(region) = self.get_region() {
             for interp_region in region.interp.iter() {
@@ -64,7 +64,7 @@ impl RegionHandler {
                             }
                         }
                         self.region_stack.push(begin_region);
-                        return Reaction::Begin
+                        return RegionReaction::Begin
                     }
                 }
             }
@@ -72,11 +72,11 @@ impl RegionHandler {
             if let Some(end_region) = self.match_region_by_end(reader) {
                 if end_region.name == region.name {
                     self.region_stack.pop();
-                    return Reaction::End
+                    return RegionReaction::End
                 }
             }
         }
-        Reaction::Pass
+        RegionReaction::Pass
     }
 
     // Matches region by some getter callback
@@ -123,7 +123,7 @@ impl RegionHandler {
 mod test {
     use crate::reg;
     use crate::rules::Region;
-    use super::{ RegionHandler, Reaction };
+    use super::{ RegionHandler, RegionReaction };
     use super::Reader;
 
     #[test]
@@ -195,7 +195,7 @@ mod test {
         // Simulate matching regions
         while let Some(_) = reader.next() {
             let region_mutated = rh.handle_region(&reader);
-            if let Reaction::Begin | Reaction::End = region_mutated {
+            if let RegionReaction::Begin | RegionReaction::End = region_mutated {
                 result.push(reader.get_index());
             }
         }

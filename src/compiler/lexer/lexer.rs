@@ -1,5 +1,6 @@
 use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
-use super::region_handler::{ RegionHandler, Reaction };
+use super::compound_handler::{CompoundHandler, CompoundReaction};
+use super::region_handler::{ RegionHandler, RegionReaction };
 use super::reader::Reader;
 use crate::compiler::logger::ErrorDetails;
 
@@ -25,7 +26,8 @@ pub type LexerError = (LexerErrorType, ErrorDetails);
 /// These can be supplied by the `Compiler` in a one cohesive package. Hence the API requires to
 /// pass a reference to the `Compiler`.
 pub struct Lexer<'a> {
-    symbols: &'a Vec<char>,
+    symbols: Vec<char>,
+    compound: CompoundHandler,
     region: RegionHandler,
     reader: Reader<'a>,
     /// This attribute stores parsed tokens by the lexer
@@ -38,7 +40,8 @@ impl<'a> Lexer<'a> {
     /// Create a new Lexer based on the compiler metadata
     pub fn new(cc: &'a Compiler) -> Self {
         Lexer {
-            symbols: &cc.rules.symbols,
+            symbols: cc.rules.symbols.clone(),
+            compound: CompoundHandler::new(&cc.rules),
             region: RegionHandler::new(&cc.rules),
             reader: Reader::new(&cc.code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
@@ -89,9 +92,9 @@ impl<'a> Lexer<'a> {
     }
 
     /// Checks whether this is a nontokenizable region
-    fn is_non_token_region(&self, reaction: Reaction) -> bool {
+    fn is_non_token_region(&self, reaction: RegionReaction) -> bool {
         if let Some(region) = self.region.get_region() {
-            !region.tokenize && reaction == Reaction::Pass
+            !region.tokenize && reaction == RegionReaction::Pass
         }
         else { false }
     }
@@ -106,7 +109,7 @@ impl<'a> Lexer<'a> {
 
     /// Pattern code for beginning a new region
     /// **[**
-    fn pattern_begin_region(&mut self, mut word: String, letter: char) -> String {
+    fn pattern_begin(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
         word.push(letter);
         word
@@ -114,7 +117,7 @@ impl<'a> Lexer<'a> {
 
     /// Pattern code for ending current region
     /// **]**
-    fn pattern_end_region(&mut self, mut word: String, letter: char) -> String {
+    fn pattern_end(&mut self, mut word: String, letter: char) -> String {
         word.push(letter);
         self.add_word_inclusively(word)
     }
@@ -132,90 +135,97 @@ impl<'a> Lexer<'a> {
             match reaction {
                 // If the region has been opened
                 // Finish the part that we have been parsing
-                Reaction::Begin => {
+                RegionReaction::Begin => {
                     // This is supposed to prevent overshadowing new line
                     // character if region rule opens with newline
                     if letter == '\n' {
                         word = self.pattern_add_symbol(word, letter);
                     }
-                    word = self.pattern_begin_region(word, letter);
+                    word = self.pattern_begin(word, letter);
                 },
                 // If the region has been closed
                 // Add the closing region and finish the word
-                Reaction::End => {
-                    word = self.pattern_end_region(word, letter);
+                RegionReaction::End => {
+                    word = self.pattern_end(word, letter);
                     // This is supposed to prevent overshadowing new line
                     // character if region rule closes with newline
                     if letter == '\n' {
                         word = self.pattern_add_symbol(word, letter);
                     }
                 }
-                Reaction::Pass => {
-                    // Handle region scope
-                    if self.is_non_token_region(reaction) {
-                        let region = self.region.get_region().unwrap();
-                        // Handle singleline attribute
-                        if letter == '\n' && region.singleline {
-                            let pos = self.reader.get_position();
-                            return Err((
-                                LexerErrorType::Singleline,
-                                ErrorDetails::with_pos(pos).data(region.name.clone())
-                            ))
-                        }
-                        word.push(letter);
-                    }
-                    else {
-
-                        /******************/
-                        /* Mode modifiers */
-                        /******************/
-
-                        // Create indent regions: '\n   '
-                        if let ScopingMode::Indent = self.scoping_mode {
-                            // If we are still in the indent region - proceed
-                            if is_indenting && vec![' ', '\t'].contains(&letter) {
+                RegionReaction::Pass => {
+                    match self.compound.handle_compound(letter, &self.reader) {
+                        CompoundReaction::Begin => word = self.pattern_begin(word, letter),
+                        CompoundReaction::Keep => word.push(letter),
+                        CompoundReaction::End => word = self.pattern_end(word, letter),
+                        CompoundReaction::Pass => {
+                            // Handle region scope
+                            if self.is_non_token_region(reaction) {
+                                let region = self.region.get_region().unwrap();
+                                // Handle singleline attribute
+                                if letter == '\n' && region.singleline {
+                                    let pos = self.reader.get_position();
+                                    return Err((
+                                        LexerErrorType::Singleline,
+                                        ErrorDetails::with_pos(pos).data(region.name.clone())
+                                    ))
+                                }
                                 word.push(letter);
                             }
-                            // If it's the new line - start indent region
-                            if letter == '\n' {
-                                is_indenting = true;
-                                word = self.pattern_begin_region(word, letter);
-                            }
-                            // Check if the current letter
-                            // concludes current indent region
-                            if is_indenting {
-                                if let Some(next_char) = self.reader.peek() {
-                                    if !vec![' ', '\t'].contains(&next_char) {
-                                        word = self.add_indent(word);
-                                        is_indenting = false;
+                            else {
+
+                                /******************/
+                                /* Mode modifiers */
+                                /******************/
+
+                                // Create indent regions: '\n   '
+                                if let ScopingMode::Indent = self.scoping_mode {
+                                    // If we are still in the indent region - proceed
+                                    if is_indenting && vec![' ', '\t'].contains(&letter) {
+                                        word.push(letter);
+                                    }
+                                    // If it's the new line - start indent region
+                                    if letter == '\n' {
+                                        is_indenting = true;
+                                        word = self.pattern_begin(word, letter);
+                                    }
+                                    // Check if the current letter
+                                    // concludes current indent region
+                                    if is_indenting {
+                                        if let Some(next_char) = self.reader.peek() {
+                                            if !vec![' ', '\t'].contains(&next_char) {
+                                                word = self.add_indent(word);
+                                                is_indenting = false;
+                                            }
+                                        }
+                                        continue
                                     }
                                 }
-                                continue
-                            }
-                        }
-                        // Skip newline character if we want to manually insert semicolons
-                        if let SeparatorMode::Manual = self.separator_mode {
-                            if letter == '\n' {
-                                word = self.add_word(word);
-                                continue
-                            }
-                        }
+                                // Skip newline character if we want to manually insert semicolons
+                                if let SeparatorMode::Manual = self.separator_mode {
+                                    if letter == '\n' {
+                                        word = self.add_word(word);
+                                        continue
+                                    }
+                                }
 
-                        /*****************/
-                        /* Regular Lexer */
-                        /*****************/
+                                /*****************/
+                                /* Regular Lexer */
+                                /*****************/
 
-                        // Skip whitespace
-                        if vec![' ', '\t'].contains(&letter) {
-                            word = self.add_word(word);
-                        }
-                        // Handle special symbols
-                        else if self.symbols.contains(&letter) || letter == '\n' {
-                            word = self.pattern_add_symbol(word, letter);
-                        }
-                        // Handle word
-                        else {
-                            word.push(letter);
+                                // Skip whitespace
+                                if vec![' ', '\t'].contains(&letter) {
+                                    word = self.add_word(word);
+                                }
+                                // Handle special symbols
+                                else if self.symbols.contains(&letter) || letter == '\n' {
+                                    word = self.pattern_add_symbol(word, letter);
+                                }
+                                // Handle word
+                                else {
+                                    word.push(letter);
+                                }
+                            }
                         }
                     }
                 }
@@ -263,7 +273,7 @@ mod test {
             ("32".to_string(), 1, 15),
             (")".to_string(), 1, 17)
         ];
-        let rules = Rules::new(symbols, regions);
+        let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = (12 + 32)");
         let mut lexer = super::Lexer::new(&cc);
@@ -306,7 +316,7 @@ mod test {
             ("}".to_string(), 1, 42),
             (" text'".to_string(), 1, 43)
         ];
-        let rules = Rules::new(symbols, regions);
+        let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("TestScript", rules);
         cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
         let mut lexer = super::Lexer::new(&cc);
@@ -335,7 +345,7 @@ mod test {
             ("\n        ".to_string(), 3, 1),
             ("pass".to_string(), 3, 9)
         ];
-        let rules = Rules::new(symbols, regions);
+        let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.scoping_mode = ScopingMode::Indent;
         cc.load(vec![
@@ -367,7 +377,7 @@ mod test {
             ("12".to_string(), 3, 1),
             (";".to_string(), 3, 3)
         ];
-        let rules = Rules::new(symbols, regions);
+        let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("Testhon", rules);
         cc.load(vec![
             "let age = 12",

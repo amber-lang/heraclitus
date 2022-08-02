@@ -14,13 +14,14 @@ use super::region::Region;
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// let symbols = vec!['+', '-', '*', '/', '(', ')', '&', '|', '!'];
+/// let compounds = vec![('&', '&'), ('|', '|')];
 /// let region = reg![
 ///     reg!(str as "string literal" => {
 ///         begin: "'",
 ///         end: "'"
 ///     })
 /// ];
-/// Rules::new(symbols, region);
+/// Rules::new(symbols, compounds, region);
 /// ```
 
 #[derive(Debug, Clone, PartialEq)]
@@ -34,13 +35,16 @@ pub struct Rules {
     pub region_tree: Region,
     /// Escape symbol
     pub escape_symbol: char,
+    /// Vector of pairs of symbols that should be merged together
+    pub compounds: Vec<(char, char)>
 }
 
 impl Rules {
     /// Creates new rules that can be supplied to the compiler
-    pub fn new(symbols: Vec<char>, region_tree: Region) -> Rules {
+    pub fn new(symbols: Vec<char>, compounds: Vec<(char, char)>, region_tree: Region) -> Rules {
         Rules {
             symbols,
+            compounds,
             region_tree,
             escape_symbol: '\\'
         }

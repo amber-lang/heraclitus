@@ -10,7 +10,7 @@ fn cobra() {
             end: "'"
         })
     ];
-    let rules = Rules::new(symbols, region);
+    let rules = Rules::new(symbols, vec![], region);
     let mut compiler = Compiler::new("Arith", rules);
     compiler.use_indents();
     compiler.load(vec![
