@@ -10,7 +10,7 @@ fn arith() {
             end: "'"
         })
     ];
-    let rules = Rules::new(symbols, region);
+    let rules = Rules::new(symbols, vec![], region);
     let mut compiler = Compiler::new("Arith", rules);
     compiler.load("12.24 +.123 + 12 + 321");
     let mut expr = arith_modules::Expr::new();

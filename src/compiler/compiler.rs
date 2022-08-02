@@ -50,7 +50,7 @@ pub enum ScopingMode {
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
 /// # fn compiler() -> Result<(), ErrorDetails> {
-/// # let rules = Rules::new(vec![], reg![]);
+/// # let rules = Rules::new(vec![], vec![], reg![]);
 /// let mut global_ctx = GlobalContext::new();
 /// let cc = Compiler::new("HerbScript", rules);
 /// let meta = cc.compile(&mut global_ctx)?;
