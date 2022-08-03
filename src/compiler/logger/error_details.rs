@@ -70,15 +70,16 @@ impl ErrorDetails {
     }
 
     /// In case of EOF this function ensures you to return concrete position
-    pub fn get_pos_by_file(&mut self, path: &String) -> std::io::Result<(usize, usize)> {
+    pub fn get_pos_by_file(&mut self, path: impl AsRef<str>) -> std::io::Result<(usize, usize)> {
         let mut code = format!("");
-        let mut file = File::open(path)?;
+        let mut file = File::open(path.as_ref())?;
         file.read_to_string(&mut code)?;
         Ok(self.get_pos_by_code(&code))
     }
 
     /// In case of EOF this function ensures you to return concrete position
-    pub fn get_pos_by_code(&mut self, code: &String) -> (usize, usize) {
+    pub fn get_pos_by_code(&mut self, code: impl AsRef<str>) -> (usize, usize) {
+        let code = code.as_ref();
         match self.position {
             ErrorPosition::Pos(row, col) => (row, col),
             ErrorPosition::EOF => {
