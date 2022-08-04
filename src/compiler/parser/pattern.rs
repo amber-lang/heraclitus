@@ -15,7 +15,7 @@ use super::{ Metadata, SyntaxModule };
 /// # }
 /// ```
 pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => if token.word == text.as_ref() {
             meta.increment_index();
             Ok(token.word.clone())
@@ -38,7 +38,7 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
 /// # }
 /// ```
 pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => if cb(&token.word) {
             meta.increment_index();
             Ok(token.word.clone())
