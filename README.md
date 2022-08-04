@@ -42,3 +42,14 @@ The `Compiler` requires lexer rules in order to exist.
 let cc = Compiler::new("HerbScript", rules);
 let tokens = cc.tokenize()?;
 ```
+
+# Change log (0.2.0) 🚀
+
+## Feature:
+- Added compounds
+- Logger can now display messages not related to code
+- New method for retrieving current token
+- New debug functionality
+
+## Fix:
+- Changed string reference of all function parameters to `impl AsRef<str>`
