@@ -8,6 +8,7 @@ pub struct Add {
 }
 
 impl SyntaxModule<DefaultMetadata> for Add {
+    syntax_name!("Add");
     fn new() -> Self {
         Add {
             left: None,

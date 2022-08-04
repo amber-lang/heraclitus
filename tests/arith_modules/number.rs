@@ -6,6 +6,7 @@ pub struct Number {
 }
 
 impl SyntaxModule<DefaultMetadata> for Number {
+    syntax_name!("Number");
     fn new() -> Self {
         Number { value: format!("") }
     }

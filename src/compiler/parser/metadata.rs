@@ -8,7 +8,9 @@ pub struct DefaultMetadata {
     /// Lexem of tokens to parse
     pub expr: Vec<Token>,
     /// Optionally path of the file
-    pub path: Option<String>
+    pub path: Option<String>,
+    /// Debug value that is used internally
+    pub indent: Option<usize>
 }
 
 impl Metadata for DefaultMetadata {
@@ -16,7 +18,8 @@ impl Metadata for DefaultMetadata {
         DefaultMetadata {
             index: 0,
             expr: expression,
-            path
+            path,
+            indent: None
         }
     }
     fn get_token_at(&self, index: usize) -> Option<Token> {
@@ -29,6 +32,12 @@ impl Metadata for DefaultMetadata {
     }
     fn get_index(&self) -> usize {
         self.index
+    }
+    fn get_debug(&mut self) -> Option<usize> {
+        self.indent
+    }
+    fn set_debug(&mut self, indent: usize) {
+       self.indent = Some(indent)
     }
 }
 
@@ -45,6 +54,10 @@ pub trait Metadata {
     fn get_index(&self) -> usize;
     /// Set current index
     fn set_index(&mut self, index: usize);
+    /// Getter for debug value (debug value should be Option<usize> initialized with None)
+    fn get_debug(&mut self) -> Option<usize>;
+    /// Setter for debug value
+    fn set_debug(&mut self, indent: usize);
     /// Optionally set logic of incrementing the index number
     fn increment_index(&mut self) {
         let index = self.get_index();

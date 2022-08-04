@@ -1,4 +1,29 @@
 use crate::compiler::logger::ErrorDetails;
+use colored::Colorize;
+
+use super::Metadata;
+
+#[macro_export]
+/// This macro is a syntax sugar for the name method
+/// All this does is setting the new name without all the syntax clutter.
+/// # Example
+/// ```
+/// # use heraclitus_compiler::prelude::*;
+/// # struct MySyntax;
+/// impl SyntaxModule<DefaultMetadata> for MySyntax {
+///     syntax_name!("MySyntax");
+/// #   fn new() -> Self { Self {} }
+/// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
+///     // ...
+/// }
+/// ```
+macro_rules! syntax_name {
+    ($expr:expr) => {
+        fn name() -> &'static str {
+            $expr
+        }
+    };
+}
 
 /// Result that should be returned in the parsing phase
 pub type SyntaxResult = Result<(), ErrorDetails>;
@@ -6,14 +31,62 @@ pub type SyntaxResult = Result<(), ErrorDetails>;
 /// Trait for parsing
 /// 
 /// Trait that should be implemented in order to parse tokens with heraklit
-pub trait SyntaxModule<M> {
+/// ```
+/// # use heraclitus_compiler::prelude::*;
+/// struct MySyntax {
+///     name: String
+///     // ... (you decide what you need to store)
+/// }
+/// 
+/// impl SyntaxModule<DefaultMetadata> for MySyntax {
+///     syntax_name!("MySyntax");
+/// 
+///     fn new() -> MySyntax {
+///         MySyntax {
+///             name: format!(""),
+///             // Default initialization
+///         }
+///     }
+/// 
+///     // Here you can parse the actual code
+///     fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
+///         token(meta, "var")?;
+///         self.name = variable(meta, vec!['_'])?;
+///         Ok(())
+///     }
+/// }
+/// ```
+pub trait SyntaxModule<M: Metadata> {
     /// Create a new default implementation of syntax module
     fn new() -> Self;
+    /// Name of this module
+    fn name() -> &'static str;
     /// Parse and create AST
     /// 
     /// This method is fundamental in creating a functional AST node that can determine 
     /// if tokens provided by metadata can be consumed to create this particular AST node.
     fn parse(&mut self, meta: &mut M) -> SyntaxResult;
+    /// Do not implement this function as this is a predefined function for debugging
+    fn parse_debug(&mut self, meta: &mut M) -> SyntaxResult {
+        match meta.get_debug() {
+            Some(debug) => {
+                let padding = "  ".repeat(debug);
+                println!("{padding}[Entered] {}", Self::name());
+                meta.set_debug(debug + 1);
+                let result = self.parse(meta);
+                match result {
+                    Ok(()) => println!("{padding}{} {}", "[Left]".green(), Self::name()),
+                    Err(_) => println!("{padding}{} {}", "[Failed]".red(), Self::name())
+                }
+                meta.set_debug(debug);
+                result
+            }
+            None => {
+                meta.set_debug(0);
+                self.parse_debug(meta)
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -25,6 +98,8 @@ mod test {
 
     struct Expression {}
     impl SyntaxModule<DefaultMetadata> for Expression {
+        syntax_name!("Expression");
+
         fn new() -> Self {
             Expression { }
         }
@@ -58,6 +133,7 @@ mod test {
 
     struct Preset {}
     impl SyntaxModule<DefaultMetadata> for Preset {
+        syntax_name!("Preset");
         fn new() -> Self {
             Preset {  }
         }
@@ -93,6 +169,7 @@ mod test {
 
     struct PatternModule {}
     impl SyntaxModule<DefaultMetadata> for PatternModule {
+        syntax_name!("Pattern Module");
         fn new() -> Self {
             PatternModule {  }
         }
