@@ -7,6 +7,7 @@ pub struct IfStatement {
     block: Block
 }
 impl SyntaxModule<DefaultMetadata> for IfStatement {
+    syntax_name!("If");
     fn new() -> Self {
         IfStatement { cond: Expr::new(), block: Block::new() }
     }

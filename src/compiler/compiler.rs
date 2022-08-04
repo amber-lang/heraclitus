@@ -46,6 +46,7 @@ pub enum ScopingMode {
 /// # use heraclitus_compiler::prelude::*;
 /// # struct GlobalContext {}
 /// # impl SyntaxModule<DefaultMetadata> for GlobalContext {
+/// #   syntax_name!("Global");
 /// #   fn new() -> Self { GlobalContext {} }
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
@@ -71,6 +72,8 @@ pub struct Compiler {
     pub separator_mode: SeparatorMode,
     /// Scoping mode for this compiler
     pub scoping_mode: ScopingMode,
+    // Check if user wants to debug parser
+    debug: bool
 }
 
 impl Compiler {
@@ -82,7 +85,8 @@ impl Compiler {
             code: format!(""),
             path: None,
             separator_mode: SeparatorMode::Manual,
-            scoping_mode: ScopingMode::Block
+            scoping_mode: ScopingMode::Block,
+            debug: false
         }
     }
 
@@ -118,12 +122,21 @@ impl Compiler {
         Ok(lexer.lexem)
     }
 
+    /// Parser will display information about the call stack
+    pub fn debug(&mut self) {
+        self.debug = true
+    }
+
     /// Bulk run lexer and parser (used for testing purposes)
     pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ErrorDetails> {
         match self.tokenize() {
             Ok(lexem) => {
                 let mut meta = M::new(lexem, self.path.clone());
-                module.parse(&mut meta)?;
+                if self.debug {
+                    module.parse_debug(&mut meta)?;
+                } else {
+                    module.parse(&mut meta)?;
+                }
                 Ok(meta)
             }
             Err((kind, mut details)) => {

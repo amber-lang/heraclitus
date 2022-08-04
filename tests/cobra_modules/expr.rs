@@ -31,6 +31,7 @@ impl Expr {
     }
 }
 impl SyntaxModule<DefaultMetadata> for Expr {
+    syntax_name!("Expr");
     fn new() -> Self {
         Expr { expr: None }
     }

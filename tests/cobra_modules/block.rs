@@ -13,6 +13,7 @@ impl Block {
     }
 }
 impl SyntaxModule<DefaultMetadata> for Block {
+    syntax_name!("Block");
     fn new() -> Self {
         Block { statements: vec![], indent_size: 0 }
     }

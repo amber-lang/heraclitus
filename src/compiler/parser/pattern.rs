@@ -56,6 +56,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 /// # use heraclitus_compiler::prelude::*;
 /// # struct IfStatement {}
 /// # impl SyntaxModule<DefaultMetadata> for IfStatement {
+/// #   syntax_name!("If");
 /// #   fn new() -> Self { IfStatement {} }
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
@@ -68,7 +69,12 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 /// ```
 pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> Result<(), ErrorDetails> {
     let index = meta.get_index();
-    if let Err(details) = module.parse(meta) {
+    // Determine if we shall parse it in debug mode or not
+    let result = match meta.get_debug() {
+        Some(_) => module.parse_debug(meta),
+        None => module.parse(meta)
+    };
+    if let Err(details) = result {
         meta.set_index(index);
         Err(details)
     } else { Ok(()) }

@@ -5,6 +5,7 @@ pub struct Text {
     value: String
 }
 impl SyntaxModule<DefaultMetadata> for Text {
+    syntax_name!("Text");
     fn new() -> Self {
         Text { value: format!("") }
     }
