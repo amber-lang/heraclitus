@@ -57,7 +57,7 @@ impl ErrorDetails {
     /// to retrieve token stored under it in metadata's expression.
     /// Then it's position is used to express the ErrorPosition
     pub fn from_metadata(meta: &impl Metadata) -> Self {
-        match meta.get_token_at(meta.get_index()) {
+        match meta.get_current_token() {
             Some(token) => ErrorDetails::with_pos(token.pos),
             None => ErrorDetails::with_eof()
         }

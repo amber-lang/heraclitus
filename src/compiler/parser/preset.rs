@@ -6,7 +6,7 @@ use super::Metadata;
 /// Matches one token with a word that would be considered as a variable name.
 /// If desired - one can extend this implementation with other chars.
 pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             // This boolean stores false if we are past
             // the first letter otherwise it's true
@@ -38,7 +38,7 @@ pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, E
 /// Matches one token with a word that consists of letters only.
 /// If desired - one can extend this implementation with other chars.
 pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphabetic() || extend.contains(&letter)) {
                 meta.increment_index();
@@ -54,7 +54,7 @@ pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,
 /// Matches one token with a word that consists of letters or numbers only.
 /// If desired - one can extend this implementation with other chars.
 pub fn alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphanumeric() || extend.contains(&letter)) {
                 meta.increment_index();
@@ -70,7 +70,7 @@ pub fn alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<Strin
 /// Matches a token of which word is a string of digits.
 /// If desired - one can extend this implementation with other chars.
 pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_numeric() || extend.contains(&letter)) {
                 meta.increment_index();
@@ -86,7 +86,7 @@ pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
 /// Matches a positive or negetive integer.
 /// If desired - one can extend this implementation with other chars.
 pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume
@@ -111,7 +111,7 @@ pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
 /// Matches a number that contains a floating point (has a dot in decimal notation)
 /// If desired - one can extend this implementation with other chars.
 pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, ErrorDetails> {
-    match meta.get_token_at(meta.get_index()) {
+    match meta.get_current_token() {
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume

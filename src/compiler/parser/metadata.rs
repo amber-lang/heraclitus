@@ -50,4 +50,9 @@ pub trait Metadata {
         let index = self.get_index();
         self.set_index(index + 1);
     }
+    /// Return token under current index
+    fn get_current_token(&self) -> Option<Token> {
+        let index = self.get_index();
+        self.get_token_at(index)
+    }
 }
