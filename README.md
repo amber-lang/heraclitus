@@ -43,13 +43,20 @@ let cc = Compiler::new("HerbScript", rules);
 let tokens = cc.tokenize()?;
 ```
 
-# Change log (0.2.0) 🚀
+## Change log 🚀
 
-## Feature:
+### Version 0.2.1
+
+#### Feature:
+- `ErrorDetails::from_token_option(...)` can now be used to create errors at location of given token
+
+### Version 0.2.0
+
+#### Feature:
 - Added compounds
 - Logger can now display messages not related to code
 - New method for retrieving current token
 - New debug functionality
 
-## Fix:
+#### Fix:
 - Changed string reference of all function parameters to `impl AsRef<str>`
