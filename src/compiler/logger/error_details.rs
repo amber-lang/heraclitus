@@ -5,7 +5,7 @@
 
 use std::fs::File;
 use std::io::*;
-use crate::compiler::Metadata;
+use crate::compiler::{Metadata, Token};
 
 /// Store position of some error
 #[derive(Debug)]
@@ -57,7 +57,15 @@ impl ErrorDetails {
     /// to retrieve token stored under it in metadata's expression.
     /// Then it's position is used to express the ErrorPosition
     pub fn from_metadata(meta: &impl Metadata) -> Self {
-        match meta.get_current_token() {
+        Self::from_token_option(meta.get_current_token())
+    }
+
+    /// Create an error at position of the provided token
+    /// 
+    /// This function gives you ability to store tokens
+    /// and error once you finished parsing the entire expression
+    pub fn from_token_option(token_opt: Option<Token>) -> Self {
+        match token_opt {
             Some(token) => ErrorDetails::with_pos(token.pos),
             None => ErrorDetails::with_eof()
         }
