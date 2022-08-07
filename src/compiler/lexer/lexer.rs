@@ -51,6 +51,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Add indentation to the lexem
+    #[inline]
     fn add_indent(&mut self, word: String) -> String {
         if word.len() > 0 {
             // Getting position by word here would attempt to
@@ -66,6 +67,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Add word that has been completed in previous iteration to the lexem
+    #[inline]
     fn add_word(&mut self, word: String) -> String {
         if word.len() > 0 {
             let (row, col) = self.reader.get_word_position(&word);
@@ -79,6 +81,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Add word that has been completed in current iteration to the lexem
+    #[inline]
     fn add_word_inclusively(&mut self, word: String) -> String {
         if word.len() > 0 {
             let (row, col) = self.reader.get_word_position(&word);
@@ -92,6 +95,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Checks whether this is a nontokenizable region
+    #[inline]
     fn is_non_token_region(&self, reaction: RegionReaction) -> bool {
         if let Some(region) = self.region.get_region() {
             !region.tokenize && reaction == RegionReaction::Pass
@@ -101,6 +105,7 @@ impl<'a> Lexer<'a> {
 
     /// Pattern code for adding a symbol
     /// **[*]**
+    #[inline]
     fn pattern_add_symbol(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
         word.push(letter);
@@ -109,6 +114,7 @@ impl<'a> Lexer<'a> {
 
     /// Pattern code for beginning a new region
     /// **[**
+    #[inline]
     fn pattern_begin(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
         word.push(letter);
@@ -117,6 +123,7 @@ impl<'a> Lexer<'a> {
 
     /// Pattern code for ending current region
     /// **]**
+    #[inline]
     fn pattern_end(&mut self, mut word: String, letter: char) -> String {
         word.push(letter);
         self.add_word_inclusively(word)
