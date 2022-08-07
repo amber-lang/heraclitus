@@ -3,8 +3,8 @@ use super::reader::Reader;
 
 #[derive(PartialEq)]
 pub enum RegionReaction {
-    Begin,
-    End,
+    Begin(bool),
+    End(bool),
     Pass
 }
 
@@ -47,6 +47,8 @@ impl RegionHandler {
                 // The region that got matched based on current code lexing state
                 if let Some(mut begin_region) = self.match_region_by_begin(reader) {
                     if begin_region.name == *interp_region.name {
+                        // Save the tokenize state here to preserve borrow rules
+                        let tokenize = begin_region.tokenize.clone();
                         // This region could reference other region
                         // In this case we want to replace the interpolations
                         // of the region with the target ones
@@ -64,15 +66,17 @@ impl RegionHandler {
                             }
                         }
                         self.region_stack.push(begin_region);
-                        return RegionReaction::Begin
+                        return RegionReaction::Begin(tokenize);
                     }
                 }
             }
             // Let's check if we can close current region
             if let Some(end_region) = self.match_region_by_end(reader) {
                 if end_region.name == region.name {
+                    // Save the tokenize state here to preserve borrow rules
+                    let tokenize = end_region.tokenize.clone();
                     self.region_stack.pop();
-                    return RegionReaction::End
+                    return RegionReaction::End(tokenize)
                 }
             }
         }
@@ -195,7 +199,7 @@ mod test {
         // Simulate matching regions
         while let Some(_) = reader.next() {
             let region_mutated = rh.handle_region(&reader);
-            if let RegionReaction::Begin | RegionReaction::End = region_mutated {
+            if let RegionReaction::Begin(_) | RegionReaction::End(_) = region_mutated {
                 result.push(reader.get_index());
             }
         }

@@ -135,22 +135,42 @@ impl<'a> Lexer<'a> {
             match reaction {
                 // If the region has been opened
                 // Finish the part that we have been parsing
-                RegionReaction::Begin => {
-                    // This is supposed to prevent overshadowing new line
-                    // character if region rule opens with newline
-                    if letter == '\n' {
+                RegionReaction::Begin(tokenize) => {
+                    // Also if the new region is an interpolation that tokenizes
+                    // the inner content - separate the region from the content
+                    if tokenize {
                         word = self.pattern_add_symbol(word, letter);
                     }
-                    word = self.pattern_begin(word, letter);
+                    // Regular region case
+                    else {
+                        // This is supposed to prevent overshadowing new line
+                        // character if region rule opens with newline
+                        if letter == '\n' {
+                            // This additionally creates a new token
+                            word = self.pattern_add_symbol(word, letter);
+                        }
+                        // Normally start a new region
+                        word = self.pattern_begin(word, letter);
+                    }
                 },
                 // If the region has been closed
                 // Add the closing region and finish the word
-                RegionReaction::End => {
-                    word = self.pattern_end(word, letter);
-                    // This is supposed to prevent overshadowing new line
-                    // character if region rule closes with newline
-                    if letter == '\n' {
+                RegionReaction::End(tokenize) => {
+                    // Also if the new region is an interpolation that tokenizes
+                    // the inner content - separate the region from the content
+                    if tokenize {
                         word = self.pattern_add_symbol(word, letter);
+                    }
+                    // Regular region case
+                    else {
+                        // Normally close the region
+                        word = self.pattern_end(word, letter);
+                        // This is supposed to prevent overshadowing new line
+                        // character if region rule closes with newline
+                        if letter == '\n' {
+                            // This additionally creates a new token
+                            word = self.pattern_add_symbol(word, letter);
+                        }
                     }
                 }
                 RegionReaction::Pass => {
@@ -310,15 +330,15 @@ mod test {
             ("{".to_string(), 1, 15),
             ("'is ".to_string(), 1, 16),
             ("{".to_string(), 1, 20),
-            ("'reeeeaaaally'".to_string(), 1, 21),
-            ("}".to_string(), 1, 35),
-            (" long'".to_string(), 1, 36),
-            ("}".to_string(), 1, 42),
-            (" text'".to_string(), 1, 43)
+            ("adjective".to_string(), 1, 21),
+            ("}".to_string(), 1, 30),
+            (" long'".to_string(), 1, 31),
+            ("}".to_string(), 1, 37),
+            (" text'".to_string(), 1, 38)
         ];
         let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("TestScript", rules);
-        cc.load("let a = 'this {'is {'reeeeaaaally'} long'} text'");
+        cc.load("let a = 'this {'is {adjective} long'} text'");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
