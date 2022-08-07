@@ -23,12 +23,14 @@ impl RegionHandler {
         }
     }
 
+    #[inline]
     pub fn get_region(&self) -> Option<&Region> {
         self.region_stack.last()
     }
 
     // Error if after code lexing 
     // some region was left unclosed
+    #[inline]
     pub fn is_region_closed(&self, reader: &Reader) -> Result<(),((usize, usize), Region)> {
         if let Some(region) = self.region_stack.last() {
             if !region.allow_left_open {
@@ -84,6 +86,7 @@ impl RegionHandler {
     }
 
     // Matches region by some getter callback
+    #[inline]
     fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &Vec<Region>) -> Option<Region> {
         // Closure that checks if for each given Region is there any that matches current history state
         let predicate = |candidate: &Region| match reader.get_history(cb(candidate).len()) {
@@ -100,11 +103,13 @@ impl RegionHandler {
         self.get_region_by(predicate, candidates)
     }
 
+    #[inline]
     fn match_region_by_begin(&self, reader: &Reader) -> Option<Region> {
         let region = self.get_region().unwrap();
         self.match_region_by(reader, |candidate: &Region| &candidate.begin, &region.interp)
     }
 
+    #[inline]
     fn match_region_by_end(&self, reader: &Reader) -> Option<Region> {
         let region = self.get_region().unwrap();
         if !region.global {
@@ -113,6 +118,7 @@ impl RegionHandler {
     }
 
     // Target region is a region on which we want to search the interpolations
+    #[inline]
     fn get_region_by(&self, cb: impl Fn(&Region) -> bool, candidates: &Vec<Region>) -> Option<Region> {
         for region in candidates.iter() {
             if cb(region) {
