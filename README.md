@@ -45,13 +45,16 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 0.2.1
+## Version 1.2.2
+### Fix:
+- Major bug with a tokenised interpolation being parsed in a wrong way.
+- Intensively used code is now inlined at compile time
 
+## Version 0.2.1
 ### Feature:
 - `ErrorDetails::from_token_option(...)` can now be used to create errors at location of given token
 
 ## Version 0.2.0
-
 ### Feature:
 - Added compounds
 - Logger can now display messages not related to code
