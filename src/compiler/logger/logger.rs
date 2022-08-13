@@ -8,7 +8,7 @@
 #![allow(dead_code)]
 use std::process;
 use super::displayer::Displayer;
-use crate::compiler::{Token, Metadata};
+use crate::compiler::{Token};
 
 /// Type of the message that logger shall display
 #[derive(Clone)]
