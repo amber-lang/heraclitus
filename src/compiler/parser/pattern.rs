@@ -9,7 +9,7 @@ use super::{ Metadata, SyntaxModule };
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
-/// # let meta = &mut DefaultMetadata::new(vec![], None);
+/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// token(meta, "let")?;
 /// # Ok(())
 /// # }
@@ -32,7 +32,7 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
-/// # let meta = &mut DefaultMetadata::new(vec![], None);
+/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let the_word = token_by(meta, |word| word.starts_with('@'))?;
 /// # Ok(())
 /// # }
@@ -61,7 +61,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
 /// # fn compile() -> Result<(), ErrorDetails> {
-/// # let meta = &mut DefaultMetadata::new(vec![], None);
+/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let mut ifst = IfStatement::new();
 /// syntax(meta, &mut ifst)?;
 /// # Ok(())
@@ -88,7 +88,7 @@ pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> R
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
-/// # let meta = &mut DefaultMetadata::new(vec![], None);
+/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let spaces: usize = indent(meta)?;
 /// # Ok(())
 /// # }
@@ -110,7 +110,7 @@ pub fn indent(meta: &mut impl Metadata) -> Result<usize, ErrorDetails> {
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn compile() -> Result<(), ErrorDetails> {
-/// # let meta = &mut DefaultMetadata::new(vec![], None);
+/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let cmp: std::cmp::Ordering = indent_with(meta, 6)?;
 /// # Ok(())
 /// # }

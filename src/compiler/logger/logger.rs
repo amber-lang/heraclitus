@@ -8,7 +8,6 @@
 #![allow(dead_code)]
 use std::process;
 use super::{displayer::Displayer, ErrorDetails};
-use crate::compiler::{Token};
 
 /// Type of the message that logger shall display
 #[derive(Clone)]
@@ -31,10 +30,9 @@ pub enum LogType {
 /// # let position = (0, 0);
 /// # let guess = "type";
 /// # let code = format!("code");
-/// Logger::new_err(path, position)
+/// Logger::new_err_with_details(Some(path), Some(code), ErrorDetails::with_pos(position, 4))
 ///     .attach_message("Type of this parameter is invalid")
 ///     .attach_comment(format!("Maybe you meant type {guess} instead"))
-///     .attach_code(code)
 ///     .show()
 ///     .exit();
 /// ```
