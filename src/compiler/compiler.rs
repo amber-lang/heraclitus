@@ -65,7 +65,7 @@ pub struct Compiler {
     /// Rules that describe your language
     pub rules: Rules,
     /// Source code in a form of string
-    pub code: String,
+    pub code: Option<String>,
     /// Path to the compiled file if exists
     pub path: Option<String>,
     /// Separator mode for this compiler
@@ -82,7 +82,7 @@ impl Compiler {
         Compiler {
             name: String::from(name.as_ref()),
             rules,
-            code: format!(""),
+            code: None,
             path: None,
             separator_mode: SeparatorMode::Manual,
             scoping_mode: ScopingMode::Block,
@@ -98,14 +98,16 @@ impl Compiler {
     /// Load file from path
     pub fn load_file(mut self, file_path: String) -> std::io::Result<()> {
         let mut file = File::open(&file_path)?;
-        file.read_to_string(&mut self.code)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        self.code = Some(contents);
         self.path = Some(file_path);
         Ok(())
     }
 
     /// Load code string
     pub fn load<T: AsRef<str>>(&mut self, code: T) {
-        self.code = String::from(code.as_ref());
+        self.code = Some(String::from(code.as_ref()));
     }
 
     /// Set source file path
@@ -131,7 +133,7 @@ impl Compiler {
     pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ErrorDetails> {
         match self.tokenize() {
             Ok(lexem) => {
-                let mut meta = M::new(lexem, self.path.clone());
+                let mut meta = M::new(lexem, self.path.clone(), self.code.clone());
                 if self.debug {
                     module.parse_debug(&mut meta)?;
                 } else {
@@ -139,18 +141,18 @@ impl Compiler {
                 }
                 Ok(meta)
             }
-            Err((kind, mut details)) => {
+            Err((kind, details)) => {
                 let data = details.data.clone().unwrap().capitalize();
                 // Create an error message
                 let message = match kind {
                     LexerErrorType::Singleline => format!("{data} cannot be multiline"),
                     LexerErrorType::Unclosed => format!("{data} unclosed"),
                 };
-                let pos = details.get_pos_by_code(&self.code);
+                let pos = details.get_pos_by_code(&self.code.as_ref().unwrap());
                 // Send error
-                Logger::new_err_at_position(self.path.clone(), Some(self.code.clone()), pos)
+                Logger::new_err_at_position(self.path.clone(), self.code.clone(), pos)
                     .attach_message(message)
-                    .attach_code(self.code.clone())
+                    .attach_code(self.code.as_ref().unwrap().clone())
                     .show()
                     .exit();
                 Err(details)

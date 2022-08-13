@@ -138,7 +138,7 @@ mod test {
     #[test]
     fn indent_test() {
         let expr = vec![Token {word: format!("\n    "), pos: (0, 0)}];
-        let mut meta = DefaultMetadata::new(expr, Some(format!("path/to/file")));
+        let mut meta = DefaultMetadata::new(expr, Some(format!("path/to/file")), None);
         let res = indent(&mut meta);
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), 4);
@@ -147,7 +147,7 @@ mod test {
     #[test]
     fn indent_with_test() {
         let expr = vec![Token { word: format!("\n    "), pos: (0, 0) }];
-        let mut meta = DefaultMetadata::new(expr, Some(format!("path/to/file")));
+        let mut meta = DefaultMetadata::new(expr, Some(format!("path/to/file")), None);
         let res = indent_with(&mut meta, 4);
         assert!(res.is_ok());
     }

@@ -7,7 +7,7 @@
 
 #![allow(dead_code)]
 use std::process;
-use super::displayer::Displayer;
+use super::{displayer::Displayer, ErrorDetails};
 use crate::compiler::{Token};
 
 /// Type of the message that logger shall display
@@ -102,18 +102,21 @@ impl Logger {
     }
 
     /// Show error message based on the token
-    pub fn new_err_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
-        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Error)
+    pub fn new_err_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
+        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
+        Logger::new(path, code, det.0, det.1, details.len, LogType::Error)
     }
 
     /// Show warning message based on the token
-    pub fn new_warn_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
-        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Warning)
+    pub fn new_warn_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
+        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
+        Logger::new(path, code, det.0, det.1, details.len, LogType::Warning)
     }
 
     /// Show info message based on the token
-    pub fn new_info_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
-        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Info)
+    pub fn new_info_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
+        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
+        Logger::new(path, code, det.0, det.1, details.len, LogType::Info)
     }
 
     /// Create an error by supplying essential information about the location

@@ -39,11 +39,12 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     /// Create a new Lexer based on the compiler metadata
     pub fn new(cc: &'a Compiler) -> Self {
+        let code: &'a String = cc.code.as_ref().unwrap();
         Lexer {
             symbols: cc.rules.symbols.clone(),
             compound: CompoundHandler::new(&cc.rules),
             region: RegionHandler::new(&cc.rules),
-            reader: Reader::new(&cc.code),
+            reader: Reader::new(&code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
             separator_mode: cc.separator_mode.clone(),
             scoping_mode: cc.scoping_mode.clone()
