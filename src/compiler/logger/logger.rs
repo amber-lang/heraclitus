@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 use std::process;
 use super::displayer::Displayer;
+use crate::compiler::{Token, Metadata};
 
 /// Type of the message that logger shall display
 #[derive(Clone)]
@@ -44,30 +45,30 @@ pub struct Logger {
     pub row: usize,
     /// Column position
     pub col: usize,
+    /// Length of the token
+    pub len: usize,
     /// Path to the source file
-    pub path: String,
+    pub path: Option<String>,
     /// Optionally store source code
     pub code: Option<String>,
     /// Optionally store message
     pub message: Option<String>,
     /// Optionally store comment
-    pub comment: Option<String>,
-    /// Size of lines of code to see in the error message
-    pub code_len: usize
+    pub comment: Option<String>
 }
 
 impl Logger {
     /// Create a new logger instance
-    pub fn new(path: String, row: usize, col: usize, kind: LogType) -> Self {
+    pub fn new(path: Option<String>, code: Option<String>, row: usize, col: usize, len: usize, kind: LogType) -> Self {
         Logger {
             kind,
             path,
             row,
             col,
-            code: None,
+            len,
+            code,
             message: None,
-            comment: None,
-            code_len: 3
+            comment: None
         }
     }
 
@@ -77,11 +78,11 @@ impl Logger {
             kind,
             row: 0,
             col: 0,
-            path: format!(""),
+            len: 0,
+            path: None,
             code: None,
             message: Some(message.as_ref().to_string()),
-            comment: None,
-            code_len: 3
+            comment: None
         }
     }
 
@@ -100,19 +101,34 @@ impl Logger {
         Logger::new_msg(message, LogType::Info)
     }
 
+    /// Show error message based on the token
+    pub fn new_err_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
+        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Error)
+    }
+
+    /// Show warning message based on the token
+    pub fn new_warn_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
+        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Warning)
+    }
+
+    /// Show info message based on the token
+    pub fn new_info_with_token(path: Option<String>, code: Option<String>, token: Token) -> Self {
+        Logger::new(path, code, token.pos.0, token.pos.1, token.word.len(), LogType::Info)
+    }
+
     /// Create an error by supplying essential information about the location
-    pub fn new_err(path: String, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, row, col, LogType::Error)
+    pub fn new_err_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
+        Logger::new(path, code, row, col, 0, LogType::Error)
     }
 
     /// Create a warning by supplying essential information about the location
-    pub fn new_warn(path: String, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, row, col, LogType::Warning)
+    pub fn new_warn_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
+        Logger::new(path, code, row, col, 0, LogType::Warning)
     }
 
     /// Create an info by supplying essential information about the location
-    pub fn new_info(path: String, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, row, col, LogType::Info)
+    pub fn new_info_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
+        Logger::new(path, code, row, col, 0, LogType::Info)
     }
 
     /// Add message to an existing log
@@ -144,16 +160,16 @@ impl Logger {
         };
         // If this error is based in code
         if self.row > 0 && self.col > 0 {
-            Displayer::new(color, self.row, self.col)
+            Displayer::new(color, self.row, self.col, self.len)
                 .header(self.kind.clone())
                 .text(self.message.clone())
-                .path(&self.path)
+                .path(self.path.clone())
                 .padded_text(self.comment.clone())
-                .snippet(self.code.clone(), self.code_len)
+                .snippet(self.code.clone())
         }
         // If this error is a message error
         else {
-            Displayer::new(color, self.row, self.col)
+            Displayer::new(color, self.row, self.col, self.len)
                 .header(self.kind.clone())
                 .text(self.message.clone())
                 .padded_text(self.comment.clone());

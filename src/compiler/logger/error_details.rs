@@ -21,15 +21,18 @@ pub enum ErrorPosition {
 pub struct ErrorDetails {
     /// Location of this error
     pub position: ErrorPosition,
+    /// Length of the token
+    pub len: usize,
     /// Additional information
     pub data: Option<String>,
 }
 
 impl ErrorDetails {
     /// Create a new erorr from scratch
-    pub fn new(position: ErrorPosition) -> Self {
+    pub fn new(position: ErrorPosition, len: usize) -> Self {
         ErrorDetails {
             position,
+            len,
             data: None
         }
     }
@@ -38,14 +41,16 @@ impl ErrorDetails {
     pub fn with_eof() -> Self {
         ErrorDetails {
             position: ErrorPosition::EOF,
+            len: 0,
             data: None
         }
     }
 
     /// Create a new erorr at given position
-    pub fn with_pos((row, col): (usize, usize)) -> Self {
+    pub fn with_pos((row, col): (usize, usize), len: usize) -> Self {
         ErrorDetails {
             position: ErrorPosition::Pos(row, col),
+            len,
             data: None
         }
     }
@@ -66,7 +71,7 @@ impl ErrorDetails {
     /// and error once you finished parsing the entire expression
     pub fn from_token_option(token_opt: Option<Token>) -> Self {
         match token_opt {
-            Some(token) => ErrorDetails::with_pos(token.pos),
+            Some(token) => ErrorDetails::with_pos(token.pos, token.word.len()),
             None => ErrorDetails::with_eof()
         }
     }

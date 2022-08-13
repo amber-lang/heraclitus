@@ -194,7 +194,7 @@ impl<'a> Lexer<'a> {
                                     let pos = self.reader.get_position();
                                     return Err((
                                         LexerErrorType::Singleline,
-                                        ErrorDetails::with_pos(pos).data(region.name.clone())
+                                        ErrorDetails::with_pos(pos, 0).data(region.name.clone())
                                     ))
                                 }
                                 word.push(letter);
@@ -263,7 +263,7 @@ impl<'a> Lexer<'a> {
         if let Err((pos, region)) = self.region.is_region_closed(&self.reader) {
             return Err((
                 LexerErrorType::Unclosed,
-                ErrorDetails::with_pos(pos).data(region.name)
+                ErrorDetails::with_pos(pos, 0).data(region.name)
             ));
         }
         Ok(())
