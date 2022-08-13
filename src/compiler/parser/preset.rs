@@ -15,13 +15,13 @@ pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, E
                 // Check if rest of the letters are alphanumeric
                 if is_later {
                     if !(letter.is_alphanumeric() || extend.contains(&letter)) {
-                        return Err(ErrorDetails::with_pos(token.pos))
+                        return Err(ErrorDetails::from_token_option(Some(token)))
                     }
                 }
                 // Check if first letter is alphabetic
                 else {
                     if !(letter.is_alphabetic() || extend.contains(&letter)) {
-                        return Err(ErrorDetails::with_pos(token.pos))
+                        return Err(ErrorDetails::from_token_option(Some(token)))
                     }
                     is_later = true;
                 }
@@ -43,7 +43,7 @@ pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,
             if token.word.chars().all(|letter| letter.is_alphabetic() || extend.contains(&letter)) {
                 meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(ErrorDetails::with_pos(token.pos)) }
+            } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
     }
@@ -59,7 +59,7 @@ pub fn alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<Strin
             if token.word.chars().all(|letter| letter.is_alphanumeric() || extend.contains(&letter)) {
                 meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(ErrorDetails::with_pos(token.pos)) }
+            } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
     }
@@ -75,7 +75,7 @@ pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
             if token.word.chars().all(|letter| letter.is_numeric() || extend.contains(&letter)) {
                 meta.increment_index();
                 Ok(token.word.clone())
-            } else { Err(ErrorDetails::with_pos(token.pos)) }
+            } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
     }
@@ -96,7 +96,7 @@ pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
             // For each further letter match a digit
             for letter in word.chars() {
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return Err(ErrorDetails::with_pos(token.pos))
+                    return Err(ErrorDetails::from_token_option(Some(token)))
                 }
             }
             meta.increment_index();
@@ -123,11 +123,11 @@ pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Erro
             for letter in word.chars() {
                 if letter == '.' {
                     // Set fraction if dot - exit match otherwise
-                    is_frac = if is_frac { return Err(ErrorDetails::with_pos(token.pos)) } else { true };
+                    is_frac = if is_frac { return Err(ErrorDetails::from_token_option(Some(token))) } else { true };
                     continue
                 }
                 if !(letter.is_numeric() || extend.contains(&letter)) {
-                    return Err(ErrorDetails::with_pos(token.pos))
+                    return Err(ErrorDetails::from_token_option(Some(token)))
                 }
             }
             meta.increment_index();

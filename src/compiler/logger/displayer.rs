@@ -5,16 +5,18 @@ use crate::compiler::logger::LogType;
 pub struct Displayer {
     color: (u8, u8, u8),
     row: usize,
-    col: usize
+    col: usize,
+    len: usize
 }
 
 impl Displayer {
     /// Create a new Displayer instance
-    pub fn new(color: (u8, u8, u8), row: usize, col: usize) -> Self {
+    pub fn new(color: (u8, u8, u8), row: usize, col: usize, len: usize) -> Self {
         Displayer {
             color,
             row,
-            col
+            col,
+            len
         }
     }
 
@@ -53,7 +55,8 @@ impl Displayer {
     }
 
     /// Render location details with supplied coloring
-    pub fn path(self, path: &String) -> Self {
+    pub fn path(self, path: Option<String>) -> Self {
+        let path = path.unwrap_or(format!("[unknown]"));
         let (r, g, b) = self.color;
         let formatted = format!("at {}:{}:{}", path, self.row, self.col)
             .truecolor(r, g, b)
@@ -74,9 +77,9 @@ impl Displayer {
 
     // Returns chopped string where fisrt and third part are supposed
     // to be left as is but the second one is supposed to be highlighted
-    fn get_highlighted_part(&self, line: &String, length: usize) -> [String;3] {
+    fn get_highlighted_part(&self, line: &String) -> [String;3] {
         let begin = self.col - 1;
-        let end = begin + length;
+        let end = begin + self.len;
         let mut results: [String; 3] = Default::default();
         for (index, letter) in line.chars().enumerate() {
             if index < begin {
@@ -93,15 +96,15 @@ impl Displayer {
     }
 
     // Return requested row with appropriate coloring
-    fn get_snippet_row(&self, code: &Vec<String>, index: usize, length: usize, offset: i32) -> String {
+    fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8) -> String {
         let max_pad = self.get_max_pad_size(code.len());
-        let index = index as i32 + offset;
-        let row = self.row as i32 + offset;
+        let index = index as i32 + offset as i32;
+        let row = self.row as i32 + offset as i32;
         let code = code[index as usize].clone();
         let line = format!("{row}").pad_to_width(max_pad);
         if offset == 0 {
             let (r, g, b) = self.color;
-            let slices = self.get_highlighted_part(&code, length);
+            let slices = self.get_highlighted_part(&code);
             let formatted = format!("{}{}{}", slices[0], slices[1].truecolor(r, g, b), slices[2]);
             format!("{}", format!("{line}| {formatted}"))
         } else {
@@ -110,7 +113,7 @@ impl Displayer {
     }
 
     /// Render snippet of the code if the message is contextual to it
-    pub fn snippet<T: AsRef<str>>(self, code: Option<T>, length: usize) {
+    pub fn snippet<T: AsRef<str>>(self, code: Option<T>) {
         if let Some(code) = code {
             let index = self.row - 1;
             let code: String = String::from(code.as_ref());
@@ -120,12 +123,12 @@ impl Displayer {
             println!("");
             // Show additional code above the snippet
             if index > 0 {
-                println!("{}", self.get_snippet_row(&code, index, length, -1));
+                println!("{}", self.get_snippet_row(&code, index, -1));
             }
-            println!("{}", self.get_snippet_row(&code, index, length, 0));
+            println!("{}", self.get_snippet_row(&code, index, 0));
             // Show additional code below the snippet
             if index < code.len() - 1 {
-                println!("{}", self.get_snippet_row(&code, index, length, 1));
+                println!("{}", self.get_snippet_row(&code, index, 1));
             }
         }
     }
@@ -133,6 +136,7 @@ impl Displayer {
 
 #[cfg(test)]
 mod test {
+    #![allow(unused_imports)]
     use std::time::Duration;
     use std::thread::sleep;
     #[allow(unused_variables)]
@@ -141,16 +145,16 @@ mod test {
     fn test_displayer() {
         let code = vec![
             "let a = 12",
-            "a.run()",
+            "a.foobar()",
             "a += 24"
         ].join("\n");
-        sleep(Duration::from_secs(1));
         /* Uncomment to see the error message
-        super::Displayer::new((255, 80, 80), 2, 3)
+        sleep(Duration::from_secs(1));
+        super::Displayer::new((255, 80, 80), 2, 3, 6)
             .header(super::LogType::Error)
-            .text(Some(format!("Cannot call function \"run\" on a number")))
-            .path(&format!("/path/to/file"))
-            .snippet(code, 3);
+            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .path(Some(format!("/path/to/file")))
+            .snippet(Some(code));
         */
     }
 }

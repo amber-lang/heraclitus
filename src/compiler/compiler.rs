@@ -146,13 +146,9 @@ impl Compiler {
                     LexerErrorType::Singleline => format!("{data} cannot be multiline"),
                     LexerErrorType::Unclosed => format!("{data} unclosed"),
                 };
-                // Get actual path
-                let path = match self.path.clone() {
-                    Some(path) => path.clone(),
-                    None => format!("[file]")
-                };
+                let pos = details.get_pos_by_code(&self.code);
                 // Send error
-                Logger::new_err(path, details.get_pos_by_code(&self.code))
+                Logger::new_err_at_position(self.path.clone(), Some(self.code.clone()), pos)
                     .attach_message(message)
                     .attach_code(self.code.clone())
                     .show()
