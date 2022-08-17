@@ -38,7 +38,12 @@ impl CompoundHandler {
     }
 
     // Determines what shall we do with detected compound
-    pub fn handle_compound(&mut self, letter: char, reader: &Reader) -> CompoundReaction {
+    pub fn handle_compound(&mut self, letter: char, reader: &Reader, is_tokenize: bool) -> CompoundReaction {
+        // If the region is not tokenizable, we do not need to check for compounds
+        if !is_tokenize {
+            self.is_triggered = false;
+            return CompoundReaction::Pass;
+        }
         // Get completing symbol for current symbol
         if let Some(entries) = self.compound_tree.get(&letter) {
             // For any of the completing symbols
@@ -106,7 +111,7 @@ mod test {
         let mut result = vec![];
         // Simulate matching compounds
         while let Some(letter) = reader.next() {
-            result.push(ch.handle_compound(letter, &reader));
+            result.push(ch.handle_compound(letter, &reader, true));
         }
         assert_eq!(expected, result);
     }

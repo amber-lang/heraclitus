@@ -97,9 +97,9 @@ impl<'a> Lexer<'a> {
 
     /// Checks whether this is a nontokenizable region
     #[inline]
-    fn is_non_token_region(&self, reaction: RegionReaction) -> bool {
-        if let Some(region) = self.region.get_region() {
-            !region.tokenize && reaction == RegionReaction::Pass
+    pub fn is_tokenized_region(&self, reaction: &RegionReaction) -> bool {
+        if let Some(region) = self.region.get_region().as_ref() {
+            region.tokenize && *reaction == RegionReaction::Pass
         }
         else { false }
     }
@@ -182,13 +182,13 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 RegionReaction::Pass => {
-                    match self.compound.handle_compound(letter, &self.reader) {
+                    match self.compound.handle_compound(letter, &self.reader, self.is_tokenized_region(&reaction)) {
                         CompoundReaction::Begin => word = self.pattern_begin(word, letter),
                         CompoundReaction::Keep => word.push(letter),
                         CompoundReaction::End => word = self.pattern_end(word, letter),
                         CompoundReaction::Pass => {
                             // Handle region scope
-                            if self.is_non_token_region(reaction) {
+                            if !self.is_tokenized_region(&reaction) {
                                 let region = self.region.get_region().unwrap();
                                 // Handle singleline attribute
                                 if letter == '\n' && region.singleline {
