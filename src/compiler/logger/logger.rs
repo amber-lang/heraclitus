@@ -27,14 +27,13 @@ pub enum LogType {
 /// # Example
 /// ```should_panic
 /// # use heraclitus_compiler::prelude::*;
-/// # let path = format!("path/to/file");
+/// # let path = Some(format!("path/to/file"));
 /// # let position = (0, 0);
 /// # let guess = "type";
-/// # let code = format!("code");
-/// Logger::new_err(path, position)
+/// # let code = Some(format!("code"));
+/// Logger::new_err_at_position(path, code, position)
 ///     .attach_message("Type of this parameter is invalid")
 ///     .attach_comment(format!("Maybe you meant type {guess} instead"))
-///     .attach_code(code)
 ///     .show()
 ///     .exit();
 /// ```

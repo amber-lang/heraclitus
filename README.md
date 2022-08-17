@@ -45,6 +45,21 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.2.6
+### Fix:
+- Critical bug with non-tokenizable regions being tokenized
+
+## Version 1.2.5
+### Feature:
+- Changed Logger API that improves adding code snippets
+- `Logger::new_err` is now called `Logger::new_err_at_position`
+- `Logger::new_warn` is now called `Logger::new_warn_at_position`
+- `Logger::new_info` is now called `Logger::new_info_at_position`
+
+## Version 1.2.4
+### Fix:
+- Bad token highlighting in Logger when showing a code snippet
+
 ## Version 1.2.2
 ### Fix:
 - Major bug with a tokenised interpolation being parsed in a wrong way.
