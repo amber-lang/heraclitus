@@ -82,8 +82,27 @@ impl ErrorDetails {
         self
     }
 
+    /// Get position of the error by either path or code
+    pub fn get_pos_by_file_or_code(&self, path: Option<String>, code: Option<String>) -> (usize, usize) {
+        match self.position {
+            ErrorPosition::Pos(row, col) => (row, col),
+            ErrorPosition::EOF => {
+                if let Some(code) = code {
+                    self.get_pos_by_code(code)
+                }
+                else if let Some(path) = path {
+                    match self.get_pos_by_file(path) {
+                        Ok((row, col)) => (row, col),
+                        Err(_) => (0, 0)
+                    }
+                }
+                else { (0, 0) }
+            }
+        }
+    }
+
     /// In case of EOF this function ensures you to return concrete position
-    pub fn get_pos_by_file(&mut self, path: impl AsRef<str>) -> std::io::Result<(usize, usize)> {
+    pub fn get_pos_by_file(&self, path: impl AsRef<str>) -> std::io::Result<(usize, usize)> {
         let mut code = format!("");
         let mut file = File::open(path.as_ref())?;
         file.read_to_string(&mut code)?;
@@ -91,7 +110,7 @@ impl ErrorDetails {
     }
 
     /// In case of EOF this function ensures you to return concrete position
-    pub fn get_pos_by_code(&mut self, code: impl AsRef<str>) -> (usize, usize) {
+    pub fn get_pos_by_code(&self, code: impl AsRef<str>) -> (usize, usize) {
         let code = code.as_ref();
         match self.position {
             ErrorPosition::Pos(row, col) => (row, col),
