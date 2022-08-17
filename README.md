@@ -45,6 +45,14 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.2.6
+### Fix:
+- Bug with non-tokenizable regions being tokenized
+
+## Version 1.2.4
+### Fix:
+- Bad token highlighting in Logger when showing a code snippet
+
 ## Version 1.2.2
 ### Fix:
 - Major bug with a tokenised interpolation being parsed in a wrong way.
