@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.2.8
+### Fix:
+- Added support for UTF symbols
+
 ## Version 1.2.6
 ### Fix:
 - Critical bug with non-tokenizable regions being tokenized
