@@ -45,7 +45,7 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.2.8
+## Version 1.3.0
 ### Fix:
 - Added support for UTF symbols
 

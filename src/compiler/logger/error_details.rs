@@ -71,7 +71,7 @@ impl ErrorDetails {
     /// and error once you finished parsing the entire expression
     pub fn from_token_option(token_opt: Option<Token>) -> Self {
         match token_opt {
-            Some(token) => ErrorDetails::with_pos(token.pos, token.word.len()),
+            Some(token) => ErrorDetails::with_pos(token.pos, token.word.chars().count()),
             None => ErrorDetails::with_eof()
         }
     }
