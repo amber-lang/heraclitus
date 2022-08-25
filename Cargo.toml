@@ -1,6 +1,6 @@
 [package]
 name = "heraclitus-compiler"
-version = "1.2.8"
+version = "1.3.0"
 edition = "2021"
 description = "Compiler frontend for developing great programming languages"
 license = "MIT"

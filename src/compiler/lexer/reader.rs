@@ -55,7 +55,7 @@ impl<'a> Reader<'a> {
     /// Gets position of token that has been read
     #[inline]
     pub fn get_word_position(&self, word: &String) -> (usize, usize) {
-        (self.row, self.col - word.len())
+        (self.row, self.col - word.chars().count())
     }
 
     /// Workaround for UTF-8 symbols

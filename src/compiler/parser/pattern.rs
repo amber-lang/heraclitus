@@ -120,7 +120,7 @@ pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Or
     let fun = |word: &String| word.starts_with('\n') && word.get(1..).unwrap().chars().all(|letter| letter == ' ');
     match token_by(meta, fun) {
         Ok(word) => {
-            let spaces = word.len() - 1;
+            let spaces = word.chars().count() - 1;
             Ok(spaces.cmp(&size))
         }
         Err(details) => {
