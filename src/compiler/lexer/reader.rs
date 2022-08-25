@@ -58,15 +58,21 @@ impl<'a> Reader<'a> {
         (self.row, self.col - word.len())
     }
 
+    /// Workaround for UTF-8 symbols
+    #[inline]
+    fn get_slice(&self, begin: usize, end: usize) -> String {
+        self.code.chars().skip(begin).take(end - begin).collect::<String>()
+    }
+
     /// Get last n characters that were processed in correct order
     /// This function includes currently processed character
     #[inline]
-    pub fn get_history(&self, n: usize) -> Option<&str> {
+    pub fn get_history(&self, n: usize) -> Option<String> {
         let offset = self.index + 1;
         // Handle arithmetic overflow
         let begin = if offset >= n { offset - n } else { return None };
         let end = offset;
-        Some(&self.code[begin..end])
+        Some(self.get_slice(begin, end))
     }
 
     /// Similar to `get_history` but returns a mutable String that can be owned
@@ -92,11 +98,12 @@ impl<'a> Reader<'a> {
     /// Get next n characters that will be processed in correct order
     /// This function includes currently processed character
     #[inline]
-    pub fn get_future(&self, n: usize) -> Option<&str> {
+    pub fn get_future(&self, n: usize) -> Option<String> {
         let begin = self.index;
         // Handle arithmetic overflow
         let end = if self.index + n <= self.code.len() { self.index + n } else { return None };
-        Some(&self.code[begin..end])
+        // Find the next UTF-8 character boundary for the beginning of the slice
+        Some(self.get_slice(begin, end))
     }
 
     /// Similar to `get_future` but returns a mutable String that can be owned

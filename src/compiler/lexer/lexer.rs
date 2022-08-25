@@ -9,6 +9,7 @@ use crate::compiler::logger::ErrorDetails;
 const AVG_TOKEN_AMOUNT: usize = 1024;
 
 /// Lexer's error type
+#[derive(Debug)]
 pub enum LexerErrorType {
     /// Unspillable region has been spilled
     Singleline,
@@ -189,6 +190,7 @@ impl<'a> Lexer<'a> {
                         CompoundReaction::Pass => {
                             // Handle region scope
                             if !self.is_tokenized_region(&reaction) {
+                                println!("Passing {}", letter);
                                 let region = self.region.get_region().unwrap();
                                 // Handle singleline attribute
                                 if letter == '\n' && region.singleline {
@@ -342,11 +344,11 @@ mod test {
             ("}".to_string(), 1, 30),
             (" long'".to_string(), 1, 31),
             ("}".to_string(), 1, 37),
-            (" text'".to_string(), 1, 38)
+            (" 🎉 text'".to_string(), 1, 38)
         ];
         let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("TestScript", rules);
-        cc.load("let a = 'this {'is {adjective} long'} text'");
+        cc.load("let a = 'this {'is {adjective} long'} 🎉 text'");
         let mut lexer = super::Lexer::new(&cc);
         let mut result = vec![];
         // Simulate lexing
