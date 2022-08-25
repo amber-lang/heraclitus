@@ -96,7 +96,7 @@ impl RegionHandler {
                     Some(code_chunk_with_escape) => code_chunk_with_escape.chars().next().unwrap() == self.escape,
                     None => false
                 };
-                !is_escaped && code_chunk == cb(candidate)
+                !is_escaped && &code_chunk == cb(candidate)
             }
             None => false
         };
