@@ -190,7 +190,6 @@ impl<'a> Lexer<'a> {
                         CompoundReaction::Pass => {
                             // Handle region scope
                             if !self.is_tokenized_region(&reaction) {
-                                println!("Passing {}", letter);
                                 let region = self.region.get_region().unwrap();
                                 // Handle singleline attribute
                                 if letter == '\n' && region.singleline {
