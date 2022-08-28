@@ -34,7 +34,8 @@ pub struct Lexer<'a> {
     /// This attribute stores parsed tokens by the lexer
     pub lexem: Vec<Token>,
     separator_mode: SeparatorMode,
-    scoping_mode: ScopingMode
+    scoping_mode: ScopingMode,
+    position: (usize, usize)
 }
 
 impl<'a> Lexer<'a> {
@@ -48,7 +49,8 @@ impl<'a> Lexer<'a> {
             reader: Reader::new(&code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
             separator_mode: cc.separator_mode.clone(),
-            scoping_mode: cc.scoping_mode.clone()
+            scoping_mode: cc.scoping_mode.clone(),
+            position: (0, 0)
         }
     }
 
@@ -64,6 +66,7 @@ impl<'a> Lexer<'a> {
                 word,
                 pos: (row, 1)
             });
+            self.position = (0, 0);
             String::new()
         } else { word }
     }
@@ -72,11 +75,11 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn add_word(&mut self, word: String) -> String {
         if word.len() > 0 {
-            let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                pos: (row, col)
+                pos: self.position
             });
+            self.position = (0, 0);
             String::new()
         }
         else { word }
@@ -86,11 +89,11 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn add_word_inclusively(&mut self, word: String) -> String {
         if word.len() > 0 {
-            let (row, col) = self.reader.get_word_position(&word);
             self.lexem.push(Token {
                 word,
-                pos: (row, col + 1)
+                pos: self.position
             });
+            self.position = (0, 0);
             String::new()
         }
         else { word }
@@ -111,7 +114,9 @@ impl<'a> Lexer<'a> {
     fn pattern_add_symbol(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
         word.push(letter);
-        self.add_word_inclusively(word)
+        self.position = self.reader.get_position();
+        let new = self.add_word_inclusively(word);
+        new
     }
 
     /// Pattern code for beginning a new region
@@ -128,7 +133,8 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn pattern_end(&mut self, mut word: String, letter: char) -> String {
         word.push(letter);
-        self.add_word_inclusively(word)
+        let new = self.add_word_inclusively(word);
+        new
     }
 
     /// Tokenize source code
@@ -138,6 +144,25 @@ impl<'a> Lexer<'a> {
         let mut word = String::new();
         let mut is_indenting = false;
         while let Some(letter) = self.reader.next() {
+
+            /****************/
+            /* Set Position */
+            /****************/
+
+            // If the new position hasn't been set yet, set it
+            if self.position == (0, 0) {
+                // If separator mode is set to Manual and the letter is a separator,
+                // then skip finding a new position
+                if &SeparatorMode::Manual != &self.separator_mode || letter != '\n' {
+                    let region = self.region.get_region().unwrap();
+                    // If the region is tokenized, then check if the letter is a separator
+                    if !region.tokenize || !vec![' ', '\t'].contains(&letter) {
+                        self.position = self.reader.get_position();
+                    }
+                }
+                
+            }
+
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
             let reaction = self.region.handle_region(&self.reader);
@@ -172,6 +197,7 @@ impl<'a> Lexer<'a> {
                     }
                     // Regular region case
                     else {
+                        println!("Tokenizing regular region {:?} {:?}", self.reader.get_position(), self.position);
                         // Normally close the region
                         word = self.pattern_end(word, letter);
                         // This is supposed to prevent overshadowing new line
@@ -421,6 +447,39 @@ mod test {
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_lexer_multiline_regions() {
+        let symbols = vec![';', '+', '='];
+        let regions = reg![
+            reg!(string as "String" => {
+                begin: "'",
+                end: "'"
+            })
+        ];
+        let expected = vec![
+            ("'this\nis\na\nmultiline\nstring'".to_string(), 1, 1)
+        ];
+        let rules = Rules::new(symbols, vec![], regions);
+        let mut cc: Compiler = Compiler::new("Test", rules);
+        cc.load(vec![
+            "'this",
+            "is",
+            "a",
+            "multiline",
+            "string'",
+        ].join("\n"));
+        let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
+        let res = lexer.run();
+        assert!(res.is_ok());
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        println!("{:?}", result);
         assert_eq!(expected, result);
     }
 }
