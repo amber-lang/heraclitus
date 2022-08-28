@@ -1,7 +1,7 @@
 use std::fmt::{Formatter, Display, Result, Debug};
 
 /// The building block of the AST
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Token {
     /// Value of the token
     pub word: String,

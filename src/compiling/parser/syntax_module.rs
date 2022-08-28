@@ -1,4 +1,4 @@
-use crate::compiler::logger::ErrorDetails;
+use crate::compiling::logging::ErrorDetails;
 use colored::Colorize;
 
 use super::Metadata;
@@ -92,9 +92,9 @@ pub trait SyntaxModule<M: Metadata> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::compiler::parser::pattern::*;
-    use crate::compiler::parser::preset::*;
-    use crate::compiler::{ Token, DefaultMetadata, Metadata };
+    use crate::compiling::parser::pattern::*;
+    use crate::compiling::parser::preset::*;
+    use crate::compiling::{ Token, DefaultMetadata, Metadata };
 
     struct Expression {}
     impl SyntaxModule<DefaultMetadata> for Expression {

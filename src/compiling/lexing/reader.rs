@@ -54,8 +54,7 @@ impl<'a> Reader<'a> {
 
     /// Gets position of token that has been read
     #[inline]
-    pub fn get_word_position(&self, word: &String) -> (usize, usize) {
-        println!("{:?} {}:{}", word, self.row, self.col);
+    pub fn get_word_position(&self, word: &str) -> (usize, usize) {
         (self.row, self.col - word.chars().count())
     }
 
@@ -74,15 +73,6 @@ impl<'a> Reader<'a> {
         let begin = if offset >= n { offset - n } else { return None };
         let end = offset;
         Some(self.get_slice(begin, end))
-    }
-
-    /// Similar to `get_history` but returns a mutable String that can be owned
-    #[inline]
-    pub fn get_history_string(&self, n: usize) -> Option<String> {
-        match self.get_history(n) {
-            Some(value) => Some(String::from(value)),
-            None => None
-        }
     }
 
     /// Show next character that is going to be consumed
@@ -105,15 +95,6 @@ impl<'a> Reader<'a> {
         let end = if self.index + n <= self.code.len() { self.index + n } else { return None };
         // Find the next UTF-8 character boundary for the beginning of the slice
         Some(self.get_slice(begin, end))
-    }
-
-    /// Similar to `get_future` but returns a mutable String that can be owned
-    #[inline]
-    pub fn get_future_string(&self, n: usize) -> Option<String> {
-        match self.get_future(n) {
-            Some(value) => Some(String::from(value)),
-            None => None
-        }
     }
 }
 
@@ -191,10 +172,10 @@ mod test {
         let mut result_future = vec![];
         // Simulate lexing
         while let Some(_) = reader.next() {
-            if let Some(history) = reader.get_history_string(SIZE) {
+            if let Some(history) = reader.get_history(SIZE) {
                 result_history.push(history.clone());
             }
-            if let Some(future) = reader.get_future_string(SIZE) {
+            if let Some(future) = reader.get_future(SIZE) {
                 result_future.push(future.clone());
             }
         }

@@ -26,7 +26,7 @@ impl Expr {
     }
     fn parse_module(&mut self, meta: &mut DefaultMetadata, module: ExprType) -> SyntaxResult {
         match module {
-            ExprType::Text(md) => self.get(meta, md, |md| ExprType::Text(md))
+            ExprType::Text(md) => self.get(meta, md, ExprType::Text)
         }
     }
 }

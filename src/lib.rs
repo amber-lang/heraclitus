@@ -37,8 +37,8 @@
 //! # }
 //! ```
 
-pub mod rules;
-pub mod compiler;
+pub mod compiling_rules;
+pub mod compiling;
 
 pub mod prelude {
     //! Use all the necessary modules
@@ -49,8 +49,8 @@ pub mod prelude {
     //! use heraclitus_compiler::prelude::*;
     //! ```
     pub use crate::*;
-    pub use crate::rules::*;
-    pub use crate::compiler::*;
-    pub use crate::compiler::patterns::*;
-    pub use crate::compiler::{ErrorDetails, ErrorPosition};
+    pub use crate::compiling_rules::*;
+    pub use crate::compiling::*;
+    pub use crate::compiling::patterns::*;
+    pub use crate::compiling::{ErrorDetails, ErrorPosition};
 }

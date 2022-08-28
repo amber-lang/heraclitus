@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use crate::rules::Rules;
+use crate::compiling_rules::Rules;
 use super::reader::Reader;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CompoundReaction {
     Begin,
     Keep,
@@ -87,8 +87,8 @@ impl CompoundHandler {
 mod test {
     use std::vec;
     use crate::reg;
-    use crate::rules::Region;
-    use crate::rules::Rules;
+    use crate::compiling_rules::Region;
+    use crate::compiling_rules::Rules;
     use super::{CompoundHandler, CompoundReaction};
     use super::Reader;
 

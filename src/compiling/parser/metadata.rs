@@ -1,4 +1,4 @@
-use crate::compiler::Token;
+use crate::compiling::Token;
 
 /// Default implementation of metadata. 
 /// This is useful for debuging or languages that are not too demanding.
@@ -27,9 +27,7 @@ impl Metadata for DefaultMetadata {
     }
 
     fn get_token_at(&self, index: usize) -> Option<Token> {
-        if let Some(token) = self.expr.get(index) {
-            return Some(token.clone())
-        } else { None }
+        self.expr.get(index).cloned()
     }
     
     fn set_index(&mut self, index: usize) {

@@ -8,7 +8,7 @@ pub struct Number {
 impl SyntaxModule<DefaultMetadata> for Number {
     syntax_name!("Number");
     fn new() -> Self {
-        Number { value: format!("") }
+        Number { value: String::new() }
     }
     fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         self.value = number(meta, vec![])?;

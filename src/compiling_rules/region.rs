@@ -149,10 +149,7 @@ impl Region {
             allow_left_open: false,
             global: false,
             singleline: false,
-            references: match references {
-                Some(value) => Some(String::from(value.as_ref())),
-                None => None
-            }
+            references: references.map(|value| String::from(value.as_ref()))
         }
     }
 
