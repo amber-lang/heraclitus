@@ -7,7 +7,7 @@ pub struct Text {
 impl SyntaxModule<DefaultMetadata> for Text {
     syntax_name!("Text");
     fn new() -> Self {
-        Text { value: format!("") }
+        Text { value: String::new() }
     }
     fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
         let mut word = token_by(meta, |word| word.starts_with('\'') && word.ends_with('\''))?;

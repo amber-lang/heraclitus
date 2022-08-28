@@ -1,7 +1,7 @@
-use crate::rules::{Region, Rules, RegionMap};
+use crate::compiling_rules::{Region, Rules, RegionMap};
 use super::reader::Reader;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum RegionReaction {
     Begin(bool),
     End(bool),
@@ -50,7 +50,7 @@ impl RegionHandler {
                 if let Some(mut begin_region) = self.match_region_by_begin(reader) {
                     if begin_region.name == *interp_region.name {
                         // Save the tokenize state here to preserve borrow rules
-                        let tokenize = begin_region.tokenize.clone();
+                        let tokenize = begin_region.tokenize;
                         // This region could reference other region
                         // In this case we want to replace the interpolations
                         // of the region with the target ones
@@ -76,7 +76,7 @@ impl RegionHandler {
             if let Some(end_region) = self.match_region_by_end(reader) {
                 if end_region.name == region.name {
                     // Save the tokenize state here to preserve borrow rules
-                    let tokenize = end_region.tokenize.clone();
+                    let tokenize = end_region.tokenize;
                     self.region_stack.pop();
                     return RegionReaction::End(tokenize)
                 }
@@ -87,7 +87,7 @@ impl RegionHandler {
 
     // Matches region by some getter callback
     #[inline]
-    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &Vec<Region>) -> Option<Region> {
+    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &[Region]) -> Option<Region> {
         // Closure that checks if for each given Region is there any that matches current history state
         let predicate = |candidate: &Region| match reader.get_history(cb(candidate).len()) {
             Some(code_chunk) => {
@@ -113,13 +113,13 @@ impl RegionHandler {
     fn match_region_by_end(&self, reader: &Reader) -> Option<Region> {
         let region = self.get_region().unwrap();
         if !region.global {
-            self.match_region_by(reader, |candidate: &Region| &candidate.end, &vec![region.clone()])
+            self.match_region_by(reader, |candidate: &Region| &candidate.end, &[region.clone()])
         } else { None }
     }
 
     // Target region is a region on which we want to search the interpolations
     #[inline]
-    fn get_region_by(&self, cb: impl Fn(&Region) -> bool, candidates: &Vec<Region>) -> Option<Region> {
+    fn get_region_by(&self, cb: impl Fn(&Region) -> bool, candidates: &[Region]) -> Option<Region> {
         for region in candidates.iter() {
             if cb(region) {
                 return Some(region.clone())
@@ -132,7 +132,7 @@ impl RegionHandler {
 #[cfg(test)]
 mod test {
     use crate::reg;
-    use crate::rules::Region;
+    use crate::compiling_rules::Region;
     use super::{ RegionHandler, RegionReaction };
     use super::Reader;
 

@@ -1,15 +1,15 @@
 use capitalize::Capitalize;
 use std::fs::File;
 use std::io::prelude::*;
-use crate::rules::Rules;
-use crate::compiler::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
-use crate::compiler::logger::{Logger, ErrorDetails};
+use crate::compiling_rules::Rules;
+use crate::compiling::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
+use crate::compiling::logging::{Logger, ErrorDetails};
 
 
 /// How do you want to separate expressions?
 ///
 /// Separator mode determines how do you want to handle separators (in many languages the semicolon)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SeparatorMode {
     /// Manual separators require user to manually write them all
     Manual,
@@ -28,7 +28,7 @@ pub enum SeparatorMode {
 /// Scoping mode determines what kind of scoping is used by your language.
 /// For instance do you want to use blocks like `{ ... }` or `if ... fi`
 /// or do you want to use intents like in languages such as Python or Yaml.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScopingMode {
     /// Scopes are going to be contained between two specified tokens
     Block,
@@ -117,10 +117,8 @@ impl Compiler {
 
     /// Run just lexer
     pub fn tokenize(&self) -> Result<Vec<Token>, LexerError> {
-        let mut lexer = Lexer::new(&self);
-        if let Err(data) = lexer.run() {
-            return Err(data);
-        }
+        let mut lexer = Lexer::new(self);
+        lexer.run()?;
         Ok(lexer.lexem)
     }
 

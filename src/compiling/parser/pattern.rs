@@ -1,4 +1,4 @@
-use crate::compiler::logger::ErrorDetails;
+use crate::compiling::logging::ErrorDetails;
 use super::{ Metadata, SyntaxModule };
 
 /// Matches one token with given word
@@ -18,7 +18,7 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
     match meta.get_current_token() {
         Some(token) => if token.word == text.as_ref() {
             meta.increment_index();
-            Ok(token.word.clone())
+            Ok(token.word)
         } else { Err(ErrorDetails::from_token_option(Some(token))) }
         None => Err(ErrorDetails::with_eof())
     }
@@ -41,7 +41,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
     match meta.get_current_token() {
         Some(token) => if cb(&token.word) {
             meta.increment_index();
-            Ok(token.word.clone())
+            Ok(token.word)
         } else { Err(ErrorDetails::from_token_option(Some(token))) }
         None => Err(ErrorDetails::with_eof())
     }
@@ -132,7 +132,7 @@ pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Or
 
 #[cfg(test)]
 mod test {
-    use crate::compiler::{DefaultMetadata, Token};
+    use crate::compiling::{DefaultMetadata, Token};
     use super::*;
 
     #[test]

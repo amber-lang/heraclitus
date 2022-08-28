@@ -1,4 +1,4 @@
-use crate::compiler::logger::ErrorDetails;
+use crate::compiling::logging::ErrorDetails;
 use super::Metadata;
 
 /// Match variable name
@@ -27,7 +27,7 @@ pub fn variable(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, E
                 }
             }
             meta.increment_index();
-            Ok(token.word.clone())
+            Ok(token.word)
         }
         None => Err(ErrorDetails::with_eof())
     }
@@ -42,7 +42,7 @@ pub fn alphabetic(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String,
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphabetic() || extend.contains(&letter)) {
                 meta.increment_index();
-                Ok(token.word.clone())
+                Ok(token.word)
             } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
@@ -58,7 +58,7 @@ pub fn alphanumeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<Strin
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_alphanumeric() || extend.contains(&letter)) {
                 meta.increment_index();
-                Ok(token.word.clone())
+                Ok(token.word)
             } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
@@ -74,7 +74,7 @@ pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
         Some(token) => {
             if token.word.chars().all(|letter| letter.is_numeric() || extend.contains(&letter)) {
                 meta.increment_index();
-                Ok(token.word.clone())
+                Ok(token.word)
             } else { Err(ErrorDetails::from_token_option(Some(token))) }
         }
         None => Err(ErrorDetails::with_eof())
@@ -90,7 +90,7 @@ pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume
-            if word.chars().next() == Some('-') {
+            if word.starts_with('-') {
                 word = word[1..].chars().collect();
             }
             // For each further letter match a digit
@@ -100,7 +100,7 @@ pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Er
                 }
             }
             meta.increment_index();
-            Ok(token.word.clone())
+            Ok(token.word)
         }
         None => Err(ErrorDetails::with_eof())
     }
@@ -115,7 +115,7 @@ pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Erro
         Some(token) => {
             let mut word = token.word.clone();
             // If it's a negative number - consume
-            if word.chars().next() == Some('-') {
+            if word.starts_with('-') {
                 word = word[1..].chars().collect();
             }
             // Determine if 'dot' was found
@@ -131,7 +131,7 @@ pub fn float(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Erro
                 }
             }
             meta.increment_index();
-            Ok(token.word.clone())
+            Ok(token.word)
         }
         None => Err(ErrorDetails::with_eof())
     }

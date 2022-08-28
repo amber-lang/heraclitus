@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use colored::Colorize;
 use pad::PadStr;
-use crate::compiler::logger::LogType;
+use crate::compiling::logging::LogType;
 pub struct Displayer {
     color: (u8, u8, u8),
     row: usize,
@@ -24,9 +24,9 @@ impl Displayer {
     pub fn header(self, kind: LogType) -> Self {
         let (r, g, b) = self.color;
         let name = match kind {
-            LogType::Error => format!(" ERROR "),
-            LogType::Warning => format!(" WARN "),
-            LogType::Info => format!(" INFO ")
+            LogType::Error => " ERROR ".to_string(),
+            LogType::Warning => " WARN ".to_string(),
+            LogType::Info => " INFO ".to_string()
         };
         let formatted = name
             .truecolor(0, 0, 0)
@@ -56,7 +56,7 @@ impl Displayer {
 
     /// Render location details with supplied coloring
     pub fn path(self, path: Option<String>) -> Self {
-        let path = path.unwrap_or(format!("[unknown]"));
+        let path = path.unwrap_or_else(|| "[unknown]".to_string());
         let (r, g, b) = self.color;
         let formatted = format!("at {}:{}:{}", path, self.row, self.col)
             .truecolor(r, g, b)
@@ -77,7 +77,7 @@ impl Displayer {
 
     // Returns chopped string where fisrt and third part are supposed
     // to be left as is but the second one is supposed to be highlighted
-    fn get_highlighted_part(&self, line: &String) -> [String;3] {
+    fn get_highlighted_part(&self, line: &str) -> [String;3] {
         let begin = self.col - 1;
         let end = begin + self.len;
         let mut results: [String; 3] = Default::default();
@@ -113,7 +113,7 @@ impl Displayer {
                 // and other 1 is the new line character that we do not display
                 *overflow = self.col - 2 + self.len - code.chars().count();
             }
-            format!("{}", format!("{line}| {formatted}"))
+            format!("{line}| {formatted}")
         }
         // Case if we are in a different line than the error (or message)
         else {
@@ -121,18 +121,18 @@ impl Displayer {
             if *overflow > 0 {
                 // Case if all line is highlighted
                 if *overflow > code.chars().count() {
-                    format!("{}", format!("{line}| {}", code.truecolor(r, g, b)).dimmed())
+                    format!("{line}| {}", code.truecolor(r, g, b)).dimmed().to_string()
                 }
                 // Case if some line is highlighted
                 else {
                     let err = code.get(0..*overflow).unwrap().to_string().truecolor(r, g, b);
                     let rest = code.get(*overflow..).unwrap().to_string();
-                    format!("{}", format!("{line}| {err}{rest}").dimmed())
+                    format!("{line}| {err}{rest}").dimmed().to_string()
                 }
             }
             // Case if no overflow
             else {
-                format!("{}", format!("{line}| {code}").dimmed())
+                format!("{line}| {code}").dimmed().to_string()
             }
         }
     }
@@ -143,10 +143,10 @@ impl Displayer {
             let mut overflow = 0;
             let index = self.row - 1;
             let code: String = String::from(code.as_ref());
-            let code = code.split("\n")
+            let code = code.split('\n')
                 .map(|item| item.to_string())
                 .collect::<Vec<String>>();
-            println!("");
+            println!();
             // Show additional code above the snippet
             if index > 0 {
                 println!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));

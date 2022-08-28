@@ -1,8 +1,8 @@
-use crate::compiler::{ Compiler, Token, SeparatorMode, ScopingMode };
+use crate::compiling::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::compound_handler::{CompoundHandler, CompoundReaction};
 use super::region_handler::{ RegionHandler, RegionReaction };
 use super::reader::Reader;
-use crate::compiler::logger::ErrorDetails;
+use crate::compiling::logging::ErrorDetails;
 
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
@@ -46,7 +46,7 @@ impl<'a> Lexer<'a> {
             symbols: cc.rules.symbols.clone(),
             compound: CompoundHandler::new(&cc.rules),
             region: RegionHandler::new(&cc.rules),
-            reader: Reader::new(&code),
+            reader: Reader::new(code),
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
             separator_mode: cc.separator_mode.clone(),
             scoping_mode: cc.scoping_mode.clone(),
@@ -57,7 +57,7 @@ impl<'a> Lexer<'a> {
     /// Add indentation to the lexem
     #[inline]
     fn add_indent(&mut self, word: String) -> String {
-        if word.len() > 0 {
+        if !word.is_empty() {
             // Getting position by word here would attempt to
             // substract with overflow since the new line character
             // technically belongs to the previous line
@@ -74,7 +74,7 @@ impl<'a> Lexer<'a> {
     /// Add word that has been completed in previous iteration to the lexem
     #[inline]
     fn add_word(&mut self, word: String) -> String {
-        if word.len() > 0 {
+        if !word.is_empty() {
             self.lexem.push(Token {
                 word,
                 pos: self.position
@@ -88,7 +88,7 @@ impl<'a> Lexer<'a> {
     /// Add word that has been completed in current iteration to the lexem
     #[inline]
     fn add_word_inclusively(&mut self, word: String) -> String {
-        if word.len() > 0 {
+        if !word.is_empty() {
             self.lexem.push(Token {
                 word,
                 pos: self.position
@@ -115,8 +115,7 @@ impl<'a> Lexer<'a> {
         word = self.add_word(word);
         word.push(letter);
         self.position = self.reader.get_position();
-        let new = self.add_word_inclusively(word);
-        new
+        self.add_word_inclusively(word)
     }
 
     /// Pattern code for beginning a new region
@@ -133,8 +132,7 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn pattern_end(&mut self, mut word: String, letter: char) -> String {
         word.push(letter);
-        let new = self.add_word_inclusively(word);
-        new
+        self.add_word_inclusively(word)
     }
 
     /// Tokenize source code
@@ -153,7 +151,7 @@ impl<'a> Lexer<'a> {
             if self.position == (0, 0) {
                 // If separator mode is set to Manual and the letter is a separator,
                 // then skip finding a new position
-                if &SeparatorMode::Manual != &self.separator_mode || letter != '\n' {
+                if SeparatorMode::Manual != self.separator_mode || letter != '\n' {
                     let region = self.region.get_region().unwrap();
                     // If the region is tokenized, then check if the letter is a separator
                     if !region.tokenize || !vec![' ', '\t'].contains(&letter) {
@@ -197,7 +195,6 @@ impl<'a> Lexer<'a> {
                     }
                     // Regular region case
                     else {
-                        println!("Tokenizing regular region {:?} {:?}", self.reader.get_position(), self.position);
                         // Normally close the region
                         word = self.pattern_end(word, letter);
                         // This is supposed to prevent overshadowing new line
@@ -300,9 +297,9 @@ impl<'a> Lexer<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::rules::{ Region, Rules };
+    use crate::compiling_rules::{ Region, Rules };
     use crate::reg;
-    use crate::compiler::{ Compiler, ScopingMode };
+    use crate::compiling::{ Compiler, ScopingMode };
 
     #[test]
     fn test_lexer_base() {
@@ -479,7 +476,6 @@ mod test {
         for lex in lexer.lexem {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
-        println!("{:?}", result);
         assert_eq!(expected, result);
     }
 }

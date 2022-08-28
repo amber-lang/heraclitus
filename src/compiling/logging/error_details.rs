@@ -5,7 +5,7 @@
 
 use std::fs::File;
 use std::io::*;
-use crate::compiler::{Metadata, Token};
+use crate::compiling::{Metadata, Token};
 
 /// Store position of some error
 #[derive(Debug)]
@@ -78,7 +78,7 @@ impl ErrorDetails {
 
     /// Attach additional data in form of a string
     pub fn data<T: AsRef<str>>(mut self, data: T) -> Self {
-        self.data = Some(data.as_ref().to_string().clone());
+        self.data = Some(data.as_ref().to_string());
         self
     }
 
@@ -103,7 +103,7 @@ impl ErrorDetails {
 
     /// In case of EOF this function ensures you to return concrete position
     pub fn get_pos_by_file(&self, path: impl AsRef<str>) -> std::io::Result<(usize, usize)> {
-        let mut code = format!("");
+        let mut code = String::new();
         let mut file = File::open(path.as_ref())?;
         file.read_to_string(&mut code)?;
         Ok(self.get_pos_by_code(&code))
@@ -123,7 +123,7 @@ impl ErrorDetails {
                 if let Some(last) = code.split_whitespace().last() {
                     row += last.len();
                 }
-                return (row, col);
+                (row, col)
             }
         }
     }
