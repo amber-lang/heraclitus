@@ -55,6 +55,7 @@ impl<'a> Reader<'a> {
     /// Gets position of token that has been read
     #[inline]
     pub fn get_word_position(&self, word: &String) -> (usize, usize) {
+        println!("{:?} {}:{}", word, self.row, self.col);
         (self.row, self.col - word.chars().count())
     }
 

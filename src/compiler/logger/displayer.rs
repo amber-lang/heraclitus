@@ -96,25 +96,51 @@ impl Displayer {
     }
 
     // Return requested row with appropriate coloring
-    fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8) -> String {
+    fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8, overflow: &mut usize) -> String {
         let max_pad = self.get_max_pad_size(code.len());
         let index = index as i32 + offset as i32;
         let row = self.row as i32 + offset as i32;
         let code = code[index as usize].clone();
         let line = format!("{row}").pad_to_width(max_pad);
+        let (r, g, b) = self.color;
+        // Case if we are in the same line as the error (or message)
         if offset == 0 {
-            let (r, g, b) = self.color;
             let slices = self.get_highlighted_part(&code);
             let formatted = format!("{}{}{}", slices[0], slices[1].truecolor(r, g, b), slices[2]);
+            // If we are at the end of the code snippet and there is still some
+            if self.col - 1 + self.len > code.chars().count() {
+                // We substract here 2 because 1 is the offset of col (starts at 1)
+                // and other 1 is the new line character that we do not display
+                *overflow = self.col - 2 + self.len - code.chars().count();
+            }
             format!("{}", format!("{line}| {formatted}"))
-        } else {
-            format!("{}", format!("{line}| {code}").dimmed())
+        }
+        // Case if we are in a different line than the error (or message)
+        else {
+            // If there is some overflow value - display it as well
+            if *overflow > 0 {
+                // Case if all line is highlighted
+                if *overflow > code.chars().count() {
+                    format!("{}", format!("{line}| {}", code.truecolor(r, g, b)).dimmed())
+                }
+                // Case if some line is highlighted
+                else {
+                    let err = code.get(0..*overflow).unwrap().to_string().truecolor(r, g, b);
+                    let rest = code.get(*overflow..).unwrap().to_string();
+                    format!("{}", format!("{line}| {err}{rest}").dimmed())
+                }
+            }
+            // Case if no overflow
+            else {
+                format!("{}", format!("{line}| {code}").dimmed())
+            }
         }
     }
 
     /// Render snippet of the code if the message is contextual to it
     pub fn snippet<T: AsRef<str>>(self, code: Option<T>) {
         if let Some(code) = code {
+            let mut overflow = 0;
             let index = self.row - 1;
             let code: String = String::from(code.as_ref());
             let code = code.split("\n")
@@ -123,12 +149,12 @@ impl Displayer {
             println!("");
             // Show additional code above the snippet
             if index > 0 {
-                println!("{}", self.get_snippet_row(&code, index, -1));
+                println!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
             }
-            println!("{}", self.get_snippet_row(&code, index, 0));
+            println!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
             // Show additional code below the snippet
             if index < code.len() - 1 {
-                println!("{}", self.get_snippet_row(&code, index, 1));
+                println!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
             }
         }
     }
@@ -145,16 +171,16 @@ mod test {
     fn test_displayer() {
         let code = vec![
             "let a = 12",
-            "a.foobar()",
-            "a += 24"
+            "value = 'this",
+            "is mutltiline",
+            "code"
         ].join("\n");
-        /* Uncomment to see the error message
-        sleep(Duration::from_secs(1));
-        super::Displayer::new((255, 80, 80), 2, 3, 6)
-            .header(super::LogType::Error)
-            .text(Some(format!("Cannot call function \"foobar\" on a number")))
-            .path(Some(format!("/path/to/file")))
-            .snippet(Some(code));
-        */
+        // Uncomment to see the error message
+        // sleep(Duration::from_secs(1));
+        // super::Displayer::new((255, 80, 80), 2, 9, 24)
+        //     .header(super::LogType::Error)
+        //     .text(Some(format!("Cannot call function \"foobar\" on a number")))
+        //     .path(Some(format!("/path/to/file")))
+        //     .snippet(Some(code));
     }
 }

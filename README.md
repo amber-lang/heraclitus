@@ -45,8 +45,12 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.3.0
+## Version 1.3.1
 ### Fix:
+- Multiline regions wouldn't parse
+
+## Version 1.3.0
+### Feature:
 - Added support for UTF symbols
 
 ## Version 1.2.6
