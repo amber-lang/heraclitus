@@ -158,7 +158,6 @@ impl<'a> Lexer<'a> {
                         self.position = self.reader.get_position();
                     }
                 }
-                
             }
 
             // Reaction stores the reaction of the region handler

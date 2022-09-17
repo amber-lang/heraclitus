@@ -74,4 +74,9 @@ pub trait Metadata {
         let index = self.get_index();
         self.get_token_at(index)
     }
+    /// Change current index by given offset
+    fn offset_index(&mut self, offset: usize) {
+        let index = self.get_index();
+        self.set_index(index + offset);
+    }
 }
