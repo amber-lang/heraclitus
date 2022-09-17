@@ -7,6 +7,8 @@
 
 #![allow(dead_code)]
 use std::process;
+use crate::prelude::Metadata;
+
 use super::{displayer::Displayer, ErrorDetails};
 
 /// Type of the message that logger shall display
@@ -39,14 +41,8 @@ pub enum LogType {
 pub struct Logger {
     /// Type of the message
     pub kind: LogType,
-    /// Row position
-    pub row: usize,
-    /// Column position
-    pub col: usize,
-    /// Length of the token
-    pub len: usize,
-    /// Path to the source file
-    pub path: Option<String>,
+    /// 
+    pub trace: Vec<ErrorDetails>,
     /// Optionally store source code
     pub code: Option<String>,
     /// Optionally store message
@@ -57,14 +53,11 @@ pub struct Logger {
 
 impl Logger {
     /// Create a new logger instance
-    pub fn new(path: Option<String>, code: Option<String>, row: usize, col: usize, len: usize, kind: LogType) -> Self {
+    pub fn new(code: Option<&String>, trace: &[ErrorDetails], kind: LogType) -> Self {
         Logger {
             kind,
-            path,
-            row,
-            col,
-            len,
-            code,
+            trace: trace.iter().rev().cloned().collect(),
+            code: code.cloned(),
             message: None,
             comment: None
         }
@@ -74,10 +67,7 @@ impl Logger {
     pub fn new_msg(message: impl AsRef<str>, kind: LogType) -> Self {
         Logger {
             kind,
-            row: 0,
-            col: 0,
-            len: 0,
-            path: None,
+            trace: vec![],
             code: None,
             message: Some(message.as_ref().to_string()),
             comment: None
@@ -100,36 +90,33 @@ impl Logger {
     }
 
     /// Show error message based on the token
-    pub fn new_err_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
-        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
-        Logger::new(path, code, det.0, det.1, details.len, LogType::Error)
+    pub fn new_err_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
+        Logger::new(meta.get_code(), trace, LogType::Error)
     }
 
     /// Show warning message based on the token
-    pub fn new_warn_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
-        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
-        Logger::new(path, code, det.0, det.1, details.len, LogType::Warning)
+    pub fn new_warn_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
+        Logger::new(meta.get_code(), trace, LogType::Warning)
     }
 
     /// Show info message based on the token
-    pub fn new_info_with_details(path: Option<String>, code: Option<String>, details: ErrorDetails) -> Self {
-        let det = details.get_pos_by_file_or_code(path.clone(), code.clone());
-        Logger::new(path, code, det.0, det.1, details.len, LogType::Info)
+    pub fn new_info_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
+        Logger::new(meta.get_code(), trace, LogType::Info)
     }
 
     /// Create an error by supplying essential information about the location
-    pub fn new_err_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, code, row, col, 0, LogType::Error)
+    pub fn new_err_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
+        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Error)
     }
 
     /// Create a warning by supplying essential information about the location
-    pub fn new_warn_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, code, row, col, 0, LogType::Warning)
+    pub fn new_warn_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
+        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Warning)
     }
 
     /// Create an info by supplying essential information about the location
-    pub fn new_info_at_position(path: Option<String>, code: Option<String>, (row, col): (usize, usize)) -> Self {
-        Logger::new(path, code, row, col, 0, LogType::Info)
+    pub fn new_info_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
+        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Info)
     }
 
     /// Add message to an existing log
@@ -154,23 +141,18 @@ impl Logger {
     /// Shows (renders) the message while giving 
     /// the ownership to this object away
     pub fn show(self) -> Self {
-        let color = match &self.kind {
-            LogType::Error => (255, 80, 80),
-            LogType::Warning => (255, 180, 80),
-            LogType::Info => (80, 80, 255)
-        };
         // If this error is based in code
-        if self.row > 0 && self.col > 0 {
-            Displayer::new(color, self.row, self.col, self.len)
+        if self.trace.len() > 0 {
+            Displayer::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())
-                .path(self.path.clone())
+                .path()
                 .padded_text(self.comment.clone())
                 .snippet(self.code.clone())
         }
         // If this error is a message error
         else {
-            Displayer::new(color, self.row, self.col, self.len)
+            Displayer::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())
                 .padded_text(self.comment.clone());

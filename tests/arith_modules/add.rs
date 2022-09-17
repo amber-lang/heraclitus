@@ -28,7 +28,7 @@ impl SyntaxModule<DefaultMetadata> for Add {
                 self.right = Some(right);
                 Ok(())
             }
-            None => Err(ErrorDetails::with_eof())
+            None => Err(ErrorDetails::with_eof(meta))
         }
     }
 }
