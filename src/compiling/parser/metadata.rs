@@ -45,6 +45,14 @@ impl Metadata for DefaultMetadata {
     fn set_debug(&mut self, indent: usize) {
        self.indent = Some(indent)
     }
+
+    fn get_path(&self) -> Option<String> {
+        self.path.clone()
+    }
+
+    fn get_code(&self) -> Option<&String> {
+        self.code.as_ref()
+    }
 }
 
 /// Metadata for carrying information through the ASI parsing phases.
@@ -64,6 +72,10 @@ pub trait Metadata {
     fn get_debug(&mut self) -> Option<usize>;
     /// Setter for debug value
     fn set_debug(&mut self, indent: usize);
+    /// Getter for path of the file
+    fn get_path(&self) -> Option<String>;
+    /// Getter for code of the file
+    fn get_code(&self) -> Option<&String>;
     /// Optionally set logic of incrementing the index number
     fn increment_index(&mut self) {
         let index = self.get_index();

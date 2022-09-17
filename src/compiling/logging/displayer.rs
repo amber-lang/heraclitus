@@ -1,85 +1,108 @@
 #![allow(dead_code)]
-use colored::Colorize;
+use colored::{Colorize, Color};
 use pad::PadStr;
 use crate::compiling::logging::LogType;
+use super::ErrorDetails;
+
 pub struct Displayer {
-    color: (u8, u8, u8),
-    row: usize,
-    col: usize,
-    len: usize
+    kind: LogType,
+    trace: Vec<ErrorDetails>
 }
 
 impl Displayer {
     /// Create a new Displayer instance
-    pub fn new(color: (u8, u8, u8), row: usize, col: usize, len: usize) -> Self {
+    pub fn new(kind: LogType, trace: &[ErrorDetails]) -> Self {
         Displayer {
-            color,
-            row,
-            col,
-            len
+            kind,
+            trace: trace.to_vec()
+        }
+    }
+
+    fn kind_to_color(&self) -> Color {
+        match self.kind {
+            LogType::Error => Color::Red,
+            LogType::Warning => Color::Yellow,
+            LogType::Info => Color::Blue
         }
     }
 
     /// Render header of your information
     pub fn header(self, kind: LogType) -> Self {
-        let (r, g, b) = self.color;
         let name = match kind {
             LogType::Error => " ERROR ".to_string(),
             LogType::Warning => " WARN ".to_string(),
             LogType::Info => " INFO ".to_string()
         };
         let formatted = name
-            .truecolor(0, 0, 0)
+            .black()
             .bold()
-            .on_truecolor(r, g, b);
-        println!("{formatted}");
+            .on_color(self.kind_to_color());
+        eprintln!("{formatted}");
         self
     }
 
     /// Render text with supplied coloring
     pub fn text(self, text: Option<String>) -> Self {
-        let (r, g, b) = self.color;
         if let Some(text) = text {
-            println!("{}", text.truecolor(r, g, b));
+            eprintln!("{}", text.color(self.kind_to_color()));
         }
         self
     }
 
     /// Render padded text with supplied coloring
     pub fn padded_text(self, text: Option<String>) -> Self {
-        let (r, g, b) = self.color;
         if let Some(text) = text {
-            println!("\n{}", text.truecolor(r, g, b));
+            eprintln!("\n{}", text.color(self.kind_to_color()));
         }
         self
     }
 
     /// Render location details with supplied coloring
-    pub fn path(self, path: Option<String>) -> Self {
-        let path = path.unwrap_or_else(|| "[unknown]".to_string());
-        let (r, g, b) = self.color;
-        let formatted = format!("at {}:{}:{}", path, self.row, self.col)
-            .truecolor(r, g, b)
-            .dimmed();
-        println!("{formatted}");
+    pub fn path(self) -> Self {
+        let path = match self.trace.first() {
+            Some(det) => {
+                [
+                    format!("at {}:{}:{}", det.get_path(), det.row, det.col),
+                    self.trace.iter()
+                        .skip(1)
+                        .map(|det| format!("in {}:{}:{}", det.get_path(), det.row, det.col))
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                ].join("\n")
+            },
+            None => {
+                "at [unknown]:0:0".to_string()
+            }
+        };
+        eprintln!("{}", path.color(self.kind_to_color()).dimmed());
         self
+    }
+
+    // Returns last row and column
+    fn get_row_col_len(&self) -> (usize, usize, usize) {
+        match self.trace.first() {
+            Some(loc) => (loc.row, loc.col, loc.len),
+            None => (0, 0, 0)
+        }
     }
 
     // Get max padding size (for line numbering)
     fn get_max_pad_size(&self, length: usize) -> usize {
-        if self.row < length - 1 {
-            format!("{}", self.row + 1).len()
+        let (row, _, _) = self.get_row_col_len();
+        if row < length - 1 {
+            format!("{}", row + 1).len()
         }
         else {
-            format!("{}", self.row).len()
+            format!("{}", row).len()
         }
     }
 
     // Returns chopped string where fisrt and third part are supposed
     // to be left as is but the second one is supposed to be highlighted
     fn get_highlighted_part(&self, line: &str) -> [String;3] {
-        let begin = self.col - 1;
-        let end = begin + self.len;
+        let (_row, col, len) = self.get_row_col_len();
+        let begin = col - 1;
+        let end = begin + len;
         let mut results: [String; 3] = Default::default();
         for (index, letter) in line.chars().enumerate() {
             if index < begin {
@@ -97,21 +120,21 @@ impl Displayer {
 
     // Return requested row with appropriate coloring
     fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8, overflow: &mut usize) -> String {
+        let (row, col, len) = self.get_row_col_len();
         let max_pad = self.get_max_pad_size(code.len());
         let index = index as i32 + offset as i32;
-        let row = self.row as i32 + offset as i32;
+        let row = row as i32 + offset as i32;
         let code = code[index as usize].clone();
         let line = format!("{row}").pad_to_width(max_pad);
-        let (r, g, b) = self.color;
         // Case if we are in the same line as the error (or message)
         if offset == 0 {
             let slices = self.get_highlighted_part(&code);
-            let formatted = format!("{}{}{}", slices[0], slices[1].truecolor(r, g, b), slices[2]);
+            let formatted = format!("{}{}{}", slices[0], slices[1].color(self.kind_to_color()), slices[2]);
             // If we are at the end of the code snippet and there is still some
-            if self.col - 1 + self.len > code.chars().count() {
+            if col - 1 + len > code.chars().count() {
                 // We substract here 2 because 1 is the offset of col (starts at 1)
                 // and other 1 is the new line character that we do not display
-                *overflow = self.col - 2 + self.len - code.chars().count();
+                *overflow = col - 2 + len - code.chars().count();
             }
             format!("{line}| {formatted}")
         }
@@ -121,11 +144,11 @@ impl Displayer {
             if *overflow > 0 {
                 // Case if all line is highlighted
                 if *overflow > code.chars().count() {
-                    format!("{line}| {}", code.truecolor(r, g, b)).dimmed().to_string()
+                    format!("{line}| {}", code.color(self.kind_to_color())).dimmed().to_string()
                 }
                 // Case if some line is highlighted
                 else {
-                    let err = code.get(0..*overflow).unwrap().to_string().truecolor(r, g, b);
+                    let err = code.get(0..*overflow).unwrap().to_string().color(self.kind_to_color());
                     let rest = code.get(*overflow..).unwrap().to_string();
                     format!("{line}| {err}{rest}").dimmed().to_string()
                 }
@@ -139,22 +162,23 @@ impl Displayer {
 
     /// Render snippet of the code if the message is contextual to it
     pub fn snippet<T: AsRef<str>>(self, code: Option<T>) {
+        let (row, _, _) = self.get_row_col_len();
         if let Some(code) = code {
             let mut overflow = 0;
-            let index = self.row - 1;
+            let index = row - 1;
             let code: String = String::from(code.as_ref());
             let code = code.split('\n')
                 .map(|item| item.to_string())
                 .collect::<Vec<String>>();
-            println!();
+            eprintln!();
             // Show additional code above the snippet
             if index > 0 {
-                println!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
+                eprintln!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
             }
-            println!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
+            eprintln!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
             // Show additional code below the snippet
             if index < code.len() - 1 {
-                println!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
+                eprintln!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
             }
         }
     }
@@ -165,6 +189,8 @@ mod test {
     #![allow(unused_imports)]
     use std::time::Duration;
     use std::thread::sleep;
+
+    use crate::prelude::{ErrorDetails, LogType};
     #[allow(unused_variables)]
     
     #[test]
@@ -176,11 +202,15 @@ mod test {
             "code"
         ].join("\n");
         // Uncomment to see the error message
-        // sleep(Duration::from_secs(1));
-        // super::Displayer::new((255, 80, 80), 2, 9, 24)
-        //     .header(super::LogType::Error)
-        //     .text(Some(format!("Cannot call function \"foobar\" on a number")))
-        //     .path(Some(format!("/path/to/file")))
-        //     .snippet(Some(code));
+        sleep(Duration::from_secs(1));
+        let trace = [
+            ErrorDetails::with_pos(Some("/path/to/bar".to_string()), (3, 25), 0),
+            ErrorDetails::with_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
+        ];
+        super::Displayer::new(LogType::Error, &trace)
+            .header(super::LogType::Error)
+            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .path()
+            .snippet(Some(code));
     }
 }

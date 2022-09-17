@@ -8,7 +8,7 @@ use std::io::*;
 use crate::compiling::{Metadata, Token};
 
 /// Store position of some error
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ErrorPosition {
     /// Explicit row and column
     Pos(usize, usize),
@@ -17,10 +17,16 @@ pub enum ErrorPosition {
 }
 
 /// Struct that is used to return a simple error
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ErrorDetails {
+    /// Path of the file
+    pub path: Option<String>,
     /// Location of this error
     pub position: ErrorPosition,
+    /// Row of the error
+    pub row: usize,
+    /// Column of the error
+    pub col: usize,
     /// Length of the token
     pub len: usize,
     /// Additional information
@@ -29,30 +35,49 @@ pub struct ErrorDetails {
 
 impl ErrorDetails {
     /// Create a new erorr from scratch
-    pub fn new(position: ErrorPosition, len: usize) -> Self {
+    pub fn new(meta: &impl Metadata, position: ErrorPosition, len: usize) -> Self {
         ErrorDetails {
             position,
+            path: meta.get_path(),
+            row: 0,
+            col: 0,
             len,
             data: None
-        }
+        }.updated_pos(meta)
     }
 
     /// Create a new erorr at the end of file
-    pub fn with_eof() -> Self {
+    pub fn with_eof(meta: &impl Metadata) -> Self {
         ErrorDetails {
+            path: meta.get_path(),
             position: ErrorPosition::EOF,
+            row: 0,
+            col: 0,
             len: 0,
+            data: None
+        }.updated_pos(meta)
+    }
+
+    /// Create a new erorr at given position
+    pub fn with_pos(path: Option<String>, (row, col): (usize, usize), len: usize) -> Self {
+        ErrorDetails {
+            path,
+            position: ErrorPosition::Pos(row, col),
+            row,
+            col,
+            len,
             data: None
         }
     }
 
-    /// Create a new erorr at given position
-    pub fn with_pos((row, col): (usize, usize), len: usize) -> Self {
-        ErrorDetails {
-            position: ErrorPosition::Pos(row, col),
-            len,
-            data: None
-        }
+    fn updated_pos(mut self, meta: &impl Metadata) -> Self {
+        (self.row, self.col) = self.get_pos_by_file_or_code(meta.get_code());
+        self
+    }
+
+    /// Get the path to the file and return [unknown] if not supplied
+    pub fn get_path(&self) -> String {
+        self.path.clone().unwrap_or_else(|| "[unknown]".to_string())
     }
 
     /// Create an error at current position of current token by metadata
@@ -62,17 +87,17 @@ impl ErrorDetails {
     /// to retrieve token stored under it in metadata's expression.
     /// Then it's position is used to express the ErrorPosition
     pub fn from_metadata(meta: &impl Metadata) -> Self {
-        Self::from_token_option(meta.get_current_token())
+        Self::from_token_option(meta, meta.get_current_token())
     }
 
     /// Create an error at position of the provided token
     /// 
     /// This function gives you ability to store tokens
     /// and error once you finished parsing the entire expression
-    pub fn from_token_option(token_opt: Option<Token>) -> Self {
+    pub fn from_token_option(meta: &impl Metadata, token_opt: Option<Token>) -> Self {
         match token_opt {
-            Some(token) => ErrorDetails::with_pos(token.pos, token.word.chars().count()),
-            None => ErrorDetails::with_eof()
+            Some(token) => ErrorDetails::with_pos(meta.get_path(), token.pos, token.word.chars().count()),
+            None => ErrorDetails::with_eof(meta)
         }
     }
 
@@ -83,14 +108,14 @@ impl ErrorDetails {
     }
 
     /// Get position of the error by either path or code
-    pub fn get_pos_by_file_or_code(&self, path: Option<String>, code: Option<String>) -> (usize, usize) {
+    pub fn get_pos_by_file_or_code(&self, code: Option<&String>) -> (usize, usize) {
         match self.position {
             ErrorPosition::Pos(row, col) => (row, col),
             ErrorPosition::EOF => {
                 if let Some(code) = code {
                     self.get_pos_by_code(code)
                 }
-                else if let Some(path) = path {
+                else if let Some(path) = &self.path {
                     match self.get_pos_by_file(path) {
                         Ok((row, col)) => (row, col),
                         Err(_) => (0, 0)
