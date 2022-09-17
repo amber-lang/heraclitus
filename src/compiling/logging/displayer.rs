@@ -59,7 +59,7 @@ impl Displayer {
 
     /// Render location details with supplied coloring
     pub fn path(self) -> Self {
-        let path = match self.trace.iter().next() {
+        let path = match self.trace.first() {
             Some(det) => {
                 [
                     format!("at {}:{}:{}", det.get_path(), det.row, det.col),
@@ -80,7 +80,7 @@ impl Displayer {
 
     // Returns last row and column
     fn get_row_col_len(&self) -> (usize, usize, usize) {
-        match self.trace.iter().next() {
+        match self.trace.first() {
             Some(loc) => (loc.row, loc.col, loc.len),
             None => (0, 0, 0)
         }

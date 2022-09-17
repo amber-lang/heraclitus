@@ -38,7 +38,7 @@ impl ErrorDetails {
     pub fn new(meta: &impl Metadata, position: ErrorPosition, len: usize) -> Self {
         ErrorDetails {
             position,
-            path: meta.get_path().clone(),
+            path: meta.get_path(),
             row: 0,
             col: 0,
             len,
@@ -49,7 +49,7 @@ impl ErrorDetails {
     /// Create a new erorr at the end of file
     pub fn with_eof(meta: &impl Metadata) -> Self {
         ErrorDetails {
-            path: meta.get_path().clone(),
+            path: meta.get_path(),
             position: ErrorPosition::EOF,
             row: 0,
             col: 0,

@@ -32,7 +32,8 @@ pub enum LogType {
 /// # let position = (0, 0);
 /// # let guess = "type";
 /// # let code = Some(format!("code"));
-/// Logger::new_err_at_position(path, code, position)
+/// # let mut meta = DefaultMetadata::new(vec![], path, code);
+/// Logger::new_err_at_position(&mut meta, position)
 ///     .attach_message("Type of this parameter is invalid")
 ///     .attach_comment(format!("Maybe you meant type {guess} instead"))
 ///     .show()
@@ -142,7 +143,7 @@ impl Logger {
     /// the ownership to this object away
     pub fn show(self) -> Self {
         // If this error is based in code
-        if self.trace.len() > 0 {
+        if !self.trace.is_empty() {
             Displayer::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())

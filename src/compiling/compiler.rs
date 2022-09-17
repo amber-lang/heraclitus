@@ -148,8 +148,8 @@ impl Compiler {
                 };
                 let pos = details.get_pos_by_code(&self.code.as_ref().unwrap());
                 // Send error
-                let mut meta = M::new(vec![], self.path.clone(), self.code.clone());
-                Logger::new_err_at_position(&mut meta, pos)
+                let meta = M::new(vec![], self.path.clone(), self.code.clone());
+                Logger::new_err_at_position(&meta, pos)
                     .attach_message(message)
                     .attach_code(self.code.as_ref().unwrap().clone())
                     .show()
