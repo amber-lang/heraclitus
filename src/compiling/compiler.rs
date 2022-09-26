@@ -6,7 +6,6 @@ use crate::compiling::{Token, Lexer, LexerError, LexerErrorType, Metadata, Synta
 use crate::compiling::failing::message::Message;
 use crate::compiling::failing::failure::Failure;
 use crate::error_pos;
-use crate::error;
 
 
 /// How do you want to separate expressions?
