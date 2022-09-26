@@ -2,7 +2,7 @@ use crate::compiling::{ Compiler, Token, SeparatorMode, ScopingMode };
 use super::compound_handler::{CompoundHandler, CompoundReaction};
 use super::region_handler::{ RegionHandler, RegionReaction };
 use super::reader::Reader;
-use crate::compiling::logging::ErrorDetails;
+use crate::compiling::failing::position_info::PositionInfo;
 
 // This is just an estimation of token amount
 // inside of a typical 200-lined file.
@@ -18,7 +18,7 @@ pub enum LexerErrorType {
 }
 
 /// Type containing full error of lexer
-pub type LexerError = (LexerErrorType, ErrorDetails);
+pub type LexerError = (LexerErrorType, PositionInfo);
 
 /// The Lexer
 /// 
@@ -220,7 +220,7 @@ impl<'a> Lexer<'a> {
                                     let pos = self.reader.get_position();
                                     return Err((
                                         LexerErrorType::Singleline,
-                                        ErrorDetails::with_pos(self.path.clone(), pos, 0).data(region.name.clone())
+                                        PositionInfo::at_pos(self.path.clone(), pos, 0).data(region.name.clone())
                                     ))
                                 }
                                 word.push(letter);
@@ -289,7 +289,7 @@ impl<'a> Lexer<'a> {
         if let Err((pos, region)) = self.region.is_region_closed(&self.reader) {
             return Err((
                 LexerErrorType::Unclosed,
-                ErrorDetails::with_pos(self.path.clone(), pos, 0).data(region.name)
+                PositionInfo::at_pos(self.path.clone(), pos, 0).data(region.name)
             ));
         }
         Ok(())

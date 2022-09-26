@@ -6,11 +6,10 @@
 mod lexing;
 mod compiler;
 mod token;
-mod logging;
 mod parser;
+pub mod failing;
 
 pub use lexing::*;
 pub use compiler::*;
 pub use token::*;
 pub use parser::*;
-pub use logging::*;

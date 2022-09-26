@@ -52,5 +52,7 @@ pub mod prelude {
     pub use crate::compiling_rules::*;
     pub use crate::compiling::*;
     pub use crate::compiling::patterns::*;
-    pub use crate::compiling::{ErrorDetails, ErrorPosition};
+    pub use crate::compiling::failing::position_info::{PositionInfo, Position};
+    pub use crate::compiling::failing::message::{Message, MessageType};
+    pub use crate::compiling::failing::failure::Failure;
 }

@@ -1,4 +1,5 @@
-use crate::compiling::logging::ErrorDetails;
+use crate::compiling::failing::position_info::PositionInfo;
+use crate::compiling::failing::failure::Failure;
 use super::{ Metadata, SyntaxModule };
 
 /// Matches one token with given word
@@ -8,19 +9,19 @@ use super::{ Metadata, SyntaxModule };
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
-/// # fn compile() -> Result<(), ErrorDetails> {
+/// # fn compile() -> Result<(), Failure> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// token(meta, "let")?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String, ErrorDetails> {
+pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String, Failure> {
     match meta.get_current_token() {
         Some(token) => if token.word == text.as_ref() {
             meta.increment_index();
             Ok(token.word)
-        } else { Err(ErrorDetails::from_token_option(meta, Some(token))) }
-        None => Err(ErrorDetails::with_eof(meta))
+        } else { Err(Failure::Quiet(PositionInfo::from_token(meta, Some(token)))) }
+        None => Err(Failure::Quiet(PositionInfo::at_eof(meta)))
     }
 }
 
@@ -31,19 +32,19 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
-/// # fn compile() -> Result<(), ErrorDetails> {
+/// # fn compile() -> Result<(), Failure> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let the_word = token_by(meta, |word| word.starts_with('@'))?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Result<String, ErrorDetails> {
+pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Result<String, Failure> {
     match meta.get_current_token() {
         Some(token) => if cb(&token.word) {
             meta.increment_index();
             Ok(token.word)
-        } else { Err(ErrorDetails::from_token_option(meta, Some(token))) }
-        None => Err(ErrorDetails::with_eof(meta))
+        } else { Err(Failure::Quiet(PositionInfo::from_token(meta, Some(token)))) }
+        None => Err(Failure::Quiet(PositionInfo::at_eof(meta)))
     }
 }
 
@@ -60,23 +61,23 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 /// #   fn new() -> Self { IfStatement {} }
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
-/// # fn compile() -> Result<(), ErrorDetails> {
+/// # fn compile() -> Result<(), Failure> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let mut ifst = IfStatement::new();
 /// syntax(meta, &mut ifst)?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> Result<(), ErrorDetails> {
+pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> Result<(), Failure> {
     let index = meta.get_index();
     // Determine if we shall parse it in debug mode or not
     let result = match meta.get_debug() {
         Some(_) => module.parse_debug(meta),
         None => module.parse(meta)
     };
-    if let Err(details) = result {
+    if let Err(failure) = result {
         meta.set_index(index);
-        Err(details)
+        Err(failure)
     } else { Ok(()) }
 }
 
@@ -87,17 +88,17 @@ pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> R
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
-/// # fn compile() -> Result<(), ErrorDetails> {
+/// # fn compile() -> Result<(), Failure> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let spaces: usize = indent(meta)?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn indent(meta: &mut impl Metadata) -> Result<usize, ErrorDetails> {
+pub fn indent(meta: &mut impl Metadata) -> Result<usize, Failure> {
     let fun = |word: &String| word.starts_with('\n') && word.get(1..).unwrap().chars().all(|letter| letter == ' ');
     match token_by(meta, fun) {
         Ok(word) => Ok(word.get(1..).unwrap().len()),
-        Err(details) => Err(details)
+        Err(failure) => Err(failure)
     }
 }
 
@@ -109,13 +110,13 @@ pub fn indent(meta: &mut impl Metadata) -> Result<usize, ErrorDetails> {
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
-/// # fn compile() -> Result<(), ErrorDetails> {
+/// # fn compile() -> Result<(), Failure> {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
 /// let cmp: std::cmp::Ordering = indent_with(meta, 6)?;
 /// # Ok(())
 /// # }
 /// ```
-pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Ordering, ErrorDetails> {
+pub fn indent_with(meta: &mut impl Metadata, size: usize) -> Result<std::cmp::Ordering, Failure> {
     let index = meta.get_index();
     let fun = |word: &String| word.starts_with('\n') && word.get(1..).unwrap().chars().all(|letter| letter == ' ');
     match token_by(meta, fun) {

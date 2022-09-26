@@ -6,14 +6,13 @@
 //! own implementation of such mechanism.
 
 #![allow(dead_code)]
-use std::process;
-use crate::prelude::Metadata;
-
-use super::{displayer::Displayer, ErrorDetails};
+use crate::compiling::{Metadata, Token};
+use crate::compiling::failing::logger::Logger;
+use crate::compiling::failing::position_info::PositionInfo;
 
 /// Type of the message that logger shall display
-#[derive(Clone)]
-pub enum LogType {
+#[derive(Clone, Debug)]
+pub enum MessageType {
     /// Error message
     Error,
     /// Warning message
@@ -29,21 +28,21 @@ pub enum LogType {
 /// ```should_panic
 /// # use heraclitus_compiler::prelude::*;
 /// # let path = Some(format!("path/to/file"));
-/// # let position = (0, 0);
+/// # let position = PositionInfo::at_pos(path.clone(), (0, 0), 0);
 /// # let guess = "type";
 /// # let code = Some(format!("code"));
 /// # let mut meta = DefaultMetadata::new(vec![], path, code);
-/// Logger::new_err_at_position(&mut meta, position)
-///     .attach_message("Type of this parameter is invalid")
-///     .attach_comment(format!("Maybe you meant type {guess} instead"))
-///     .show()
-///     .exit();
+/// Message::new_err_at_position(&mut meta, position)
+///     .message("Type of this parameter is invalid")
+///     .comment(format!("Maybe you meant type {guess} instead"))
+///     .show();
 /// ```
-pub struct Logger {
+#[derive(Debug, Clone)]
+pub struct Message {
     /// Type of the message
-    pub kind: LogType,
-    /// 
-    pub trace: Vec<ErrorDetails>,
+    pub kind: MessageType,
+    /// Trace of the error
+    pub trace: Vec<PositionInfo>,
     /// Optionally store source code
     pub code: Option<String>,
     /// Optionally store message
@@ -52,10 +51,10 @@ pub struct Logger {
     pub comment: Option<String>
 }
 
-impl Logger {
+impl Message {
     /// Create a new logger instance
-    pub fn new(code: Option<&String>, trace: &[ErrorDetails], kind: LogType) -> Self {
-        Logger {
+    pub fn new(code: Option<&String>, trace: &[PositionInfo], kind: MessageType) -> Self {
+        Message {
             kind,
             trace: trace.iter().rev().cloned().collect(),
             code: code.cloned(),
@@ -65,8 +64,8 @@ impl Logger {
     }
 
     /// Create a new logger instance with message (suited for messages not related with issues in code)
-    pub fn new_msg(message: impl AsRef<str>, kind: LogType) -> Self {
-        Logger {
+    pub fn new_msg(message: impl AsRef<str>, kind: MessageType) -> Self {
+        Message {
             kind,
             trace: vec![],
             code: None,
@@ -75,66 +74,79 @@ impl Logger {
         }
     }
 
+    /// Create a new error instance at given token position if possible
+    pub fn new_at_token(meta: &impl Metadata, token: Option<Token>, kind: MessageType) -> Self {
+        Self::new(meta.get_code(), &Self::get_full_trace(meta, PositionInfo::from_token(meta, token)), kind)
+    }
+
+    /* New Error Message */
+
     /// Show error message that does not relate to code
     pub fn new_err_msg(message: impl AsRef<str>) -> Self {
-        Logger::new_msg(message, LogType::Error)
+        Self::new_msg(message, MessageType::Error)
     }
 
     /// Show warning message that does not relate to code
     pub fn new_warn_msg(message: impl AsRef<str>) -> Self {
-        Logger::new_msg(message, LogType::Warning)
+        Self::new_msg(message, MessageType::Warning)
     }
 
     /// Show info message that does not relate to code
     pub fn new_info_msg(message: impl AsRef<str>) -> Self {
-        Logger::new_msg(message, LogType::Info)
+        Self::new_msg(message, MessageType::Info)
     }
 
+    /* New Error Message at Token */
+
     /// Show error message based on the token
-    pub fn new_err_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
-        Logger::new(meta.get_code(), trace, LogType::Error)
+    pub fn new_err_at_token(meta: &impl Metadata, token: Option<Token>) -> Self {
+        Self::new_at_token(meta, token, MessageType::Error)
     }
 
     /// Show warning message based on the token
-    pub fn new_warn_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
-        Logger::new(meta.get_code(), trace, LogType::Warning)
+    pub fn new_warn_at_token(meta: &impl Metadata, token: Option<Token>) -> Self {
+        Self::new_at_token(meta, token, MessageType::Warning)
     }
 
     /// Show info message based on the token
-    pub fn new_info_with_trace(meta: &impl Metadata, trace: &[ErrorDetails]) -> Self {
-        Logger::new(meta.get_code(), trace, LogType::Info)
+    pub fn new_info_at_token(meta: &impl Metadata, token: Option<Token>) -> Self {
+        Self::new_at_token(meta, token, MessageType::Info)
     }
 
+    /* New Error Message at Position */
+
     /// Create an error by supplying essential information about the location
-    pub fn new_err_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
-        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Error)
+    pub fn new_err_at_position(meta: &impl Metadata, pos: PositionInfo) -> Self {
+        Self::new(meta.get_code(), &Self::get_full_trace(meta, pos), MessageType::Error)
     }
 
     /// Create a warning by supplying essential information about the location
-    pub fn new_warn_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
-        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Warning)
+    pub fn new_warn_at_position(meta: &impl Metadata, pos: PositionInfo) -> Self {
+        Self::new(meta.get_code(), &Self::get_full_trace(meta, pos), MessageType::Warning)
     }
 
     /// Create an info by supplying essential information about the location
-    pub fn new_info_at_position(meta: &impl Metadata, loc: (usize, usize)) -> Self {
-        Logger::new(meta.get_code(), &[ErrorDetails::with_pos(meta.get_path(), loc, 0)], LogType::Info)
+    pub fn new_info_at_position(meta: &impl Metadata, pos: PositionInfo) -> Self {
+        Self::new(meta.get_code(), &Self::get_full_trace(meta, pos), MessageType::Info)
     }
 
+    /* Attach additional infromation */
+
     /// Add message to an existing log
-    pub fn attach_message<T: AsRef<str>>(mut self, text: T) -> Self {
+    pub fn message<T: AsRef<str>>(mut self, text: T) -> Self {
         self.message = Some(String::from(text.as_ref()));
         self
     }
 
     /// Add comment to an existing log
-    pub fn attach_comment<T: AsRef<str>>(mut self, text: T) -> Self {
+    pub fn comment<T: AsRef<str>>(mut self, text: T) -> Self {
         self.comment = Some(String::from(text.as_ref()));
         self
     }
 
     /// Add code to an existing log.
     /// This code will be used to display a snippet where the message was triggered.
-    pub fn attach_code(mut self, code: String) -> Self {
+    pub fn set_code(mut self, code: String) -> Self {
         self.code = Some(code);
         self
     }
@@ -144,7 +156,7 @@ impl Logger {
     pub fn show(self) -> Self {
         // If this error is based in code
         if !self.trace.is_empty() {
-            Displayer::new(self.kind.clone(), &self.trace)
+            Logger::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())
                 .path()
@@ -153,7 +165,7 @@ impl Logger {
         }
         // If this error is a message error
         else {
-            Displayer::new(self.kind.clone(), &self.trace)
+            Logger::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())
                 .padded_text(self.comment.clone());
@@ -161,9 +173,10 @@ impl Logger {
         self
     }
 
-    /// Exit current process with error code 1
-    pub fn exit(self) {
-        process::exit(1);
+    fn get_full_trace(meta: &impl Metadata, position: PositionInfo) -> Vec<PositionInfo> {
+        let mut trace = meta.get_trace();
+        trace.push(position);
+        trace
     }
 }
 
