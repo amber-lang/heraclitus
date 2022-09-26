@@ -47,6 +47,10 @@ let tokens = cc.tokenize()?;
 
 ## Version 1.5.0
 ### Feat:
+- Added `error_at`, `warn_at`, `info_at` macros
+
+## Version 1.5.0
+### Feat:
 - _Breaking change:_ All new Failing API
 - Syntax Result now returns Failing enum
 - Errors are now encouraged to be propagated back to the root of the AST.

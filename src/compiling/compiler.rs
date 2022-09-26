@@ -5,6 +5,7 @@ use crate::compiling_rules::Rules;
 use crate::compiling::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
 use crate::compiling::failing::message::Message;
 use crate::compiling::failing::failure::Failure;
+use crate::error_pos;
 use crate::error;
 
 
@@ -150,8 +151,7 @@ impl Compiler {
                 };
                 // Send error
                 let meta = M::new(vec![], self.path.clone(), self.code.clone());
-                // Err(Failure::Loud(Message::new_err_at_position(&meta, info).message(message)))
-                error!(&meta, info => {
+                error_pos!(&meta, info => {
                     message: message,
                     comment: "test"
                 })
