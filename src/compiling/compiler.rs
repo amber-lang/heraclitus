@@ -3,7 +3,9 @@ use std::fs::File;
 use std::io::prelude::*;
 use crate::compiling_rules::Rules;
 use crate::compiling::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
-use crate::compiling::logging::{Logger, ErrorDetails};
+use crate::compiling::failing::message::Message;
+use crate::compiling::failing::failure::Failure;
+use crate::error;
 
 
 /// How do you want to separate expressions?
@@ -50,7 +52,7 @@ pub enum ScopingMode {
 /// #   fn new() -> Self { GlobalContext {} }
 /// #   fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult { Ok(()) }
 /// # }
-/// # fn compiler() -> Result<(), ErrorDetails> {
+/// # fn compiler() -> Result<(), Failure> {
 /// # let rules = Rules::new(vec![], vec![], reg![]);
 /// let mut global_ctx = GlobalContext::new();
 /// let cc = Compiler::new("HerbScript", rules);
@@ -128,7 +130,7 @@ impl Compiler {
     }
 
     /// Bulk run lexer and parser (used for testing purposes)
-    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, ErrorDetails> {
+    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, Failure> {
         match self.tokenize() {
             Ok(lexem) => {
                 let mut meta = M::new(lexem, self.path.clone(), self.code.clone());
@@ -139,22 +141,20 @@ impl Compiler {
                 }
                 Ok(meta)
             }
-            Err((kind, details)) => {
-                let data = details.data.clone().unwrap().capitalize();
+            Err((kind, info)) => {
+                let data = info.data.clone().unwrap().capitalize();
                 // Create an error message
                 let message = match kind {
                     LexerErrorType::Singleline => format!("{data} cannot be multiline"),
                     LexerErrorType::Unclosed => format!("{data} unclosed"),
                 };
-                let pos = details.get_pos_by_code(&self.code.as_ref().unwrap());
                 // Send error
                 let meta = M::new(vec![], self.path.clone(), self.code.clone());
-                Logger::new_err_at_position(&meta, pos)
-                    .attach_message(message)
-                    .attach_code(self.code.as_ref().unwrap().clone())
-                    .show()
-                    .exit();
-                Err(details)
+                // Err(Failure::Loud(Message::new_err_at_position(&meta, info).message(message)))
+                error!(&meta, info => {
+                    message: message,
+                    comment: "test"
+                })
             }
         }
     }

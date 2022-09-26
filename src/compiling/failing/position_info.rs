@@ -9,7 +9,7 @@ use crate::compiling::{Metadata, Token};
 
 /// Store position of some error
 #[derive(Debug, Clone)]
-pub enum ErrorPosition {
+pub enum Position {
     /// Explicit row and column
     Pos(usize, usize),
     /// End of file
@@ -18,11 +18,11 @@ pub enum ErrorPosition {
 
 /// Struct that is used to return a simple error
 #[derive(Debug, Clone)]
-pub struct ErrorDetails {
+pub struct PositionInfo {
     /// Path of the file
     pub path: Option<String>,
     /// Location of this error
-    pub position: ErrorPosition,
+    pub position: Position,
     /// Row of the error
     pub row: usize,
     /// Column of the error
@@ -30,13 +30,13 @@ pub struct ErrorDetails {
     /// Length of the token
     pub len: usize,
     /// Additional information
-    pub data: Option<String>,
+    pub data: Option<String>
 }
 
-impl ErrorDetails {
+impl PositionInfo {
     /// Create a new erorr from scratch
-    pub fn new(meta: &impl Metadata, position: ErrorPosition, len: usize) -> Self {
-        ErrorDetails {
+    pub fn new(meta: &impl Metadata, position: Position, len: usize) -> Self {
+        PositionInfo {
             position,
             path: meta.get_path(),
             row: 0,
@@ -47,10 +47,10 @@ impl ErrorDetails {
     }
 
     /// Create a new erorr at the end of file
-    pub fn with_eof(meta: &impl Metadata) -> Self {
-        ErrorDetails {
+    pub fn at_eof(meta: &impl Metadata) -> Self {
+        PositionInfo {
             path: meta.get_path(),
-            position: ErrorPosition::EOF,
+            position: Position::EOF,
             row: 0,
             col: 0,
             len: 0,
@@ -59,10 +59,10 @@ impl ErrorDetails {
     }
 
     /// Create a new erorr at given position
-    pub fn with_pos(path: Option<String>, (row, col): (usize, usize), len: usize) -> Self {
-        ErrorDetails {
+    pub fn at_pos(path: Option<String>, (row, col): (usize, usize), len: usize) -> Self {
+        PositionInfo {
             path,
-            position: ErrorPosition::Pos(row, col),
+            position: Position::Pos(row, col),
             row,
             col,
             len,
@@ -87,17 +87,17 @@ impl ErrorDetails {
     /// to retrieve token stored under it in metadata's expression.
     /// Then it's position is used to express the ErrorPosition
     pub fn from_metadata(meta: &impl Metadata) -> Self {
-        Self::from_token_option(meta, meta.get_current_token())
+        Self::from_token(meta, meta.get_current_token())
     }
 
     /// Create an error at position of the provided token
     /// 
     /// This function gives you ability to store tokens
     /// and error once you finished parsing the entire expression
-    pub fn from_token_option(meta: &impl Metadata, token_opt: Option<Token>) -> Self {
+    pub fn from_token(meta: &impl Metadata, token_opt: Option<Token>) -> Self {
         match token_opt {
-            Some(token) => ErrorDetails::with_pos(meta.get_path(), token.pos, token.word.chars().count()),
-            None => ErrorDetails::with_eof(meta)
+            Some(token) => PositionInfo::at_pos(meta.get_path(), token.pos, token.word.chars().count()),
+            None => PositionInfo::at_eof(meta)
         }
     }
 
@@ -110,8 +110,8 @@ impl ErrorDetails {
     /// Get position of the error by either path or code
     pub fn get_pos_by_file_or_code(&self, code: Option<&String>) -> (usize, usize) {
         match self.position {
-            ErrorPosition::Pos(row, col) => (row, col),
-            ErrorPosition::EOF => {
+            Position::Pos(row, col) => (row, col),
+            Position::EOF => {
                 if let Some(code) = code {
                     self.get_pos_by_code(code)
                 }
@@ -138,8 +138,8 @@ impl ErrorDetails {
     pub fn get_pos_by_code(&self, code: impl AsRef<str>) -> (usize, usize) {
         let code = code.as_ref();
         match self.position {
-            ErrorPosition::Pos(row, col) => (row, col),
-            ErrorPosition::EOF => {
+            Position::Pos(row, col) => (row, col),
+            Position::EOF => {
                 let mut col = 1;
                 let mut row = 1;
                 // Count letters in column

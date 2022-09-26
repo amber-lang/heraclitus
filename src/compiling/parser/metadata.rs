@@ -1,4 +1,5 @@
 use crate::compiling::Token;
+use crate::compiling::failing::position_info::PositionInfo;
 
 /// Default implementation of metadata. 
 /// This is useful for debuging or languages that are not too demanding.
@@ -76,6 +77,10 @@ pub trait Metadata {
     fn get_path(&self) -> Option<String>;
     /// Getter for code of the file
     fn get_code(&self) -> Option<&String>;
+    /// Get traceback
+    fn get_trace(&self) -> Vec<PositionInfo> {
+        vec![]
+    }
     /// Optionally set logic of incrementing the index number
     fn increment_index(&mut self) {
         let index = self.get_index();

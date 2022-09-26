@@ -1,4 +1,4 @@
-use crate::compiling::logging::ErrorDetails;
+use crate::compiling::failing::failure::Failure;
 use colored::Colorize;
 
 use super::Metadata;
@@ -26,7 +26,7 @@ macro_rules! syntax_name {
 }
 
 /// Result that should be returned in the parsing phase
-pub type SyntaxResult = Result<(), ErrorDetails>;
+pub type SyntaxResult = Result<(), Failure>;
 
 /// Trait for parsing
 /// 

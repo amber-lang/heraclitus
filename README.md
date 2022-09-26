@@ -45,6 +45,21 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.0
+### Feat:
+- _Breaking change:_ All new Failing API
+- Syntax Result now returns Failing enum
+- Errors are now encouraged to be propagated back to the root of the AST.
+- Added `context` macro to support better developer experience
+
+## Version 1.4.0
+### Feat:
+- Tracebacks
+
+### Fix:
+- Terminal colors (support for non-truecolor consoles)
+- Logger now prints errors to STDERR
+
 ## Version 1.3.1
 ### Fix:
 - Multiline regions wouldn't parse

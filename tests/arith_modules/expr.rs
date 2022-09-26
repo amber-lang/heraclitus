@@ -30,7 +30,7 @@ impl Expr {
         // Check if exclusion occurs
         if let Some(excludes) = &self.excludes {
             if excludes.clone() as usize == id as usize {
-                return Err(ErrorDetails::from_metadata(meta))
+                return Err(Failure::Quiet(PositionInfo::from_metadata(meta)))
             }
         }
         // Match syntax

@@ -1,18 +1,23 @@
+//! This is a logger module which is used by compiler to log errors, warnings and info messages
+
 #![allow(dead_code)]
 use colored::{Colorize, Color};
 use pad::PadStr;
-use crate::compiling::logging::LogType;
-use super::ErrorDetails;
+use crate::compiling::failing::position_info::PositionInfo;
+use crate::compiling::failing::message::MessageType;
 
-pub struct Displayer {
-    kind: LogType,
-    trace: Vec<ErrorDetails>
+/// This is a logger that is used to log messages to the user
+/// The logger is being used internally by the Message struct
+/// when invoking the `show` method
+pub struct Logger {
+    kind: MessageType,
+    trace: Vec<PositionInfo>
 }
 
-impl Displayer {
+impl Logger {
     /// Create a new Displayer instance
-    pub fn new(kind: LogType, trace: &[ErrorDetails]) -> Self {
-        Displayer {
+    pub fn new(kind: MessageType, trace: &[PositionInfo]) -> Self {
+        Logger {
             kind,
             trace: trace.to_vec()
         }
@@ -20,18 +25,18 @@ impl Displayer {
 
     fn kind_to_color(&self) -> Color {
         match self.kind {
-            LogType::Error => Color::Red,
-            LogType::Warning => Color::Yellow,
-            LogType::Info => Color::Blue
+            MessageType::Error => Color::Red,
+            MessageType::Warning => Color::Yellow,
+            MessageType::Info => Color::Blue
         }
     }
 
     /// Render header of your information
-    pub fn header(self, kind: LogType) -> Self {
+    pub fn header(self, kind: MessageType) -> Self {
         let name = match kind {
-            LogType::Error => " ERROR ".to_string(),
-            LogType::Warning => " WARN ".to_string(),
-            LogType::Info => " INFO ".to_string()
+            MessageType::Error => " ERROR ".to_string(),
+            MessageType::Warning => " WARN ".to_string(),
+            MessageType::Info => " INFO ".to_string()
         };
         let formatted = name
             .black()
@@ -190,7 +195,7 @@ mod test {
     use std::time::Duration;
     use std::thread::sleep;
 
-    use crate::prelude::{ErrorDetails, LogType};
+    use crate::prelude::{PositionInfo, MessageType};
     #[allow(unused_variables)]
     
     #[test]
@@ -204,11 +209,11 @@ mod test {
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let trace = [
-            ErrorDetails::with_pos(Some("/path/to/bar".to_string()), (3, 25), 0),
-            ErrorDetails::with_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
+            PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 25), 0),
+            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
         ];
-        super::Displayer::new(LogType::Error, &trace)
-            .header(super::LogType::Error)
+        super::Logger::new(MessageType::Error, &trace)
+            .header(MessageType::Error)
             .text(Some(format!("Cannot call function \"foobar\" on a number")))
             .path()
             .snippet(Some(code));
