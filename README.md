@@ -46,6 +46,11 @@ let tokens = cc.tokenize()?;
 # Change log 🚀
 
 ## Version 1.5.0
+### Fix:
+- Message now does not consumes itself when it's being displayed
+- Removed `warn*` and `info*` macros as we don't see any reason to use them at this point
+
+## Version 1.5.0
 ### Feat:
 - Added `error_at`, `warn_at`, `info_at` macros
 
