@@ -14,9 +14,9 @@ pub mod logger;
 /// # use heraclitus_compiler::prelude::*;
 /// # fn parse() -> SyntaxResult {
 /// # let meta = &mut DefaultMetadata::new(vec![], None, None);
-/// let token = meta.get_current_token();
+/// let tok = meta.get_current_token();
 /// if let Err(failure) = token(meta, "keyword") {
-///   return error!(meta, token, "Expected keyword");
+///   return error!(meta, tok, "Expected keyword");
 /// }
 /// # Ok(())
 /// # }
