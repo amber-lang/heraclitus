@@ -45,7 +45,11 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.5.0
+## Version 1.5.2
+### Fix:
+- Token now derives Default trait
+
+## Version 1.5.1
 ### Feat:
 - Added `error_at`, `warn_at`, `info_at` macros
 
