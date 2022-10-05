@@ -45,14 +45,18 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.5.2
+## Version 1.5.3
 ### Fix:
 - Token now derives Default trait
 
-## Version 1.5.1
+## Version 1.5.2
 ### Fix:
 - Message now does not consumes itself when it's being displayed
 - Removed `warn*` and `info*` macros as we don't see any reason to use them at this point
+
+## Version 1.5.1
+### Feat:
+- Added `error_at`, `warn_at`, `info_at` macros
 
 ## Version 1.5.0
 ### Feat:
@@ -60,7 +64,6 @@ let tokens = cc.tokenize()?;
 - Syntax Result now returns Failing enum
 - Errors are now encouraged to be propagated back to the root of the AST.
 - Added `context` macro to support better developer experience
-- Added `error_at`, `warn_at`, `info_at` macros
 
 ## Version 1.4.0
 ### Feat:
