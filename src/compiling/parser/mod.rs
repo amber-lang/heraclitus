@@ -27,7 +27,7 @@ pub mod patterns {
 ///     // ...
 ///     Ok(())
 ///   }, |quiet_failure| {
-///     error!(meta, quiet_failure, "Undefined syntax at variable declaration")
+///     error_pos!(meta, quiet_failure, "Undefined syntax at variable declaration")
 ///   });
 /// }
 /// ```

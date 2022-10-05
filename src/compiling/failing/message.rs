@@ -144,16 +144,9 @@ impl Message {
         self
     }
 
-    /// Add code to an existing log.
-    /// This code will be used to display a snippet where the message was triggered.
-    pub fn set_code(mut self, code: String) -> Self {
-        self.code = Some(code);
-        self
-    }
-
     /// Shows (renders) the message while giving 
     /// the ownership to this object away
-    pub fn show(self) -> Self {
+    pub fn show(&self) {
         // If this error is based in code
         if !self.trace.is_empty() {
             Logger::new(self.kind.clone(), &self.trace)
@@ -170,7 +163,6 @@ impl Message {
                 .text(self.message.clone())
                 .padded_text(self.comment.clone());
         }
-        self
     }
 
     fn get_full_trace(meta: &impl Metadata, position: PositionInfo) -> Vec<PositionInfo> {
