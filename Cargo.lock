@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "heraclitus-compiler"
-version = "1.5.3"
+version = "1.5.4"
 dependencies = [
  "capitalize",
  "colored",

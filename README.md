@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.4
+### Fix:
+- Offset now supports negative values
+
 ## Version 1.5.3
 ### Fix:
 - Token now derives Default trait
