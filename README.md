@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.5
+### Feature:
+- Show elapsed time in parser debug mode
+
 ## Version 1.5.4
 ### Fix:
 - Offset now supports negative values
@@ -59,18 +63,18 @@ let tokens = cc.tokenize()?;
 - Removed `warn*` and `info*` macros as we don't see any reason to use them at this point
 
 ## Version 1.5.1
-### Feat:
+### Feature:
 - Added `error_at`, `warn_at`, `info_at` macros
 
 ## Version 1.5.0
-### Feat:
+### Feature:
 - _Breaking change:_ All new Failing API
 - Syntax Result now returns Failing enum
 - Errors are now encouraged to be propagated back to the root of the AST.
 - Added `context` macro to support better developer experience
 
 ## Version 1.4.0
-### Feat:
+### Feature:
 - Tracebacks
 
 ### Fix:
