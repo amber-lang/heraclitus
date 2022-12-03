@@ -73,10 +73,11 @@ pub trait SyntaxModule<M: Metadata> {
                 let padding = "  ".repeat(debug);
                 println!("{padding}[Entered] {}", Self::name());
                 meta.set_debug(debug + 1);
+                let time = std::time::Instant::now();
                 let result = self.parse(meta);
                 match result {
-                    Ok(()) => println!("{padding}{} {}", "[Left]".green(), Self::name()),
-                    Err(_) => println!("{padding}{} {}", "[Failed]".red(), Self::name())
+                    Ok(()) => println!("{padding}{} {} ({}ms)", "[Left]".green(), Self::name(), time.elapsed().as_millis()),
+                    Err(_) => println!("{padding}{} {} ({}ms)", "[Failed]".red(), Self::name(), time.elapsed().as_millis())
                 }
                 meta.set_debug(debug);
                 result
