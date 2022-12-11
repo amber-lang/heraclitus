@@ -166,25 +166,36 @@ impl Logger {
     }
 
     /// Render snippet of the code if the message is contextual to it
-    pub fn snippet<T: AsRef<str>>(self, code: Option<T>) {
-        let (row, _, _) = self.get_row_col_len();
+    pub fn snippet<T: AsRef<str>>(self, code: Option<T>) -> Self {
+        if let Some(pos) = self.trace.first() {
+            if let Ok(code) = std::fs::read_to_string(pos.get_path()) {
+                self.snippet_from_code(code);
+                return self;
+            }
+        }
         if let Some(code) = code {
-            let mut overflow = 0;
-            let index = row - 1;
-            let code: String = String::from(code.as_ref());
-            let code = code.split('\n')
-                .map(|item| item.to_string())
-                .collect::<Vec<String>>();
-            eprintln!();
-            // Show additional code above the snippet
-            if index > 0 {
-                eprintln!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
-            }
-            eprintln!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
-            // Show additional code below the snippet
-            if index < code.len() - 1 {
-                eprintln!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
-            }
+            self.snippet_from_code(code.as_ref().to_string());
+        }
+        self
+    }
+
+    /// Render snippet of the code based on the code data
+    fn snippet_from_code(&self, code: String) {
+        let (row, _, _) = self.get_row_col_len();
+        let mut overflow = 0;
+        let index = row - 1;
+        let code = code.split('\n')
+            .map(|item| item.to_string())
+            .collect::<Vec<String>>();
+        eprintln!();
+        // Show additional code above the snippet
+        if index > 0 {
+            eprintln!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
+        }
+        eprintln!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
+        // Show additional code below the snippet
+        if index < code.len() - 1 {
+            eprintln!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
         }
     }
 }
