@@ -154,7 +154,7 @@ impl Message {
                 .text(self.message.clone())
                 .path()
                 .padded_text(self.comment.clone())
-                .snippet(self.code.clone())
+                .snippet(self.code.clone());
         }
         // If this error is a message error
         else {

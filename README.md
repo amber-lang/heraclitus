@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.6
+### Fix:
+- Compiler now does not rely strongly on provided source code. It can now open files from path if provided. This can improve drastically performance of the compiler when working with imports.
+
 ## Version 1.5.5
 ### Feature:
 - Show elapsed time in parser debug mode
