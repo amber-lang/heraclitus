@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.8
+### Fix:
+- Escaping regions is now properly handled
+
 ## Version 1.5.7
 ### Fix:
 - Major fix that caused the lexer to lead to an undefined behavior with defining a region that has a beginning rule longer than one character.
