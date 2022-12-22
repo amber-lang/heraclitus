@@ -1,6 +1,11 @@
 #![allow(dead_code)]
 const BEGINNING: (usize, usize) = (0, 1);
 
+pub enum ReadMode {
+    History,
+    Future
+}
+
 pub struct Reader<'a> {
     pub code: &'a String,
     pub row: usize,
@@ -83,6 +88,15 @@ impl<'a> Reader<'a> {
         match self.get_future(one_forward) {
             Some(value) => value.chars().nth(one_forward - 1),
             None => None
+        }
+    }
+
+    /// Show next character that is going to be consumed depending on the mode
+    #[inline]
+    pub fn get_history_or_future(&self, n: usize, mode: &ReadMode) -> Option<String> {
+        match mode {
+            ReadMode::History => self.get_history(n),
+            ReadMode::Future => self.get_future(n)
         }
     }
 
