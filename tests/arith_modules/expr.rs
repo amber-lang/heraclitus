@@ -33,6 +33,14 @@ impl Expr {
                 return Err(Failure::Quiet(PositionInfo::from_metadata(meta)))
             }
         }
+        // Skip comments
+        while let Some(token) = meta.get_current_token() {
+            if token.word.starts_with("//") || token.word.starts_with("\n") {
+                meta.increment_index();
+            } else {
+                break
+            }
+        }
         // Match syntax
         match syntax(meta, &mut module) {
             Ok(()) => {

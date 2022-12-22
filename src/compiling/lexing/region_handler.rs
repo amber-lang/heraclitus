@@ -1,5 +1,6 @@
 use crate::compiling_rules::{Region, Rules, RegionMap};
 use super::reader::Reader;
+use super::reader::ReadMode;
 
 #[derive(PartialEq, Eq)]
 pub enum RegionReaction {
@@ -87,12 +88,12 @@ impl RegionHandler {
 
     // Matches region by some getter callback
     #[inline]
-    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &[Region]) -> Option<Region> {
+    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &[Region], read_mode: ReadMode) -> Option<Region> {
         // Closure that checks if for each given Region is there any that matches current history state
-        let predicate = |candidate: &Region| match reader.get_history(cb(candidate).len()) {
+        let predicate = |candidate: &Region| match reader.get_history_or_future(cb(candidate).len(), &read_mode) {
             Some(code_chunk) => {
                 // Check if the region was escaped
-                let is_escaped = match reader.get_history(cb(candidate).len() + 1) {
+                let is_escaped = match reader.get_history_or_future(cb(candidate).len() + 1, &read_mode) {
                     Some(code_chunk_with_escape) => code_chunk_with_escape.chars().next().unwrap() == self.escape,
                     None => false
                 };
@@ -106,14 +107,14 @@ impl RegionHandler {
     #[inline]
     fn match_region_by_begin(&self, reader: &Reader) -> Option<Region> {
         let region = self.get_region().unwrap();
-        self.match_region_by(reader, |candidate: &Region| &candidate.begin, &region.interp)
+        self.match_region_by(reader, |candidate: &Region| &candidate.begin, &region.interp, ReadMode::Future)
     }
 
     #[inline]
     fn match_region_by_end(&self, reader: &Reader) -> Option<Region> {
         let region = self.get_region().unwrap();
         if !region.global {
-            self.match_region_by(reader, |candidate: &Region| &candidate.end, &[region.clone()])
+            self.match_region_by(reader, |candidate: &Region| &candidate.end, &[region.clone()], ReadMode::History)
         } else { None }
     }
 
@@ -144,7 +145,7 @@ mod test {
             "end"
         ];
         let expected = vec![
-            (4, String::from("begin")),
+            (0, String::from("begin")),
             (15, String::from("end"))
         ];
         let code = lines.join(" ");

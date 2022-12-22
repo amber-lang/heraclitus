@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.7
+### Fix:
+- Major fix that caused the lexer to lead to an undefined behavior with defining a region that has a beginning rule longer than one character.
+
 ## Version 1.5.6
 ### Fix:
 - Compiler now does not rely strongly on provided source code. It can now open files from path if provided. This can improve drastically performance of the compiler when working with imports.
