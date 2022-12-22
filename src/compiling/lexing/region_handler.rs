@@ -92,8 +92,13 @@ impl RegionHandler {
         // Closure that checks if for each given Region is there any that matches current history state
         let predicate = |candidate: &Region| match reader.get_history_or_future(cb(candidate).len(), &read_mode) {
             Some(code_chunk) => {
+                // Check if the region was escaped (the escape symbol will always be in a history)
+                let is_escaped = match read_mode {
+                    ReadMode::History => reader.get_history(cb(candidate).len() + 1),
+                    ReadMode::Future => reader.get_history(2)
+                };
                 // Check if the region was escaped
-                let is_escaped = match reader.get_history_or_future(cb(candidate).len() + 1, &read_mode) {
+                let is_escaped = match is_escaped {
                     Some(code_chunk_with_escape) => code_chunk_with_escape.chars().next().unwrap() == self.escape,
                     None => false
                 };
