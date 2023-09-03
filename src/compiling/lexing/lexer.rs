@@ -479,4 +479,32 @@ mod test {
         }
         assert_eq!(expected, result);
     }
+
+    #[test]
+    fn test_lexer_escaped_regions() {
+        let symbols = vec![';', '+', '='];
+        let regions = reg![
+            reg!(string as "String" => {
+                begin: "\"",
+                end: "\""
+            })
+        ];
+        let expected = vec![
+            ("\"this is \\\"escaped\\\" string\"".to_string(), 1, 1)
+        ];
+        let rules = Rules::new(symbols, vec![], regions);
+        let mut cc: Compiler = Compiler::new("Test", rules);
+        cc.load(vec![
+            "\"this is \\\"escaped\\\" string\""
+        ].join("\n"));
+        let mut lexer = super::Lexer::new(&cc);
+        let mut result = vec![];
+        // Simulate lexing
+        let res = lexer.run();
+        assert!(res.is_ok());
+        for lex in lexer.lexem {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        assert_eq!(expected, result);
+    }
 }

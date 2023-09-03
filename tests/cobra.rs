@@ -12,7 +12,7 @@ fn cobra() {
         })
     ];
     let rules = Rules::new(symbols, compounds, region);
-    let mut compiler = Compiler::new("Arith", rules);
+    let mut compiler = Compiler::new("Cobra", rules);
     compiler.use_indents();
     compiler.load(vec![
         "if 'condition':",
