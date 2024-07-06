@@ -128,6 +128,9 @@ impl Logger {
         let (row, col, len) = self.get_row_col_len();
         let max_pad = self.get_max_pad_size(code.len());
         let index = index as i32 + offset as i32;
+        if code.get(index as usize).is_none() {
+            return String::new();
+        }
         let row = row as i32 + offset as i32;
         let code = code[index as usize].clone();
         let line = format!("{row}").pad_to_width(max_pad);
@@ -208,7 +211,7 @@ mod test {
 
     use crate::prelude::{PositionInfo, MessageType};
     #[allow(unused_variables)]
-    
+
     #[test]
     fn test_displayer() {
         let code = vec![
@@ -222,6 +225,23 @@ mod test {
         let trace = [
             PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 25), 0),
             PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
+        ];
+        super::Logger::new(MessageType::Error, &trace)
+            .header(MessageType::Error)
+            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .path()
+            .snippet(Some(code));
+    }
+
+    #[test]
+    fn test_end_of_line_displayer() {
+        let code = vec![
+            "hello"
+        ].join("\n");
+        // Uncomment to see the error message
+        sleep(Duration::from_secs(1));
+        let trace = [
+            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 6), 1)
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)

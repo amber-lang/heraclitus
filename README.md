@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.6.0
+### Fix:
+- Heraclitus no longer panics when error happens out of bounds of file
+
 ## Version 1.5.9
 ### Fix:
 - Escaping escape key now treats it as a character
