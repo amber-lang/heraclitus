@@ -12,7 +12,6 @@ impl SyntaxModule<DefaultMetadata> for IfStatement {
         IfStatement { cond: Expr::new(), block: Block::new() }
     }
     fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
-        dbg!("IfStatement");
         token(meta, "if")?;
         syntax(meta, &mut self.cond)?;
         token(meta, ":")?;
