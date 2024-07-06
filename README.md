@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.5.9
+### Fix:
+- Escaping escape key now treats it as a character
+
 ## Version 1.5.8
 ### Fix:
 - Escaping regions is now properly handled
