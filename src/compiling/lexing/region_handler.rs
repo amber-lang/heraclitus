@@ -102,13 +102,6 @@ impl RegionHandler {
                     ReadMode::History => reader.get_history(cb(candidate).len() + 2),
                     ReadMode::Future => reader.get_history(3)
                 }.is_some_and(|val| val.starts_with(&self.escape.to_string().repeat(2)));
-                if escaped_suffix {
-                    dbg!(
-                        reader.get_history(cb(candidate).len() + 1),
-                        reader.get_history(cb(candidate).len() + 2),
-                        escape_escaped
-                    );
-                }
                 let is_escaped = escaped_suffix && !escape_escaped;
                 !is_escaped && &code_chunk == cb(candidate)
             }
@@ -223,7 +216,6 @@ mod test {
                 result.push(reader.get_index());
             }
         }
-        dbg!(expected.clone(), result.clone());
         assert_eq!(expected, result);
     }
 }

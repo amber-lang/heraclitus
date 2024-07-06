@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.6.1
+### Fix:
+- Remove debug information
+
 ## Version 1.6.0
 ### Fix:
 - Heraclitus no longer panics when error happens out of bounds of file
