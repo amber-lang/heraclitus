@@ -15,9 +15,9 @@ dependencies = [
 
 [[package]]
 name = "capitalize"
-version = "0.1.0"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "702cfe2f052c6542d55a9924efef63dd315c168cc4f315a824fb0f47da4e11c8"
+checksum = "6b5271031022835ee8c7582fe67403bd6cb3d962095787af7921027234bab5bf"
 
 [[package]]
 name = "colored"
@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "heraclitus-compiler"
-version = "1.5.8"
+version = "1.5.9"
 dependencies = [
  "capitalize",
  "colored",

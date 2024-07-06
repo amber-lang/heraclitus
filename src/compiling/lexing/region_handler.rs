@@ -29,7 +29,7 @@ impl RegionHandler {
         self.region_stack.last()
     }
 
-    // Error if after code lexing 
+    // Error if after code lexing
     // some region was left unclosed
     #[inline]
     pub fn is_region_closed(&self, reader: &Reader) -> Result<(),((usize, usize), Region)> {
@@ -93,15 +93,23 @@ impl RegionHandler {
         let predicate = |candidate: &Region| match reader.get_history_or_future(cb(candidate).len(), &read_mode) {
             Some(code_chunk) => {
                 // Check if the region was escaped (the escape symbol will always be in a history)
-                let is_escaped = match read_mode {
+                let escaped_suffix = match read_mode {
                     ReadMode::History => reader.get_history(cb(candidate).len() + 1),
                     ReadMode::Future => reader.get_history(2)
-                };
-                // Check if the region was escaped
-                let is_escaped = match is_escaped {
-                    Some(code_chunk_with_escape) => code_chunk_with_escape.chars().next().unwrap() == self.escape,
-                    None => false
-                };
+                }.is_some_and(|val| val.starts_with(self.escape));
+                // Check if the escape symbol was escaped
+                let escape_escaped = match read_mode {
+                    ReadMode::History => reader.get_history(cb(candidate).len() + 2),
+                    ReadMode::Future => reader.get_history(3)
+                }.is_some_and(|val| val.starts_with(&self.escape.to_string().repeat(2)));
+                if escaped_suffix {
+                    dbg!(
+                        reader.get_history(cb(candidate).len() + 1),
+                        reader.get_history(cb(candidate).len() + 2),
+                        escape_escaped
+                    );
+                }
+                let is_escaped = escaped_suffix && !escape_escaped;
                 !is_escaped && &code_chunk == cb(candidate)
             }
             None => false
@@ -184,10 +192,10 @@ mod test {
     #[test]
     fn handle_region() {
         let lines = vec![
-            "'My name is {name}.'"
+            "'My name is \\\\{name}.\\\\'"
         ];
         let expected = vec![
-            0, 12, 17, 19
+            0, 14, 19, 23
         ];
         let code = lines.join("\n");
         let region = reg![
@@ -203,7 +211,7 @@ mod test {
         ];
         let mut reader = Reader::new(&code);
         let mut rh = RegionHandler {
-            region_stack: vec![region.clone()], 
+            region_stack: vec![region.clone()],
             region_map: region.generate_region_map(),
             escape: '\\'
         };
@@ -215,6 +223,7 @@ mod test {
                 result.push(reader.get_index());
             }
         }
+        dbg!(expected.clone(), result.clone());
         assert_eq!(expected, result);
     }
 }

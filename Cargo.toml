@@ -1,6 +1,6 @@
 [package]
 name = "heraclitus-compiler"
-version = "1.5.8"
+version = "1.5.9"
 edition = "2021"
 description = "Compiler frontend for developing great programming languages"
 license = "MIT"
@@ -13,4 +13,4 @@ keywords = ["heraclitus", "compiler", "parser"]
 [dependencies]
 colored = "2.0.0"
 pad = "0.1.6"
-capitalize = "0.1.0"
+capitalize = "0.3.4"

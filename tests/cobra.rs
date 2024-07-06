@@ -15,7 +15,7 @@ fn cobra() {
     let mut compiler = Compiler::new("Cobra", rules);
     compiler.use_indents();
     compiler.load(vec![
-        "if 'condition':",
+        "if 'condition\\\\':",
         "  'do + this'",
         "  'do ++ that'"
     ].join("\n"));
