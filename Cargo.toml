@@ -13,4 +13,4 @@ keywords = ["heraclitus", "compiler", "parser"]
 [dependencies]
 colored = "2.0.0"
 pad = "0.1.6"
-capitalize = "0.1.0"
+capitalize = "0.3.4"
