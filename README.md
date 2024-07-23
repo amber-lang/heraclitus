@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.6.2
+### Fix:
+- Fixes escapes that were handled improperly
+
 ## Version 1.6.1
 ### Fix:
 - Remove debug information
