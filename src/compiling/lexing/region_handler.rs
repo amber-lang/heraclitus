@@ -11,16 +11,14 @@ pub enum RegionReaction {
 
 pub struct RegionHandler {
     region_stack: Vec<Region>,
-    region_map: RegionMap,
-    escape: char
+    region_map: RegionMap
 }
 
 impl RegionHandler {
     pub fn new(rules: &Rules) -> Self {
         RegionHandler {
             region_stack: vec![rules.region_tree.clone()],
-            region_map: rules.region_tree.clone().generate_region_map(),
-            escape: rules.escape_symbol
+            region_map: rules.region_tree.clone().generate_region_map()
         }
     }
 
@@ -43,12 +41,12 @@ impl RegionHandler {
     }
 
     // Check where we are in code and open / close some region if matched
-    pub fn handle_region(&mut self, reader: &Reader) -> RegionReaction {
+    pub fn handle_region(&mut self, reader: &Reader, is_escaped: bool) -> RegionReaction {
         // If we are not in the global scope
         if let Some(region) = self.get_region() {
             for interp_region in region.interp.iter() {
                 // The region that got matched based on current code lexing state
-                if let Some(mut begin_region) = self.match_region_by_begin(reader) {
+                if let Some(mut begin_region) = self.match_region_by_begin(reader, is_escaped) {
                     if begin_region.name == *interp_region.name {
                         // Save the tokenize state here to preserve borrow rules
                         let tokenize = begin_region.tokenize;
@@ -74,7 +72,7 @@ impl RegionHandler {
                 }
             }
             // Let's check if we can close current region
-            if let Some(end_region) = self.match_region_by_end(reader) {
+            if let Some(end_region) = self.match_region_by_end(reader, is_escaped) {
                 if end_region.name == region.name {
                     // Save the tokenize state here to preserve borrow rules
                     let tokenize = end_region.tokenize;
@@ -88,39 +86,45 @@ impl RegionHandler {
 
     // Matches region by some getter callback
     #[inline]
-    fn match_region_by(&self, reader: &Reader, cb: impl Fn(&Region) -> &String, candidates: &[Region], read_mode: ReadMode) -> Option<Region> {
+    fn match_region_by(
+        &self,
+        reader: &Reader,
+        cb: impl Fn(&Region) -> &String,
+        candidates: &[Region],
+        read_mode: ReadMode,
+        is_escaped: bool
+    ) -> Option<Region> {
         // Closure that checks if for each given Region is there any that matches current history state
         let predicate = |candidate: &Region| match reader.get_history_or_future(cb(candidate).len(), &read_mode) {
-            Some(code_chunk) => {
-                // Check if the region was escaped (the escape symbol will always be in a history)
-                let escaped_suffix = match read_mode {
-                    ReadMode::History => reader.get_history(cb(candidate).len() + 1),
-                    ReadMode::Future => reader.get_history(2)
-                }.is_some_and(|val| val.starts_with(self.escape));
-                // Check if the escape symbol was escaped
-                let escape_escaped = match read_mode {
-                    ReadMode::History => reader.get_history(cb(candidate).len() + 2),
-                    ReadMode::Future => reader.get_history(3)
-                }.is_some_and(|val| val.starts_with(&self.escape.to_string().repeat(2)));
-                let is_escaped = escaped_suffix && !escape_escaped;
-                !is_escaped && &code_chunk == cb(candidate)
-            }
+            Some(code_chunk) => !is_escaped && &code_chunk == cb(candidate),
             None => false
         };
         self.get_region_by(predicate, candidates)
     }
 
     #[inline]
-    fn match_region_by_begin(&self, reader: &Reader) -> Option<Region> {
+    fn match_region_by_begin(&self, reader: &Reader, is_escaped: bool) -> Option<Region> {
         let region = self.get_region().unwrap();
-        self.match_region_by(reader, |candidate: &Region| &candidate.begin, &region.interp, ReadMode::Future)
+        self.match_region_by(
+            reader,
+            |candidate: &Region| &candidate.begin,
+            &region.interp,
+            ReadMode::Future,
+            is_escaped
+        )
     }
 
     #[inline]
-    fn match_region_by_end(&self, reader: &Reader) -> Option<Region> {
+    fn match_region_by_end(&self, reader: &Reader, is_escaped: bool) -> Option<Region> {
         let region = self.get_region().unwrap();
         if !region.global {
-            self.match_region_by(reader, |candidate: &Region| &candidate.end, &[region.clone()], ReadMode::History)
+            self.match_region_by(
+                reader,
+                |candidate: &Region| &candidate.end,
+                &[region.clone()],
+                ReadMode::History,
+                is_escaped
+            )
         } else { None }
     }
 
@@ -165,19 +169,23 @@ mod test {
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()],
             region_map: region.generate_region_map(),
-            escape: '\\'
         };
 
         let mut result = vec![];
+        let mut is_escaped = false;
         // Simulate matching regions
-        while let Some(_) = reader.next() {
-            if let Some(begin) = rh.match_region_by_begin(&reader) {
+        while let Some(letter) = reader.next() {
+            if let Some(begin) = rh.match_region_by_begin(&reader, is_escaped) {
                 rh.region_stack.push(begin.clone());
                 result.push((reader.get_index(), begin.begin));
             }
-            if let Some(end) = rh.match_region_by_end(&reader) {
+            if let Some(end) = rh.match_region_by_end(&reader, is_escaped) {
                 result.push((reader.get_index(), end.end));
             }
+            // Handle the escape key
+            is_escaped = (!is_escaped && letter == '\\')
+                .then(|| !is_escaped)
+                .unwrap_or(false);
         }
         assert_eq!(expected, result);
     }
@@ -185,10 +193,10 @@ mod test {
     #[test]
     fn handle_region() {
         let lines = vec![
-            "'My name is \\\\{name}.\\\\'"
+            "'My name is \\\\\\'{name}.\\\\'"
         ];
         let expected = vec![
-            0, 14, 19, 23
+            0, 16, 21, 25
         ];
         let code = lines.join("\n");
         let region = reg![
@@ -205,16 +213,20 @@ mod test {
         let mut reader = Reader::new(&code);
         let mut rh = RegionHandler {
             region_stack: vec![region.clone()],
-            region_map: region.generate_region_map(),
-            escape: '\\'
+            region_map: region.generate_region_map()
         };
         let mut result = vec![];
+        let mut is_escaped = false;
         // Simulate matching regions
-        while let Some(_) = reader.next() {
-            let region_mutated = rh.handle_region(&reader);
+        while let Some(letter) = reader.next() {
+            let region_mutated = rh.handle_region(&reader, is_escaped);
             if let RegionReaction::Begin(_) | RegionReaction::End(_) = region_mutated {
                 result.push(reader.get_index());
             }
+            // Handle the escape key
+            is_escaped = (!is_escaped && letter == '\\')
+                .then(|| !is_escaped)
+                .unwrap_or(false);
         }
         assert_eq!(expected, result);
     }

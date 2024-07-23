@@ -28,6 +28,7 @@ pub type LexerError = (LexerErrorType, PositionInfo);
 /// pass a reference to the `Compiler`.
 pub struct Lexer<'a> {
     symbols: Vec<char>,
+    escape_symbol: char,
     compound: CompoundHandler,
     region: RegionHandler,
     reader: Reader<'a>,
@@ -36,6 +37,7 @@ pub struct Lexer<'a> {
     pub lexem: Vec<Token>,
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode,
+    is_escaped: bool,
     position: (usize, usize)
 }
 
@@ -45,6 +47,7 @@ impl<'a> Lexer<'a> {
         let code: &'a String = cc.code.as_ref().unwrap();
         Lexer {
             symbols: cc.rules.symbols.clone(),
+            escape_symbol: cc.rules.escape_symbol,
             compound: CompoundHandler::new(&cc.rules),
             region: RegionHandler::new(&cc.rules),
             reader: Reader::new(code),
@@ -52,6 +55,7 @@ impl<'a> Lexer<'a> {
             lexem: Vec::with_capacity(AVG_TOKEN_AMOUNT),
             separator_mode: cc.separator_mode.clone(),
             scoping_mode: cc.scoping_mode.clone(),
+            is_escaped: false,
             position: (0, 0),
         }
     }
@@ -164,7 +168,7 @@ impl<'a> Lexer<'a> {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = self.region.handle_region(&self.reader);
+            let reaction = self.region.handle_region(&self.reader, self.is_escaped);
             match reaction {
                 // If the region has been opened
                 // Finish the part that we have been parsing
@@ -215,6 +219,10 @@ impl<'a> Lexer<'a> {
                             // Handle region scope
                             if !self.is_tokenized_region(&reaction) {
                                 let region = self.region.get_region().unwrap();
+                                // Flip escaped key
+                                self.is_escaped = (!self.is_escaped && letter == self.escape_symbol)
+                                    .then(|| !self.is_escaped)
+                                    .unwrap_or(false);
                                 // Handle singleline attribute
                                 if letter == '\n' && region.singleline {
                                     let pos = self.reader.get_position();
