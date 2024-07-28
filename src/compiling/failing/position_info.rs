@@ -1,5 +1,5 @@
 //! Simple error structure
-//! 
+//!
 //! This module defines `ErrorDetails` structure which is returned as
 //! an error by lexer and is used in parsing phase as well.
 
@@ -23,10 +23,6 @@ pub struct PositionInfo {
     pub path: Option<String>,
     /// Location of this error
     pub position: Position,
-    /// Row of the error
-    pub row: usize,
-    /// Column of the error
-    pub col: usize,
     /// Length of the token
     pub len: usize,
     /// Additional information
@@ -39,8 +35,6 @@ impl PositionInfo {
         PositionInfo {
             position,
             path: meta.get_path(),
-            row: 0,
-            col: 0,
             len,
             data: None
         }.updated_pos(meta)
@@ -51,8 +45,6 @@ impl PositionInfo {
         PositionInfo {
             path: meta.get_path(),
             position: Position::EOF,
-            row: 0,
-            col: 0,
             len: 0,
             data: None
         }.updated_pos(meta)
@@ -63,15 +55,14 @@ impl PositionInfo {
         PositionInfo {
             path,
             position: Position::Pos(row, col),
-            row,
-            col,
             len,
             data: None
         }
     }
 
     fn updated_pos(mut self, meta: &impl Metadata) -> Self {
-        (self.row, self.col) = self.get_pos_by_file_or_code(meta.get_code());
+        let (row, col) = self.get_pos_by_file_or_code(meta.get_code());
+        self.position = Position::Pos(row, col);
         self
     }
 
@@ -81,7 +72,7 @@ impl PositionInfo {
     }
 
     /// Create an error at current position of current token by metadata
-    /// 
+    ///
     /// This function can become handy when parsing the AST.
     /// This takes the current index stored in metadata and uses it
     /// to retrieve token stored under it in metadata's expression.
@@ -91,13 +82,28 @@ impl PositionInfo {
     }
 
     /// Create an error at position of the provided token
-    /// 
+    ///
     /// This function gives you ability to store tokens
     /// and error once you finished parsing the entire expression
     pub fn from_token(meta: &impl Metadata, token_opt: Option<Token>) -> Self {
         match token_opt {
             Some(token) => PositionInfo::at_pos(meta.get_path(), token.pos, token.word.chars().count()),
             None => PositionInfo::at_eof(meta)
+        }
+    }
+
+    /// Create an error at position between two tokens
+    ///
+    /// This function is used to create an error between two tokens
+    /// which can be used to express an error in a specific range
+    pub fn from_between_tokens(meta: &impl Metadata, begin: Option<Token>, end: Option<Token>) -> Self {
+        if let (Some(begin), Some(end)) = (begin, end) {
+            let (row, col) = begin.pos;
+            let len = end.start - begin.start;
+            PositionInfo::at_pos(meta.get_path(), (row, col), len)
+        }
+        else {
+            PositionInfo::from_metadata(meta)
         }
     }
 
@@ -151,5 +157,28 @@ impl PositionInfo {
                 (row, col)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::DefaultMetadata;
+    use super::*;
+
+    #[test]
+    fn test_position_info() {
+        let pos = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 1);
+        assert_eq!(pos.get_path(), "test");
+        assert_eq!(pos.get_pos_by_code("test"), (1, 1));
+    }
+
+    #[test]
+    fn test_position_info_between_tokens() {
+        let begin = Token { word: "begin".to_string(), pos: (1, 1), start: 0 };
+        let to = Token { word: "to".to_string(), pos: (1, 7), start: 6 };
+        let end = Token { word: "end".to_string(), pos: (1, 10), start: 9 };
+        let mut meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], None, Some("begin to end".to_string()));
+        let pos = PositionInfo::from_between_tokens(&mut meta, Some(begin.clone()), Some(end.clone()));
+        assert_eq!(pos.len, end.start - begin.start);
     }
 }

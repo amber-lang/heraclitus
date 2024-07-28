@@ -45,6 +45,11 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.7.0
+### Feature:
+- Tokens now contain information about their index of the first character in the source code
+- Added `PositionInfo::from_between_tokens` method to select a region between two tokens in messages
+
 ## Version 1.6.2
 ### Fix:
 - Fixes escapes that were handled improperly

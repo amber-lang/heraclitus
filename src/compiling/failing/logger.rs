@@ -5,6 +5,7 @@ use colored::{Colorize, Color};
 use pad::PadStr;
 use crate::compiling::failing::position_info::PositionInfo;
 use crate::compiling::failing::message::MessageType;
+use crate::prelude::Position;
 
 /// This is a logger that is used to log messages to the user
 /// The logger is being used internally by the Message struct
@@ -64,13 +65,17 @@ impl Logger {
 
     /// Render location details with supplied coloring
     pub fn path(self) -> Self {
+        let get_row_col = |pos: &PositionInfo| match pos.position {
+            Position::Pos(row, col) => format!("{}:{}", row, col),
+            Position::EOF => " end of file".to_string()
+        };
         let path = match self.trace.first() {
-            Some(det) => {
+            Some(pos) => {
                 [
-                    format!("at {}:{}:{}", det.get_path(), det.row, det.col),
+                    format!("at {}:{}", pos.get_path(), get_row_col(pos)),
                     self.trace.iter()
                         .skip(1)
-                        .map(|det| format!("in {}:{}:{}", det.get_path(), det.row, det.col))
+                        .map(|pos| format!("in {}:{}", pos.get_path(), get_row_col(pos)))
                         .collect::<Vec<String>>()
                         .join("\n")
                 ].join("\n")
@@ -83,29 +88,32 @@ impl Logger {
         self
     }
 
-    // Returns last row and column
-    fn get_row_col_len(&self) -> (usize, usize, usize) {
+    // Returns last row, column and it's length
+    fn get_row_col_len(&self) -> Option<(usize, usize, usize)> {
         match self.trace.first() {
-            Some(loc) => (loc.row, loc.col, loc.len),
-            None => (0, 0, 0)
+            Some(pos) => match pos.position {
+                Position::Pos(row, col) => Some((row, col, pos.len)),
+                Position::EOF => None
+            },
+            None => None
         }
     }
 
     // Get max padding size (for line numbering)
-    fn get_max_pad_size(&self, length: usize) -> usize {
-        let (row, _, _) = self.get_row_col_len();
+    fn get_max_pad_size(&self, length: usize) -> Option<usize> {
+        let (row, _, _) = self.get_row_col_len()?;
         if row < length - 1 {
-            format!("{}", row + 1).len()
+            Some(format!("{}", row + 1).len())
         }
         else {
-            format!("{}", row).len()
+            Some(format!("{}", row).len())
         }
     }
 
     // Returns chopped string where fisrt and third part are supposed
     // to be left as is but the second one is supposed to be highlighted
-    fn get_highlighted_part(&self, line: &str) -> [String;3] {
-        let (_row, col, len) = self.get_row_col_len();
+    fn get_highlighted_part(&self, line: &str) -> Option<[String;3]> {
+        let (_row, col, len) = self.get_row_col_len()?;
         let begin = col - 1;
         let end = begin + len;
         let mut results: [String; 3] = Default::default();
@@ -120,23 +128,20 @@ impl Logger {
                 results[1].push(letter);
             }
         }
-        results
+        Some(results)
     }
 
     // Return requested row with appropriate coloring
-    fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8, overflow: &mut usize) -> String {
-        let (row, col, len) = self.get_row_col_len();
-        let max_pad = self.get_max_pad_size(code.len());
+    fn get_snippet_row(&self, code: &Vec<String>, index: usize, offset: i8, overflow: &mut usize) -> Option<String> {
+        let (row, col, len) = self.get_row_col_len()?;
+        let max_pad = self.get_max_pad_size(code.len())?;
         let index = index as i32 + offset as i32;
-        if code.get(index as usize).is_none() {
-            return String::new();
-        }
         let row = row as i32 + offset as i32;
-        let code = code[index as usize].clone();
+        let code = code.get(index as usize)?.clone();
         let line = format!("{row}").pad_to_width(max_pad);
         // Case if we are in the same line as the error (or message)
         if offset == 0 {
-            let slices = self.get_highlighted_part(&code);
+            let slices = self.get_highlighted_part(&code)?;
             let formatted = format!("{}{}{}", slices[0], slices[1].color(self.kind_to_color()), slices[2]);
             // If we are at the end of the code snippet and there is still some
             if col - 1 + len > code.chars().count() {
@@ -144,7 +149,7 @@ impl Logger {
                 // and other 1 is the new line character that we do not display
                 *overflow = col - 2 + len - code.chars().count();
             }
-            format!("{line}| {formatted}")
+            Some(format!("{line}| {formatted}"))
         }
         // Case if we are in a different line than the error (or message)
         else {
@@ -152,18 +157,18 @@ impl Logger {
             if *overflow > 0 {
                 // Case if all line is highlighted
                 if *overflow > code.chars().count() {
-                    format!("{line}| {}", code.color(self.kind_to_color())).dimmed().to_string()
+                    Some(format!("{line}| {}", code.color(self.kind_to_color())).dimmed().to_string())
                 }
                 // Case if some line is highlighted
                 else {
                     let err = code.get(0..*overflow).unwrap().to_string().color(self.kind_to_color());
                     let rest = code.get(*overflow..).unwrap().to_string();
-                    format!("{line}| {err}{rest}").dimmed().to_string()
+                    Some(format!("{line}| {err}{rest}").dimmed().to_string())
                 }
             }
             // Case if no overflow
             else {
-                format!("{line}| {code}").dimmed().to_string()
+                Some(format!("{line}| {code}").dimmed().to_string())
             }
         }
     }
@@ -183,23 +188,23 @@ impl Logger {
     }
 
     /// Render snippet of the code based on the code data
-    fn snippet_from_code(&self, code: String) {
-        let (row, _, _) = self.get_row_col_len();
+    fn snippet_from_code(&self, code: String) -> Option<()> {
+        let (row, _, _) = self.get_row_col_len()?;
         let mut overflow = 0;
         let index = row - 1;
         let code = code.split('\n')
-            .map(|item| item.to_string())
+            .map(|item| item.trim_end().to_string())
             .collect::<Vec<String>>();
         eprintln!();
         // Show additional code above the snippet
-        if index > 0 {
-            eprintln!("{}", self.get_snippet_row(&code, index, -1, &mut overflow));
+        if let Some(line) = self.get_snippet_row(&code, index, -1, &mut overflow) {
+            eprintln!("{}", line);
         }
-        eprintln!("{}", self.get_snippet_row(&code, index, 0, &mut overflow));
+        // Show the current line of code
+        eprintln!("{}", self.get_snippet_row(&code, index, 0, &mut overflow)?);
         // Show additional code below the snippet
-        if index < code.len() - 1 {
-            eprintln!("{}", self.get_snippet_row(&code, index, 1, &mut overflow));
-        }
+        eprintln!("{}", self.get_snippet_row(&code, index, 1, &mut overflow)?);
+        Some(())
     }
 }
 
@@ -209,7 +214,7 @@ mod test {
     use std::time::Duration;
     use std::thread::sleep;
 
-    use crate::prelude::{PositionInfo, MessageType};
+    use crate::prelude::{DefaultMetadata, Metadata, MessageType, PositionInfo, Token};
     #[allow(unused_variables)]
 
     #[test]
@@ -218,12 +223,12 @@ mod test {
             "let a = 12",
             "value = 'this",
             "is mutltiline",
-            "code"
+            "code'"
         ].join("\n");
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let trace = [
-            PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 25), 0),
+            PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 4), 10),
             PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
         ];
         super::Logger::new(MessageType::Error, &trace)
@@ -242,6 +247,26 @@ mod test {
         sleep(Duration::from_secs(1));
         let trace = [
             PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 6), 1)
+        ];
+        super::Logger::new(MessageType::Error, &trace)
+            .header(MessageType::Error)
+            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .path()
+            .snippet(Some(code));
+    }
+
+    #[test]
+    fn test_between_tokens() {
+        let code = vec![
+            "foo(12 + 24)"
+        ].join("\n");
+        // Uncomment to see the error message
+        sleep(Duration::from_secs(1));
+        let begin = Token { word: "12".to_string(), pos: (1, 5), start: 4 };
+        let end = Token { word: ")".to_string(), pos: (1, 12), start: 11 };
+        let mut meta = DefaultMetadata::new(vec![], Some("/path/to/foo".to_string()), Some(code.clone()));
+        let trace = [
+            PositionInfo::from_between_tokens(&mut meta, Some(begin), Some(end))
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)

@@ -7,6 +7,8 @@ pub struct Token {
     pub word: String,
     /// Position of the token (row, column)
     pub pos: (usize, usize),
+    /// Index of the character in the file that the token starts
+    pub start: usize,
 }
 
 impl Token {
@@ -46,7 +48,8 @@ mod test {
     fn display_token() {
         let mut token = super::Token {
             word: String::from("keyword"),
-            pos: (1, 2)
+            pos: (1, 2),
+            start: 0
         };
         assert_eq!(format!("{}", token), String::from("Tok[keyword 1:2]"));
         token.word = String::from("[");
