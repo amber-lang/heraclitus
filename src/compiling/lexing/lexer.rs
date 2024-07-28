@@ -21,7 +21,7 @@ pub enum LexerErrorType {
 pub type LexerError = (LexerErrorType, PositionInfo);
 
 /// The Lexer
-/// 
+///
 /// Lexer takes source code in a form of a string and translates it to a list of tokens.
 /// This particular implementation requires additional metadata such as like regions or symbols.
 /// These can be supplied by the `Compiler` in a one cohesive package. Hence the API requires to
@@ -38,7 +38,8 @@ pub struct Lexer<'a> {
     separator_mode: SeparatorMode,
     scoping_mode: ScopingMode,
     is_escaped: bool,
-    position: (usize, usize)
+    position: (usize, usize),
+    index: usize
 }
 
 impl<'a> Lexer<'a> {
@@ -57,6 +58,7 @@ impl<'a> Lexer<'a> {
             scoping_mode: cc.scoping_mode.clone(),
             is_escaped: false,
             position: (0, 0),
+            index: 0
         }
     }
 
@@ -70,7 +72,8 @@ impl<'a> Lexer<'a> {
             let (row, _col) = self.reader.get_position();
             self.lexem.push(Token {
                 word,
-                pos: (row, 1)
+                pos: (row, 1),
+                start: self.reader.get_index(),
             });
             self.position = (0, 0);
             String::new()
@@ -83,7 +86,8 @@ impl<'a> Lexer<'a> {
         if !word.is_empty() {
             self.lexem.push(Token {
                 word,
-                pos: self.position
+                pos: self.position,
+                start: self.index
             });
             self.position = (0, 0);
             String::new()
@@ -97,7 +101,8 @@ impl<'a> Lexer<'a> {
         if !word.is_empty() {
             self.lexem.push(Token {
                 word,
-                pos: self.position
+                pos: self.position,
+                start: self.index
             });
             self.position = (0, 0);
             String::new()
@@ -121,6 +126,7 @@ impl<'a> Lexer<'a> {
         word = self.add_word(word);
         word.push(letter);
         self.position = self.reader.get_position();
+        self.index = self.reader.get_index();
         self.add_word_inclusively(word)
     }
 
@@ -142,7 +148,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Tokenize source code
-    /// 
+    ///
     /// Run lexer and tokenize code. The result is stored in the lexem attribute
     pub fn run(&mut self) -> Result<(), LexerError> {
         let mut word = String::new();

@@ -29,7 +29,7 @@ macro_rules! syntax_name {
 pub type SyntaxResult = Result<(), Failure>;
 
 /// Trait for parsing
-/// 
+///
 /// Trait that should be implemented in order to parse tokens with heraklit
 /// ```
 /// # use heraclitus_compiler::prelude::*;
@@ -37,17 +37,17 @@ pub type SyntaxResult = Result<(), Failure>;
 ///     name: String
 ///     // ... (you decide what you need to store)
 /// }
-/// 
+///
 /// impl SyntaxModule<DefaultMetadata> for MySyntax {
 ///     syntax_name!("MySyntax");
-/// 
+///
 ///     fn new() -> MySyntax {
 ///         MySyntax {
 ///             name: format!(""),
 ///             // Default initialization
 ///         }
 ///     }
-/// 
+///
 ///     // Here you can parse the actual code
 ///     fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
 ///         token(meta, "var")?;
@@ -62,8 +62,8 @@ pub trait SyntaxModule<M: Metadata> {
     /// Name of this module
     fn name() -> &'static str;
     /// Parse and create AST
-    /// 
-    /// This method is fundamental in creating a functional AST node that can determine 
+    ///
+    /// This method is fundamental in creating a functional AST node that can determine
     /// if tokens provided by metadata can be consumed to create this particular AST node.
     fn parse(&mut self, meta: &mut M) -> SyntaxResult;
     /// Do not implement this function as this is a predefined function for debugging
@@ -116,13 +116,15 @@ mod test {
         let dataset1 = vec![
             Token {
                 word: format!("let"),
-                pos: (0, 0)
+                pos: (0, 0),
+                start: 0
             }
         ];
         let dataset2 = vec![
             Token {
                 word: format!("tell"),
-                pos: (0, 0)
+                pos: (0, 0),
+                start: 0
             }
         ];
         let path = Some(format!("path/to/file"));
@@ -153,15 +155,15 @@ mod test {
         let mut exp = Preset {};
         let dataset = vec![
             // Variable
-            Token { word: format!("_text"), pos: (0, 0) },
+            Token { word: format!("_text"), pos: (0, 0), start: 0 },
             // Numeric
-            Token { word: format!("12321"), pos: (0, 0) },
+            Token { word: format!("12321"), pos: (0, 0), start: 0 },
             // Number
-            Token { word: format!("-123.12"), pos: (0, 0) },
+            Token { word: format!("-123.12"), pos: (0, 0), start: 0 },
             // Integer
-            Token { word: format!("-12"), pos: (0, 0) },
+            Token { word: format!("-12"), pos: (0, 0), start: 0 },
             // Float
-            Token { word: format!("-.681"), pos: (0, 0)}
+            Token { word: format!("-.681"), pos: (0, 0), start: 0 }
         ];
         let path = Some(format!("path/to/file"));
         let result = exp.parse(&mut DefaultMetadata::new(dataset, path, None));
@@ -180,7 +182,7 @@ mod test {
             if let Ok(_) = token(meta, "apple") {}
             else if let Ok(_) = token(meta, "orange") {}
             else if let Ok(_) = token(meta, "banana") {}
-            else { 
+            else {
                 if let Err(details) = token(meta, "banana") {
                     return Err(details);
                 }
@@ -209,42 +211,42 @@ mod test {
         let mut exp = PatternModule {};
         // Everything should pass
         let dataset1 = vec![
-            Token { word: format!("orange"), pos: (0, 0) },
-            Token { word: format!("optional"), pos: (0, 0) },
-            Token { word: format!("let"), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!(","), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!("end"), pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0), start: 0 },
+            Token { word: format!("optional"), pos: (0, 0), start: 0 },
+            Token { word: format!("let"), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!(","), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!("end"), pos: (0, 0), start: 0 }
         ];
         // Token should fail
         let dataset2 = vec![
-            Token { word: format!("kiwi"), pos: (0, 0) },
-            Token { word: format!("optional"), pos: (0, 0) },
-            Token { word: format!("let"), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!(","), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!("end"), pos: (0, 0) }
+            Token { word: format!("kiwi"), pos: (0, 0), start: 0 },
+            Token { word: format!("optional"), pos: (0, 0), start: 0 },
+            Token { word: format!("let"), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!(","), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!("end"), pos: (0, 0), start: 0 }
         ];
         // Syntax should fail
         let dataset3 = vec![
-            Token { word: format!("orange"), pos: (0, 0) },
-            Token { word: format!("tell"), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!(","), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!("end"), pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0), start: 0 },
+            Token { word: format!("tell"), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!(","), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!("end"), pos: (0, 0), start: 0 }
         ];
         // Token should fail because of repeat matching (this , this) ,
         let dataset4 = vec![
-            Token { word: format!("orange"), pos: (0, 0) },
-            Token { word: format!("tell"), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!(","), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!("this"), pos: (0, 0) },
-            Token { word: format!("end"), pos: (0, 0) }
+            Token { word: format!("orange"), pos: (0, 0), start: 0 },
+            Token { word: format!("tell"), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!(","), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!("this"), pos: (0, 0), start: 0 },
+            Token { word: format!("end"), pos: (0, 0), start: 0 }
         ];
         let path = Some(format!("path/to/file"));
         let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, path.clone(), None));
