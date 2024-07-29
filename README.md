@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.7.1
+### Fix:
+- Bugfixes for calculating start index in tokens
+
 ## Version 1.7.0
 ### Feature:
 - Tokens now contain information about their index of the first character in the source code

@@ -39,7 +39,8 @@ pub struct Lexer<'a> {
     scoping_mode: ScopingMode,
     is_escaped: bool,
     position: (usize, usize),
-    index: usize
+    index: usize,
+    token_start_index: usize
 }
 
 impl<'a> Lexer<'a> {
@@ -58,7 +59,8 @@ impl<'a> Lexer<'a> {
             scoping_mode: cc.scoping_mode.clone(),
             is_escaped: false,
             position: (0, 0),
-            index: 0
+            index: 0,
+            token_start_index: 0
         }
     }
 
@@ -73,7 +75,7 @@ impl<'a> Lexer<'a> {
             self.lexem.push(Token {
                 word,
                 pos: (row, 1),
-                start: self.reader.get_index(),
+                start: self.token_start_index,
             });
             self.position = (0, 0);
             String::new()
@@ -87,7 +89,7 @@ impl<'a> Lexer<'a> {
             self.lexem.push(Token {
                 word,
                 pos: self.position,
-                start: self.index
+                start: self.token_start_index
             });
             self.position = (0, 0);
             String::new()
@@ -102,7 +104,7 @@ impl<'a> Lexer<'a> {
             self.lexem.push(Token {
                 word,
                 pos: self.position,
-                start: self.index
+                start: self.token_start_index
             });
             self.position = (0, 0);
             String::new()
@@ -124,9 +126,11 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn pattern_add_symbol(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
-        word.push(letter);
+        if word.is_empty() {
+            self.token_start_index = self.index;
+        }
+        self.word_push(&mut word, letter);
         self.position = self.reader.get_position();
-        self.index = self.reader.get_index();
         self.add_word_inclusively(word)
     }
 
@@ -135,7 +139,7 @@ impl<'a> Lexer<'a> {
     #[inline]
     fn pattern_begin(&mut self, mut word: String, letter: char) -> String {
         word = self.add_word(word);
-        word.push(letter);
+        self.word_push(&mut word, letter);
         word
     }
 
@@ -143,8 +147,16 @@ impl<'a> Lexer<'a> {
     /// **]**
     #[inline]
     fn pattern_end(&mut self, mut word: String, letter: char) -> String {
-        word.push(letter);
+        self.word_push(&mut word, letter);
         self.add_word_inclusively(word)
+    }
+
+    /// Push letter to the word and set token start index
+    fn word_push(&mut self, word: &mut String, letter: char) {
+        if word.is_empty() {
+            self.token_start_index = self.index;
+        }
+        word.push(letter);
     }
 
     /// Tokenize source code
@@ -154,6 +166,7 @@ impl<'a> Lexer<'a> {
         let mut word = String::new();
         let mut is_indenting = false;
         while let Some(letter) = self.reader.next() {
+            self.index = self.reader.get_index();
 
             /****************/
             /* Set Position */
@@ -219,7 +232,7 @@ impl<'a> Lexer<'a> {
                 RegionReaction::Pass => {
                     match self.compound.handle_compound(letter, &self.reader, self.is_tokenized_region(&reaction)) {
                         CompoundReaction::Begin => word = self.pattern_begin(word, letter),
-                        CompoundReaction::Keep => word.push(letter),
+                        CompoundReaction::Keep => self.word_push(&mut word, letter),
                         CompoundReaction::End => word = self.pattern_end(word, letter),
                         CompoundReaction::Pass => {
                             // Handle region scope
@@ -237,7 +250,7 @@ impl<'a> Lexer<'a> {
                                         PositionInfo::at_pos(self.path.clone(), pos, 0).data(region.name.clone())
                                     ))
                                 }
-                                word.push(letter);
+                                self.word_push(&mut word, letter);
                             }
                             else {
 
@@ -249,7 +262,7 @@ impl<'a> Lexer<'a> {
                                 if let ScopingMode::Indent = self.scoping_mode {
                                     // If we are still in the indent region - proceed
                                     if is_indenting && vec![' ', '\t'].contains(&letter) {
-                                        word.push(letter);
+                                        self.word_push(&mut word, letter);
                                     }
                                     // If it's the new line - start indent region
                                     if letter == '\n' {
@@ -290,7 +303,7 @@ impl<'a> Lexer<'a> {
                                 }
                                 // Handle word
                                 else {
-                                    word.push(letter);
+                                    self.word_push(&mut word, letter);
                                 }
                             }
                         }
@@ -402,15 +415,15 @@ mod test {
         let symbols = vec![':'];
         let regions = reg![];
         let expected = vec![
-            ("if".to_string(), 1, 1),
-            ("condition".to_string(), 1, 4),
-            (":".to_string(), 1, 13),
-            ("\n    ".to_string(), 2, 1),
-            ("if".to_string(), 2, 5),
-            ("subcondition".to_string(), 2, 8),
-            (":".to_string(), 2, 20),
-            ("\n        ".to_string(), 3, 1),
-            ("pass".to_string(), 3, 9)
+            ("if".to_string(), (1, 1), 0),
+            ("condition".to_string(), (1, 4), 3),
+            (":".to_string(), (1, 13), 12),
+            ("\n    ".to_string(), (2, 1), 13),
+            ("if".to_string(), (2, 5), 18),
+            ("subcondition".to_string(), (2, 8), 21),
+            (":".to_string(), (2, 20), 33),
+            ("\n        ".to_string(), (3, 1), 34),
+            ("pass".to_string(), (3, 9), 43)
         ];
         let rules = Rules::new(symbols, vec![], regions);
         let mut cc: Compiler = Compiler::new("Testhon", rules);
@@ -426,7 +439,7 @@ mod test {
         let res = lexer.run();
         assert!(res.is_ok());
         for lex in lexer.lexem {
-            result.push((lex.word, lex.pos.0, lex.pos.1));
+            result.push((lex.word, (lex.pos.0, lex.pos.1), lex.start));
         }
         assert_eq!(expected, result);
     }
