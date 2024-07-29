@@ -97,9 +97,10 @@ impl PositionInfo {
     /// This function is used to create an error between two tokens
     /// which can be used to express an error in a specific range
     pub fn from_between_tokens(meta: &impl Metadata, begin: Option<Token>, end: Option<Token>) -> Self {
-        if let (Some(begin), Some(end)) = (begin, end) {
+        if let Some(begin) = begin {
             let (row, col) = begin.pos;
-            let len = end.start - begin.start;
+            let end = end.map_or(usize::max_value(), |tok| tok.start);
+            let len = end - begin.start;
             PositionInfo::at_pos(meta.get_path(), (row, col), len)
         }
         else {

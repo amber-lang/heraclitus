@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.7.2
+### Fix:
+- `PositionInfo::from_between_tokens` shows the range even if the end token is None
+
 ## Version 1.7.1
 ### Fix:
 - Bugfixes for calculating start index in tokens
