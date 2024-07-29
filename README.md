@@ -45,6 +45,12 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.7.3
+### Fix:
+- `Logger::text` now doesn't end with a new line
+### Feature:
+- Added `Logger::line` method that adds a new line in the end (works just like old `Logger::text`)
+
 ## Version 1.7.2
 ### Fix:
 - `PositionInfo::from_between_tokens` shows the range even if the end token is None

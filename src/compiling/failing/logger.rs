@@ -43,20 +43,28 @@ impl Logger {
             .black()
             .bold()
             .on_color(self.kind_to_color());
-        eprintln!("{formatted}");
+        eprint!("{formatted} ");
         self
     }
 
     /// Render text with supplied coloring
     pub fn text(self, text: Option<String>) -> Self {
         if let Some(text) = text {
+            eprint!("{}", text.color(self.kind_to_color()));
+        }
+        self
+    }
+
+    /// Render text with supplied coloring and end it with a newline
+    pub fn line(self, text: Option<String>) -> Self {
+        if let Some(text) = text {
             eprintln!("{}", text.color(self.kind_to_color()));
         }
         self
     }
 
-    /// Render padded text with supplied coloring
-    pub fn padded_text(self, text: Option<String>) -> Self {
+    /// Render padded text with a newline, applying the supplied coloring, and end it with another newline
+    pub fn padded_line(self, text: Option<String>) -> Self {
         if let Some(text) = text {
             eprintln!("\n{}", text.color(self.kind_to_color()));
         }
@@ -83,7 +91,7 @@ impl Logger {
             None => {
                 "at [unknown]:0:0".to_string()
             }
-        };
+        }.trim_end().to_string();
         eprintln!("{}", path.color(self.kind_to_color()).dimmed());
         self
     }
@@ -233,7 +241,7 @@ mod test {
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some(format!("Cannot call function \"foobar\" on a number")))
             .path()
             .snippet(Some(code));
     }
@@ -250,7 +258,7 @@ mod test {
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some(format!("Cannot call function \"foobar\" on a number")))
             .path()
             .snippet(Some(code));
     }
@@ -270,7 +278,7 @@ mod test {
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .text(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some(format!("Cannot call function \"foobar\" on a number")))
             .path()
             .snippet(Some(code));
     }

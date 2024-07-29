@@ -1,5 +1,5 @@
 //! Display your errors
-//! 
+//!
 //! Logger makes it easy for you to display errors. This sub-module is pretty powerful
 //! to be used extensively instead of building own implementation of such mechanism.
 //! However, if you need more specific functionality - it is encouraged to create your
@@ -22,7 +22,7 @@ pub enum MessageType {
 }
 
 /// Logger itself
-/// 
+///
 /// Log the message you want to show to the user
 /// # Example
 /// ```should_panic
@@ -144,7 +144,7 @@ impl Message {
         self
     }
 
-    /// Shows (renders) the message while giving 
+    /// Shows (renders) the message while giving
     /// the ownership to this object away
     pub fn show(&self) {
         // If this error is based in code
@@ -153,7 +153,7 @@ impl Message {
                 .header(self.kind.clone())
                 .text(self.message.clone())
                 .path()
-                .padded_text(self.comment.clone())
+                .padded_line(self.comment.clone())
                 .snippet(self.code.clone());
         }
         // If this error is a message error
@@ -161,7 +161,7 @@ impl Message {
             Logger::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
                 .text(self.message.clone())
-                .padded_text(self.comment.clone());
+                .padded_line(self.comment.clone());
         }
     }
 
@@ -174,7 +174,7 @@ impl Message {
 
 #[cfg(test)]
 mod test {
-    
+
     #[test]
     fn test_logger() {
         // use super::Logger;
@@ -184,6 +184,3 @@ mod test {
         //     .exit();
     }
 }
-
-
-
