@@ -151,10 +151,10 @@ impl Message {
         if !self.trace.is_empty() {
             Logger::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
-                .text(self.message.clone())
+                .line(self.message.clone())
                 .path()
-                .padded_line(self.comment.clone())
-                .snippet(self.code.clone());
+                .snippet(self.code.clone())
+                .line(self.comment.clone());
         }
         // If this error is a message error
         else {
@@ -174,13 +174,29 @@ impl Message {
 
 #[cfg(test)]
 mod test {
+    use crate::prelude::{DefaultMetadata, Message, Metadata, PositionInfo};
 
     #[test]
-    fn test_logger() {
-        // use super::Logger;
-        // Logger::new_err_msg("This is not a message")
-        //     .attach_comment("Or is it?")
-        //     .show()
-        //     .exit();
+    fn test_message() {
+        Message::new_err_msg("This is not a message")
+            .comment("Or is it?")
+            .show();
+    }
+
+    #[test]
+    fn test_message_with_code() {
+        let code = Some([
+            "... some code",
+            "name = false",
+            "... further code",
+        ].join("\n"));
+        let path = Some(format!("path/to/file"));
+        let position = PositionInfo::at_pos(path.clone(), (2, 1), 4);
+        let guess = "type";
+        let mut meta = DefaultMetadata::new(vec![], path, code);
+        Message::new_err_at_position(&mut meta, position)
+            .message("Type of this parameter is invalid")
+            .comment(format!("Maybe you meant type {guess} instead"))
+            .show();
     }
 }

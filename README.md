@@ -45,7 +45,7 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.7.3
+## Version 1.7.4
 ### Fix:
 - `Logger::text` now doesn't end with a new line
 ### Feature:
