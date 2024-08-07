@@ -45,7 +45,7 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.7.5
+## Version 1.7.6
 ### Fix:
 - Prevent Logger from panicking when trying to display a region that is out of bounds
 

@@ -152,10 +152,10 @@ impl Logger {
             let slices = self.get_highlighted_part(&code)?;
             let formatted = format!("{}{}{}", slices[0], slices[1].color(self.kind_to_color()), slices[2]);
             // If we are at the end of the code snippet and there is still some
-            if col - 1 + len > code.chars().count() {
+            if col + len - 1 > code.chars().count() {
                 // We substract here 2 because 1 is the offset of col (starts at 1)
                 // and other 1 is the new line character that we do not display
-                *overflow = (col - 2 + len).checked_sub(code.chars().count()).unwrap_or(0);
+                *overflow = (col + len - 2).checked_sub(code.chars().count()).unwrap_or(0);
             }
             Some(format!("{line}| {formatted}"))
         }
