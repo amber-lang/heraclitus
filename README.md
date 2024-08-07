@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.7.5
+### Fix:
+- Prevent Logger from panicking when trying to display a region that is out of bounds
+
 ## Version 1.7.4
 ### Fix:
 - `Logger::text` now doesn't end with a new line
