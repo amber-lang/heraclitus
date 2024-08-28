@@ -43,6 +43,16 @@ let cc = Compiler::new("HerbScript", rules);
 let tokens = cc.tokenize()?;
 ```
 
+## Features
+
+You can import specific features from Heraclitus. Available options are:
+
+- `compiler` - Includes Compiler and dynamic Lexer
+- `lexer_dynamic` - Includes just the dynamic Lexer
+- `lexer_static` - Includes just the static Lexer
+
+The difference between `static` and `dynamic` Lexer is that the `static` Lexer doesn't mutate it's own state while tokenizing the input.
+
 # Change log 🚀
 
 ## Version 1.7.8

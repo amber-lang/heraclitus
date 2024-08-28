@@ -2,11 +2,12 @@ use capitalize::Capitalize;
 use std::fs::File;
 use std::io::prelude::*;
 use crate::compiling_rules::Rules;
-use crate::compiling::{Token, Lexer, LexerError, LexerErrorType, Metadata, SyntaxModule};
+use crate::compiling::{Token, LexerError, LexerErrorType, Metadata, SyntaxModule};
 use crate::compiling::failing::message::Message;
 use crate::compiling::failing::failure::Failure;
 use crate::error_pos;
 
+use super::lexer::Lexer;
 
 /// How do you want to separate expressions?
 ///
