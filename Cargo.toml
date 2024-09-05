@@ -9,17 +9,6 @@ authors = ["pawel.karas@icloud.com"]
 keywords = ["heraclitus", "compiler", "parser"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[features]
-default = ["compiler"]
-
-# Include the compiler and lexer
-compiler = ["lexer_dynamic"]
-
-# Include the lexer
-lexer_dynamic = []
-
-# Include the static lexer
-lexer_static = []
 
 [dependencies]
 colored = "2.0.0"

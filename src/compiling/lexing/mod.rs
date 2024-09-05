@@ -5,10 +5,7 @@
 use crate::prelude::PositionInfo;
 
 mod compound_handler;
-#[cfg(feature = "lexer_dynamic")]
 pub mod lexer;
-#[cfg(feature = "lexer_static")]
-pub mod lexer_static;
 mod reader;
 mod region_handler;
 

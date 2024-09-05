@@ -65,18 +65,14 @@ pub enum ScopingMode {
 pub struct Compiler {
     /// Name of your language
     pub name: String,
-    /// Rules that describe your language
-    pub rules: Rules,
     /// Source code in a form of string
     pub code: Option<String>,
     /// Path to the compiled file if exists
     pub path: Option<String>,
-    /// Separator mode for this compiler
-    pub separator_mode: SeparatorMode,
-    /// Scoping mode for this compiler
-    pub scoping_mode: ScopingMode,
     // Check if user wants to debug parser
-    debug: bool
+    debug: bool,
+    /// Lexer to tokenize the code
+    lexer: Lexer
 }
 
 impl Compiler {
@@ -84,18 +80,21 @@ impl Compiler {
     pub fn new<T: AsRef<str>>(name: T, rules: Rules) -> Self {
         Compiler {
             name: String::from(name.as_ref()),
-            rules,
             code: None,
             path: None,
-            separator_mode: SeparatorMode::Manual,
-            scoping_mode: ScopingMode::Block,
-            debug: false
+            debug: false,
+            lexer: Lexer::new(rules)
         }
     }
 
     /// Set the language to use indentations
     pub fn use_indents(&mut self) {
-        self.scoping_mode = ScopingMode::Indent
+        self.lexer.scoping_mode = ScopingMode::Indent
+    }
+
+    /// Set the language separator mode
+    pub fn set_separator(&mut self, mode: SeparatorMode) {
+        self.lexer.separator_mode = mode
     }
 
     /// Load file from path
@@ -120,9 +119,7 @@ impl Compiler {
 
     /// Run just lexer
     pub fn tokenize(&self) -> Result<Vec<Token>, LexerError> {
-        let mut lexer = Lexer::new(self);
-        lexer.run()?;
-        Ok(lexer.lexem)
+        self.lexer.tokenize(&self.code.clone().unwrap())
     }
 
     /// Parser will display information about the call stack
