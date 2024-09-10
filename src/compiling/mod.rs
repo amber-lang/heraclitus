@@ -4,6 +4,7 @@
 //! that helps you tokenize your code or even parse it entirely.
 
 mod lexing;
+
 mod compiler;
 mod token;
 mod parser;
