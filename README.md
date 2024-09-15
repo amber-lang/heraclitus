@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.8.0
+### Feature:
+- Lexer is now better separated from the compiler thus easier to integrate in other projects like LSP servers
+
 ## Version 1.7.8
 ### Fix:
 - Prevent Logger from panicking when trying to display a region that is out of bounds
