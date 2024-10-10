@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.8.1
+### Fix:
+- Now prints newline on text errors as well as syntax errors
+
 ## Version 1.8.0
 ### Feature:
 - Lexer is now better separated from the compiler thus easier to integrate in other projects like LSP servers
