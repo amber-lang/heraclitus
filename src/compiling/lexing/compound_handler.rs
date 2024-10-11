@@ -2,7 +2,11 @@ use std::collections::HashMap;
 use crate::compiling_rules::Rules;
 use super::reader::Reader;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CompoundReaction {
     Begin,
     Keep,
@@ -10,6 +14,7 @@ pub enum CompoundReaction {
     Pass
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CompoundHandler {
     compound_tree: HashMap<char, Vec<char>>,
     is_triggered: bool

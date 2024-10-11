@@ -2,13 +2,18 @@ use crate::compiling_rules::{Region, Rules, RegionMap};
 use super::reader::Reader;
 use super::reader::ReadMode;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 #[derive(PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RegionReaction {
     Begin(bool),
     End(bool),
     Pass
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RegionHandler {
     region_stack: Vec<Region>,
     region_map: RegionMap

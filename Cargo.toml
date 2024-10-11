@@ -14,3 +14,7 @@ keywords = ["heraclitus", "compiler", "parser"]
 colored = "2.0.0"
 pad = "0.1.6"
 capitalize = "0.3.4"
+serde = { version = "1.0.210", default-features = false, optional = true, features = [ "derive" ] }
+
+[features]
+serde = [ "dep:serde" ]

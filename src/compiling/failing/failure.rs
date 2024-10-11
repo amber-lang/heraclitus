@@ -3,6 +3,9 @@
 use crate::compiling::failing::message::Message;
 use crate::compiling::failing::position_info::PositionInfo;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Failure enum
 /// 
 /// This enum returns two types of errors - `Quiet` and `Loud`.
@@ -15,6 +18,7 @@ use crate::compiling::failing::position_info::PositionInfo;
 /// The Loud failure is used when the parser cannot continue. It contains detailed information
 /// about the error such as token position and length, but also a message, comment and a full traceback.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Failure {
     /// Failure that is not important
     Quiet(PositionInfo),
