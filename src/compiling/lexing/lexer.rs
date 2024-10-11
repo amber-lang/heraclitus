@@ -14,8 +14,12 @@ use super::{
     LexerError, LexerErrorType,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 ///  Lexer
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Lexer {
     rules: Rules,
     /// Path to the lexed file
@@ -28,6 +32,7 @@ pub struct Lexer {
     pub scoping_mode: ScopingMode,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct LexState<'a> {
     word: String,
     is_indenting: bool,

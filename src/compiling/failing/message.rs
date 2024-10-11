@@ -5,13 +5,16 @@
 //! However, if you need more specific functionality - it is encouraged to create your
 //! own implementation of such mechanism.
 
-#![allow(dead_code)]
 use crate::compiling::{Metadata, Token};
 use crate::compiling::failing::logger::Logger;
 use crate::compiling::failing::position_info::PositionInfo;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Type of the message that logger shall display
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MessageType {
     /// Error message
     Error,
@@ -38,6 +41,7 @@ pub enum MessageType {
 ///     .show();
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Message {
     /// Type of the message
     pub kind: MessageType,

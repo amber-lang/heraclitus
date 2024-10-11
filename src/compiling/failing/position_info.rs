@@ -7,8 +7,12 @@ use std::fs::File;
 use std::io::*;
 use crate::compiling::{Metadata, Token};
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Store position of some error
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
     /// Explicit row and column
     Pos(usize, usize),
@@ -18,6 +22,7 @@ pub enum Position {
 
 /// Struct that is used to return a simple error
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PositionInfo {
     /// Path of the file
     pub path: Option<String>,
