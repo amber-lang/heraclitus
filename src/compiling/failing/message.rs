@@ -160,7 +160,7 @@ impl Message {
         else {
             Logger::new(self.kind.clone(), &self.trace)
                 .header(self.kind.clone())
-                .text(self.message.clone())
+                .line(self.message.clone())
                 .padded_line(self.comment.clone());
         }
     }
