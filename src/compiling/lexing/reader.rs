@@ -9,7 +9,7 @@ pub enum ReadMode {
     Future
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Reader<'a> {
     pub code: &'a String,
     pub row: usize,
