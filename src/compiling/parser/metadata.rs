@@ -1,8 +1,12 @@
 use crate::compiling::Token;
 use crate::compiling::failing::position_info::PositionInfo;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Default implementation of metadata. 
 /// This is useful for debuging or languages that are not too demanding.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DefaultMetadata {
     /// Current index in the token stream
     pub index: usize,

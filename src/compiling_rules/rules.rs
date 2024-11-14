@@ -1,5 +1,8 @@
 use super::region::Region;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Determine lexing rules for the parser
 /// 
 /// Rules struct that contains list of symbols as well as region tree
@@ -25,6 +28,7 @@ use super::region::Region;
 /// ```
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Rules {
     /// Symbols that should be separated (most commonly: (, ), +, -, ...)
     /// This handles situations like for instance if we want to parse `1+1` as

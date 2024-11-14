@@ -1,15 +1,18 @@
 //! This is a logger module which is used by compiler to log errors, warnings and info messages
 
-#![allow(dead_code)]
 use colored::{Colorize, Color};
 use pad::PadStr;
 use crate::compiling::failing::position_info::PositionInfo;
 use crate::compiling::failing::message::MessageType;
 use crate::prelude::Position;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// This is a logger that is used to log messages to the user
 /// The logger is being used internally by the Message struct
 /// when invoking the `show` method
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Logger {
     kind: MessageType,
     trace: Vec<PositionInfo>

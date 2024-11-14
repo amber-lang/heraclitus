@@ -1,7 +1,11 @@
 use std::fmt::{Formatter, Display, Result, Debug};
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// The building block of the AST
 #[derive(Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Token {
     /// Value of the token
     pub word: String,
