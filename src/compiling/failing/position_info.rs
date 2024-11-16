@@ -32,22 +32,24 @@ pub struct PositionInfo {
 impl PositionInfo {
     /// Create a new erorr from scratch
     pub fn new(meta: &impl Metadata, position: Position, len: usize) -> Self {
-        PositionInfo {
+        let info = PositionInfo {
             position,
             path: meta.get_path(),
             len,
             data: None
-        }.updated_pos(meta)
+        };
+        info.updated_pos(meta)
     }
 
     /// Create a new erorr at the end of file
     pub fn at_eof(meta: &impl Metadata) -> Self {
-        PositionInfo {
+        let info = PositionInfo {
             path: meta.get_path(),
             position: Position::EOF,
             len: 0,
             data: None
-        }.updated_pos(meta)
+        };
+        info.updated_pos(meta)
     }
 
     /// Create a new erorr at given position
@@ -128,7 +130,9 @@ impl PositionInfo {
                         Err(_) => (0, 0)
                     }
                 }
-                else { (0, 0) }
+                else {
+                    (0, 0)
+                }
             }
         }
     }
@@ -145,7 +149,9 @@ impl PositionInfo {
     pub fn get_pos_by_code(&self, code: impl AsRef<str>) -> (usize, usize) {
         let code = code.as_ref();
         match self.position {
-            Position::Pos(row, col) => (row, col),
+            Position::Pos(row, col) => {
+                (row, col)
+            }
             Position::EOF => {
                 let mut col = 1;
                 let mut row = 1;
