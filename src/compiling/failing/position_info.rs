@@ -153,15 +153,13 @@ impl PositionInfo {
                 (row, col)
             }
             Position::EOF => {
-                let mut col = 1;
-                let mut row = 1;
-                // Count letters in column
-                col += code.split_whitespace().count();
-                // Coint letters in row
-                if let Some(last) = code.split_whitespace().last() {
-                    row += last.len();
+                // Add one to `row` because `enumerate()` counts from zero.
+                // Add one to `col` because `len()` counts from zero.
+                if let Some((row, line)) = code.lines().enumerate().last() {
+                    (row + 1, line.len() + 1)
+                } else {
+                    (0, 0)
                 }
-                (row, col)
             }
         }
     }
