@@ -67,7 +67,6 @@ pub enum ScopingMode {
 /// # }
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Compiler {
     /// Name of your language
     pub name: String,

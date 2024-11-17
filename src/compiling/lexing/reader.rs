@@ -1,15 +1,10 @@
-#[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
-
 const BEGINNING: (usize, usize) = (0, 1);
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ReadMode {
     History,
     Future
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Reader {
     pub code: String,
     pub row: usize,
