@@ -28,7 +28,6 @@ pub struct Lexer {
     pub scoping_mode: ScopingMode,
 }
 
-// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct LexState {
     word: String,
     is_indenting: bool,
