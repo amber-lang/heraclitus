@@ -37,7 +37,7 @@ impl RegionHandler {
     #[inline]
     pub fn is_region_closed(&self, reader: &Reader) -> Result<(),((usize, usize), Region)> {
         if let Some(region) = self.region_stack.last() {
-            if !region.allow_left_open {
+            if !region.allow_unclosed_region {
                 let pos = reader.get_position();
                 return Err((pos, region.clone()));
             }

@@ -56,12 +56,6 @@ impl Reader {
         (self.row, self.col)
     }
 
-    /// Gets position of token that has been read
-    #[inline]
-    pub fn get_word_position(&self, word: &str) -> (usize, usize) {
-        (self.row, self.col - word.chars().count())
-    }
-
     /// Workaround for UTF-8 symbols
     #[inline]
     fn get_slice(&self, begin: usize, end: usize) -> String {

@@ -7,13 +7,13 @@ use serde::{Serialize, Deserialize};
 pub type RegionMap = HashMap<String,Region>;
 
 /// Convenience macro that creates regions
-/// 
+///
 /// This macro can create four types of region
 /// 1. Global region
 /// 2. Simple region with extendable options
 /// 3. Region with extendable options and interpolation modules
 /// 4. Region with extendable options that references (has the same interpolations as) some other region by id
-/// 
+///
 /// # Example
 /// ## 1. Global Region
 /// Global region is the foundation for your entire region tree.
@@ -25,14 +25,14 @@ pub type RegionMap = HashMap<String,Region>;
 ///     // insert other regions here
 /// ];
 /// ```
-/// 
+///
 /// ## 2. Simple Region
 /// This is a region that does not interpolate anything inside.
 /// It can be extended with additional options such as:
 ///  - `tokenize`
-///  - `allow_left_open`
+///  - `allow_unclosed_region`
 ///  - `singleline`
-/// 
+///
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// reg!(str as "string literal" => {
@@ -41,7 +41,7 @@ pub type RegionMap = HashMap<String,Region>;
 ///     singleline: true
 /// });
 /// ```
-/// 
+///
 /// ## 3. Region with Interpolations
 /// This is a region that can have multiple interpolations of other regions
 /// ```
@@ -53,10 +53,10 @@ pub type RegionMap = HashMap<String,Region>;
 ///     // reg!(...)
 /// ]);
 /// ```
-/// 
+///
 /// ## 4. Region Reference
 /// This is a region that as interpolation references other region.
-/// 
+///
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// reg!(string_interp as "String Interpolation" => {
@@ -91,14 +91,14 @@ macro_rules! reg {
 }
 
 /// Structure that describes isolated text that should not be tokenized such as string or comment
-/// 
+///
 /// Region can be used to create a way to describe a form of region in your code
 /// that should not be parsed. Additionally you can create interpolation rules in order
 /// to interpolate code inside.
-/// 
+///
 /// # Macro
 /// Creating regions may be too verbose at times hence you can use defined macro to create regions
-/// 
+///
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
@@ -110,7 +110,7 @@ macro_rules! reg {
 /// You can extend region with multiple options.
 /// The recommended options are:
 ///  - `tokenize`
-///  - `allow_left_open`
+///  - `allow_unclosed_region`
 ///  - `singleline`
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -128,9 +128,9 @@ pub struct Region {
     /// This field determines if the contents
     /// of the region should be tokenized
     pub tokenize: bool,
-    /// This field can allow to leave region 
+    /// This field can allow to leave region
     /// unclosed after parsing has finished
-    pub allow_left_open: bool,
+    pub allow_unclosed_region: bool,
     /// Determines if this region is the global context
     pub global: bool,
     /// Determines if region cannot
@@ -150,7 +150,7 @@ impl Region {
             end: String::from(end.as_ref()),
             interp,
             tokenize: false,
-            allow_left_open: false,
+            allow_unclosed_region: false,
             global: false,
             singleline: false,
             references: references.map(|value| String::from(value.as_ref()))
@@ -160,14 +160,14 @@ impl Region {
     /// Create a new global region
     pub fn new_global(interp: Vec<Region>) -> Region {
         let mut reg = Region::new("global", "Global context", "", "", interp, None);
-        reg.allow_left_open = true;
+        reg.allow_unclosed_region = true;
         reg.global = true;
         reg.tokenize = true;
         reg
     }
 
     /// Generate a region for region handler
-    /// 
+    ///
     /// This functionality is required if we want to reference other regions.
     /// It is not supposed to be used explicitly in the code, however this can be used
     /// to debug complex region dependency tree.
@@ -209,19 +209,19 @@ mod test {
                             end: format!("}}"),
                             interp: vec![],
                             tokenize: true,
-                            allow_left_open: false,
+                            allow_unclosed_region: false,
                             singleline: false,
                             global: false,
                             references: Some(format!("global"))
                         }],
                     tokenize: false,
-                    allow_left_open: false,
+                    allow_unclosed_region: false,
                     singleline: false,
                     global: false,
                     references: None
                 }],
             tokenize: true,
-            allow_left_open: true,
+            allow_unclosed_region: true,
             global: true,
             singleline: false,
             references: None
@@ -251,7 +251,7 @@ mod test {
             end: "}".to_string(),
             interp: vec![],
             tokenize: true,
-            allow_left_open: false,
+            allow_unclosed_region: false,
             global: false,
             singleline: false,
             references: Some(
@@ -277,7 +277,7 @@ mod test {
                                 end: "}".to_string(),
                                 interp: vec![],
                                 tokenize: true,
-                                allow_left_open: false,
+                                allow_unclosed_region: false,
                                 global: false,
                                 singleline: false,
                                 references: Some(
@@ -286,14 +286,14 @@ mod test {
                             },
                         ],
                         tokenize: false,
-                        allow_left_open: false,
+                        allow_unclosed_region: false,
                         global: false,
                         singleline: false,
                         references: None,
                     },
                 ],
                 tokenize: true,
-                allow_left_open: true,
+                allow_unclosed_region: true,
                 global: true,
                 singleline: false,
                 references: None,
@@ -311,7 +311,7 @@ mod test {
                     end: "}".to_string(),
                     interp: vec![],
                     tokenize: true,
-                    allow_left_open: false,
+                    allow_unclosed_region: false,
                     global: false,
                     singleline: false,
                     references: Some(
@@ -320,7 +320,7 @@ mod test {
                 },
             ],
             tokenize: false,
-            allow_left_open: false,
+            allow_unclosed_region: false,
             global: false,
             singleline: false,
             references: None,
