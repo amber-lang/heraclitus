@@ -104,16 +104,6 @@ impl Lexer {
         lex_state.word = String::new()
     }
 
-    /// Checks whether this is a nontokenizable region
-    #[inline]
-    fn is_tokenized_region(&self, reaction: &RegionReaction, lex_state: &mut LexState) -> bool {
-        if let Some(region) = lex_state.region_handler.get_region() {
-            region.tokenize && *reaction == RegionReaction::Pass
-        } else {
-            false
-        }
-    }
-
     /// Pattern code for adding a symbol
     /// **[*]**
     #[inline]
@@ -191,9 +181,14 @@ impl Lexer {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = lex_state
-                .region_handler
-                .handle_region(&lex_state.reader, lex_state.is_escaped);
+            let reaction = if lex_state.is_escaped {
+                RegionReaction::Pass
+            } else {
+                lex_state.region_handler.handle_region(&lex_state.reader)
+            };
+
+            lex_state.is_escaped = !lex_state.is_escaped && letter == self.escape_symbol;
+
             match reaction {
                 // If the region has been opened
                 // Finish the part that we have been parsing
@@ -236,7 +231,9 @@ impl Lexer {
                     }
                 }
                 RegionReaction::Pass => {
-                    let is_tokenized_region = self.is_tokenized_region(&reaction, &mut lex_state);
+                    let region = lex_state.region_handler.get_region().unwrap();
+                    let is_tokenized_region = region.tokenize;
+
                     match lex_state.compound_handler.handle_compound(
                         letter,
                         &lex_state.reader,
@@ -247,15 +244,9 @@ impl Lexer {
                         CompoundReaction::End => self.pattern_end(&mut lex_state, letter),
                         CompoundReaction::Pass => {
                             // Handle region scope
-                            if !self.is_tokenized_region(&reaction, &mut lex_state) {
-                                let region = lex_state.region_handler.get_region().unwrap();
-                                // Flip escaped key
-                                lex_state.is_escaped = (!lex_state.is_escaped
-                                    && letter == self.escape_symbol)
-                                    .then(|| !lex_state.is_escaped)
-                                    .unwrap_or(false);
+                            if !is_tokenized_region {
                                 // Handle singleline attribute
-                                if letter == '\n' && region.singleline {
+                                if region.singleline && letter == '\n' {
                                     let pos = lex_state.reader.get_position();
                                     return Err((
                                         LexerErrorType::Singleline,
@@ -508,5 +499,62 @@ mod test {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
         assert_eq!(expected, result);
+    }
+
+    // Test if comments are tokenized in the string (it should not be)
+    #[test]
+    fn test_lexer_tokenized_regions() {
+        let symbols = vec!['/', '"', '{', '}'];
+        let regions = reg![
+            reg!(string as "String" => {
+                begin: "\"",
+                end: "\"",
+                tokenize: true
+            } => [
+                reg!(str_interp as "string interpolation" => {
+                    begin: "{",
+                    end: "}",
+                    tokenize: true
+                } ref global)
+            ]),
+            reg!(comment as "Comment" => {
+                begin: "//",
+                end: "\n",
+                allow_left_open: true
+            })
+        ];
+        let compounds = vec![('/', '/')];
+        let rules = Rules::new(symbols, compounds, regions);
+        let lexer = super::Lexer::new(rules);
+
+        let text = r#""\{should not be interpolated // should not be a comment}""#;
+
+        let res = lexer.tokenize(&vec![text].join("\n"));
+        assert!(res.is_ok());
+
+        let mut result = vec![];
+        for lex in res.unwrap() {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+
+        let expected = vec![
+            ("\"", 1, 1),
+            ("\\", 1, 2),
+            ("{", 1, 3),
+            ("should", 1, 4),
+            ("not", 1, 11),
+            ("be", 1, 15),
+            ("interpolated", 1, 18),
+            ("//", 1, 31),
+            ("should", 1, 34),
+            ("not", 1, 41),
+            ("be", 1, 45),
+            ("a", 1, 48),
+            ("comment", 1, 50),
+            ("}", 1, 57),
+            ("\"", 1, 58),
+        ].iter().map(|(word, row, col)| (word.to_string(), *row, *col)).collect::<Vec<_>>();
+
+        assert_eq!(result, expected);
     }
 }
