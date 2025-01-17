@@ -520,7 +520,7 @@ mod test {
             reg!(comment as "Comment" => {
                 begin: "//",
                 end: "\n",
-                allow_left_open: true
+                allow_unclosed_region: true
             })
         ];
         let compounds = vec![('/', '/')];
