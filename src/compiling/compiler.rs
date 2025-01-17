@@ -9,10 +9,14 @@ use crate::error_pos;
 
 use super::lexer::Lexer;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// How do you want to separate expressions?
 ///
 /// Separator mode determines how do you want to handle separators (in many languages the semicolon)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SeparatorMode {
     /// Manual separators require user to manually write them all
     Manual,
@@ -32,6 +36,7 @@ pub enum SeparatorMode {
 /// For instance do you want to use blocks like `{ ... }` or `if ... fi`
 /// or do you want to use intents like in languages such as Python or Yaml.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ScopingMode {
     /// Scopes are going to be contained between two specified tokens
     Block,

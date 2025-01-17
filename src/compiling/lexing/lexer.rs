@@ -28,13 +28,13 @@ pub struct Lexer {
     pub scoping_mode: ScopingMode,
 }
 
-struct LexState<'a> {
+struct LexState {
     word: String,
     is_indenting: bool,
     is_escaped: bool,
     token_start_index: usize,
     position: (usize, usize),
-    reader: Reader<'a>,
+    reader: Reader,
     lexem: Vec<Token>,
     region_handler: RegionHandler,
     compound_handler: CompoundHandler,

@@ -7,8 +7,12 @@ use std::fs::File;
 use std::io::*;
 use crate::compiling::{Metadata, Token};
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// Store position of some error
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {
     /// Explicit row and column
     Pos(usize, usize),
@@ -18,6 +22,7 @@ pub enum Position {
 
 /// Struct that is used to return a simple error
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PositionInfo {
     /// Path of the file
     pub path: Option<String>,
@@ -32,22 +37,24 @@ pub struct PositionInfo {
 impl PositionInfo {
     /// Create a new erorr from scratch
     pub fn new(meta: &impl Metadata, position: Position, len: usize) -> Self {
-        PositionInfo {
+        let info = PositionInfo {
             position,
             path: meta.get_path(),
             len,
             data: None
-        }.updated_pos(meta)
+        };
+        info.updated_pos(meta)
     }
 
     /// Create a new erorr at the end of file
     pub fn at_eof(meta: &impl Metadata) -> Self {
-        PositionInfo {
+        let info = PositionInfo {
             path: meta.get_path(),
             position: Position::EOF,
             len: 0,
             data: None
-        }.updated_pos(meta)
+        };
+        info.updated_pos(meta)
     }
 
     /// Create a new erorr at given position
@@ -128,7 +135,9 @@ impl PositionInfo {
                         Err(_) => (0, 0)
                     }
                 }
-                else { (0, 0) }
+                else {
+                    (0, 0)
+                }
             }
         }
     }
@@ -145,17 +154,17 @@ impl PositionInfo {
     pub fn get_pos_by_code(&self, code: impl AsRef<str>) -> (usize, usize) {
         let code = code.as_ref();
         match self.position {
-            Position::Pos(row, col) => (row, col),
-            Position::EOF => {
-                let mut col = 1;
-                let mut row = 1;
-                // Count letters in column
-                col += code.split_whitespace().count();
-                // Coint letters in row
-                if let Some(last) = code.split_whitespace().last() {
-                    row += last.len();
-                }
+            Position::Pos(row, col) => {
                 (row, col)
+            }
+            Position::EOF => {
+                // Add one to `row` because `enumerate()` counts from zero.
+                // Add one to `col` because `len()` counts from zero.
+                if let Some((row, line)) = code.lines().enumerate().last() {
+                    (row + 1, line.len() + 1)
+                } else {
+                    (0, 0)
+                }
             }
         }
     }

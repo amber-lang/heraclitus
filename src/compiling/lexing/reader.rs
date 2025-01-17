@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 const BEGINNING: (usize, usize) = (0, 1);
 
 pub enum ReadMode {
@@ -6,18 +5,18 @@ pub enum ReadMode {
     Future
 }
 
-pub struct Reader<'a> {
-    pub code: &'a String,
+pub struct Reader {
+    pub code: String,
     pub row: usize,
     pub col: usize,
     pub index: usize,
     pub new_line: bool
 }
 
-impl<'a> Reader<'a> {
-    pub fn new(code: &'a String) -> Self {
+impl Reader {
+    pub fn new(code: &String) -> Self {
         Reader {
-            code,
+            code: code.clone(),
             row: BEGINNING.0,
             col: BEGINNING.1,
             index: 0,
@@ -55,12 +54,6 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn get_position(&self) -> (usize, usize) {
         (self.row, self.col)
-    }
-
-    /// Gets position of token that has been read
-    #[inline]
-    pub fn get_word_position(&self, word: &str) -> (usize, usize) {
-        (self.row, self.col - word.chars().count())
     }
 
     /// Workaround for UTF-8 symbols
@@ -112,7 +105,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-impl<'a> Iterator for Reader<'a> {
+impl Iterator for Reader {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -2,13 +2,18 @@ use super::reader::ReadMode;
 use super::reader::Reader;
 use crate::compiling_rules::{Region, RegionMap, Rules};
 
-#[derive(PartialEq, Eq, Debug)]
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RegionReaction {
     Begin(bool),
     End(bool),
     Pass,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RegionHandler {
     region_stack: Vec<Region>,
     region_map: RegionMap,
@@ -32,7 +37,7 @@ impl RegionHandler {
     #[inline]
     pub fn is_region_closed(&self, reader: &Reader) -> Result<(), ((usize, usize), Region)> {
         if let Some(region) = self.region_stack.last() {
-            if !region.allow_left_open {
+            if !region.allow_unclosed_region {
                 let pos = reader.get_position();
                 return Err((pos, region.clone()));
             }
