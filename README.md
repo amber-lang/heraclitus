@@ -45,6 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
+## Version 1.8.2
+### Fix:
+- Proper lexing of escaped regions
+
 ## Version 1.8.1
 ### Fix:
 - Now prints newline on text errors as well as syntax errors
