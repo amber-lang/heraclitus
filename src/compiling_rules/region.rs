@@ -133,10 +133,9 @@ pub struct Region {
     pub allow_unclosed_region: bool,
     /// Determines if this region is the global context
     pub global: bool,
-    /// Determines if region cannot
-    /// go past the new line character
-    pub references: Option<String>,
     /// Region can be a reference to some other region
+    pub references: Option<String>,
+    /// Determines if region cannot go past the new line character
     pub singleline: bool
 }
 
