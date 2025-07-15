@@ -181,7 +181,7 @@ impl Lexer {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = if lex_state.is_escaped {
+            let reaction = if lex_state.is_escaped && lex_state.region_handler.get_region().unwrap().begin != "//" {
                 RegionReaction::Pass
             } else {
                 lex_state.region_handler.handle_region(&lex_state.reader)
