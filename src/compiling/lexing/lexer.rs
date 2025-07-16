@@ -182,7 +182,7 @@ impl Lexer {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = if lex_state.is_escaped && region.ignore_escaped {
+            let reaction = if lex_state.is_escaped && (!region.ignore_escaped) {
                 RegionReaction::Pass
             } else {
                 lex_state.region_handler.handle_region(&lex_state.reader)
@@ -482,20 +482,27 @@ mod test {
         assert_eq!(expected, result);
     }
 
+    
     #[test]
-    fn test_lexer_escaped_regions() {
+    fn test_lexer_ignored_escaped_regions() {
         let symbols = vec![';', '+', '='];
-        let regions = reg![reg!(string as "String" => {
-            begin: "\"",
-            end: "\""
-        })];
-        let expected = vec![("\"this is \\\"escaped\\\" string\"".to_string(), 1, 1)];
+        let mut regions = reg![
+            reg!(module as "Comment" => {
+                begin: "//",
+                end: "\n"
+            }),
+            reg!(module as "String" => {
+                begin: "\"",
+                end: "\""
+            })
+        ];
+        regions.interp[0].ignore_escaped = true;
+        let expected = vec![("// comment \\\n".to_string(), 1, 1), ("\n".to_string(), 1, 13), ("// not same region\n".to_string(), 2, 1), ("\n".to_string(), 2, 19)];
         let rules = Rules::new(symbols, vec![], regions);
         let lexer = super::Lexer::new(rules);
         let mut result = vec![];
         // Simulate lexing
-        let res = lexer.tokenize(&vec!["\"this is \\\"escaped\\\" string\""].join("\n"));
-        assert!(res.is_ok());
+        let res = lexer.tokenize(&vec!["// comment \\", "// not same region\n"].join("\n"));
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
