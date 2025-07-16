@@ -162,6 +162,8 @@ impl Lexer {
         };
 
         while let Some(letter) = lex_state.reader.next() {
+            let region = lex_state.region_handler.get_region().unwrap();
+            
             /****************/
             /* Set Position */
             /****************/
@@ -171,7 +173,6 @@ impl Lexer {
                 // If separator mode is set to Manual and the letter is a separator,
                 // then skip finding a new position
                 if SeparatorMode::Manual != self.separator_mode || letter != '\n' {
-                    let region = lex_state.region_handler.get_region().unwrap();
                     // If the region is tokenized, then check if the letter is a separator
                     if !region.tokenize || !vec![' ', '\t'].contains(&letter) {
                         lex_state.position = lex_state.reader.get_position();
@@ -181,7 +182,7 @@ impl Lexer {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = if lex_state.is_escaped && lex_state.region_handler.get_region().unwrap().begin != "//" {
+            let reaction = if lex_state.is_escaped && region.ignore_escaped {
                 RegionReaction::Pass
             } else {
                 lex_state.region_handler.handle_region(&lex_state.reader)
