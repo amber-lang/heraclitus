@@ -46,6 +46,10 @@ let tokens = cc.tokenize()?;
 # Change log 🚀
 
 ## Version 1.8.2
+### Feat:
+- Introduced `ignore_escaped` property on regions to prevent from escaping region boundaries
+
+## Version 1.8.2
 ### Fix:
 - Proper lexing of escaped regions
 
