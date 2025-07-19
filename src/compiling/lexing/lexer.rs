@@ -162,6 +162,8 @@ impl Lexer {
         };
 
         while let Some(letter) = lex_state.reader.next() {
+            let region = lex_state.region_handler.get_region().unwrap();
+            
             /****************/
             /* Set Position */
             /****************/
@@ -171,7 +173,6 @@ impl Lexer {
                 // If separator mode is set to Manual and the letter is a separator,
                 // then skip finding a new position
                 if SeparatorMode::Manual != self.separator_mode || letter != '\n' {
-                    let region = lex_state.region_handler.get_region().unwrap();
                     // If the region is tokenized, then check if the letter is a separator
                     if !region.tokenize || !vec![' ', '\t'].contains(&letter) {
                         lex_state.position = lex_state.reader.get_position();
@@ -181,7 +182,7 @@ impl Lexer {
 
             // Reaction stores the reaction of the region handler
             // Have we just opened or closed some region?
-            let reaction = if lex_state.is_escaped {
+            let reaction = if lex_state.is_escaped && (!region.ignore_escaped) {
                 RegionReaction::Pass
             } else {
                 lex_state.region_handler.handle_region(&lex_state.reader)
@@ -495,6 +496,32 @@ mod test {
         // Simulate lexing
         let res = lexer.tokenize(&vec!["\"this is \\\"escaped\\\" string\""].join("\n"));
         assert!(res.is_ok());
+        for lex in res.unwrap() {
+            result.push((lex.word, lex.pos.0, lex.pos.1));
+        }
+        assert_eq!(expected, result);
+    }
+    
+    #[test]
+    fn test_lexer_ignored_escaped_regions() {
+        let symbols = vec![';', '+', '='];
+        let mut regions = reg![
+            reg!(module as "Comment" => {
+                begin: "//",
+                end: "\n"
+            }),
+            reg!(module as "String" => {
+                begin: "\"",
+                end: "\""
+            })
+        ];
+        regions.interp[0].ignore_escaped = true;
+        let expected = vec![("// comment \\\n".to_string(), 1, 1), ("\n".to_string(), 1, 13), ("// not same region\n".to_string(), 2, 1), ("\n".to_string(), 2, 19)];
+        let rules = Rules::new(symbols, vec![], regions);
+        let lexer = super::Lexer::new(rules);
+        let mut result = vec![];
+        // Simulate lexing
+        let res = lexer.tokenize(&vec!["// comment \\", "// not same region\n"].join("\n"));
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }

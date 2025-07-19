@@ -136,7 +136,9 @@ pub struct Region {
     /// Region can be a reference to some other region
     pub references: Option<String>,
     /// Determines if region cannot go past the new line character
-    pub singleline: bool
+    pub singleline: bool,
+    /// Whether to ignore escaped characters for this region only
+    pub ignore_escaped: bool,
 }
 
 impl Region {
@@ -152,7 +154,8 @@ impl Region {
             allow_unclosed_region: false,
             global: false,
             singleline: false,
-            references: references.map(|value| String::from(value.as_ref()))
+            references: references.map(|value| String::from(value.as_ref())),
+            ignore_escaped: false
         }
     }
 
@@ -211,19 +214,22 @@ mod test {
                             allow_unclosed_region: false,
                             singleline: false,
                             global: false,
-                            references: Some(format!("global"))
+                            references: Some(format!("global")),
+                            ignore_escaped: false,
                         }],
                     tokenize: false,
                     allow_unclosed_region: false,
                     singleline: false,
                     global: false,
-                    references: None
+                    references: None,
+                    ignore_escaped: false
                 }],
             tokenize: true,
             allow_unclosed_region: true,
             global: true,
             singleline: false,
-            references: None
+            references: None,
+            ignore_escaped: false
         };
         let result = reg![
             reg!(string as "String Literal" => {
@@ -256,6 +262,7 @@ mod test {
             references: Some(
                 "global".to_string(),
             ),
+            ignore_escaped: false,
         });
         expected.insert("global".to_string(), Region {
                 id: "global".to_string(),
@@ -282,6 +289,7 @@ mod test {
                                 references: Some(
                                     "global".to_string(),
                                 ),
+                                ignore_escaped: false,
                             },
                         ],
                         tokenize: false,
@@ -289,6 +297,7 @@ mod test {
                         global: false,
                         singleline: false,
                         references: None,
+                        ignore_escaped: false,
                     },
                 ],
                 tokenize: true,
@@ -296,6 +305,7 @@ mod test {
                 global: true,
                 singleline: false,
                 references: None,
+                ignore_escaped: false,
         });
         expected.insert("string".to_string(), Region {
             id: "string".to_string(),
@@ -316,6 +326,7 @@ mod test {
                     references: Some(
                         "global".to_string(),
                     ),
+                    ignore_escaped: false,
                 },
             ],
             tokenize: false,
@@ -323,6 +334,7 @@ mod test {
             global: false,
             singleline: false,
             references: None,
+            ignore_escaped: false,
         });
         let region = reg![
             reg!(string as "String Literal" => {
