@@ -84,7 +84,7 @@ pub fn numeric(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Fa
 
 /// Match an integer
 /// 
-/// Matches a positive or negetive integer.
+/// Matches a positive or negative integer.
 /// If desired - one can extend this implementation with other chars.
 pub fn integer(meta: &mut impl Metadata, extend: Vec<char>) -> Result<String, Failure> {
     match meta.get_current_token() {

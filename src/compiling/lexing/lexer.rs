@@ -60,7 +60,7 @@ impl Lexer {
         }
 
         // Getting position by word here would attempt to
-        // substract with overflow since the new line character
+        // subtract with overflow since the new line character
         // technically belongs to the previous line
         let (row, _col) = lex_state.reader.get_position();
         lex_state.lexem.push(Token {

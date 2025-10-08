@@ -35,7 +35,7 @@ pub struct PositionInfo {
 }
 
 impl PositionInfo {
-    /// Create a new erorr from scratch
+    /// Create a new error from scratch
     pub fn new(meta: &impl Metadata, position: Position, len: usize) -> Self {
         let info = PositionInfo {
             position,
@@ -46,7 +46,7 @@ impl PositionInfo {
         info.updated_pos(meta)
     }
 
-    /// Create a new erorr at the end of file
+    /// Create a new error at the end of file
     pub fn at_eof(meta: &impl Metadata) -> Self {
         let info = PositionInfo {
             path: meta.get_path(),
@@ -57,7 +57,7 @@ impl PositionInfo {
         info.updated_pos(meta)
     }
 
-    /// Create a new erorr at given position
+    /// Create a new error at given position
     pub fn at_pos(path: Option<String>, (row, col): (usize, usize), len: usize) -> Self {
         PositionInfo {
             path,
