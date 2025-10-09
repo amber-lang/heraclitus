@@ -1,6 +1,6 @@
 //! Module designed to help you send Errors
 //! 
-//! It's recommmended to use macros for this case, but you can use this module directly.
+//! It's recommended to use macros for this case, but you can use this module directly.
 
 pub mod failure;
 pub mod message;

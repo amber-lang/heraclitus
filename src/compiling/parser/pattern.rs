@@ -4,7 +4,7 @@ use super::{ Metadata, SyntaxModule };
 
 /// Matches one token with given word
 ///
-/// If token was matched succesfully - the word it contained is returned.
+/// If token was matched successfully - the word it contained is returned.
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
@@ -27,7 +27,7 @@ pub fn token<T: AsRef<str>>(meta: &mut impl Metadata, text: T) -> Result<String,
 
 /// Matches one token by defined function
 ///
-/// If token was matched succesfully - the word it contained is returned.
+/// If token was matched successfully - the word it contained is returned.
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
@@ -50,7 +50,7 @@ pub fn token_by(meta: &mut impl Metadata, cb: impl Fn(&String) -> bool) -> Resul
 
 /// Parses syntax module
 ///
-/// If syntax module was parsed succesfully - nothing is returned.
+/// If syntax module was parsed successfully - nothing is returned.
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
@@ -83,7 +83,7 @@ pub fn syntax<M: Metadata>(meta: &mut M, module: &mut impl SyntaxModule<M>) -> R
 
 /// Matches indentation
 ///
-/// If indentation was matched succesfully - the amount of spaces is returned.
+/// If indentation was matched successfully - the amount of spaces is returned.
 /// Otherwise detailed information is returned about where this happened.
 /// # Example
 /// ```
@@ -104,7 +104,7 @@ pub fn indent(meta: &mut impl Metadata) -> Result<usize, Failure> {
 
 /// Matches indentation with provided size
 ///
-/// If indentation was identified succesfully return the std::cmp::Ordering
+/// If indentation was identified successfully return the std::cmp::Ordering
 /// depending on whether the amount of spaces detected was smaller, equal or greater.
 /// Otherwise detailed information is returned about where this happened.
 /// # Example

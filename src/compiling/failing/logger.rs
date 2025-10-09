@@ -121,7 +121,7 @@ impl Logger {
         }
     }
 
-    // Returns chopped string where fisrt and third part are supposed
+    // Returns chopped string where first and third part are supposed
     // to be left as is but the second one is supposed to be highlighted
     fn get_highlighted_part(&self, line: &str) -> Option<[String;3]> {
         let (_row, col, len) = self.get_row_col_len()?;
@@ -157,7 +157,7 @@ impl Logger {
             let end = col.checked_add(len).unwrap_or(len);
             // If we are at the end of the code snippet and there is still some
             if end - 1 > code.chars().count() {
-                // We substract here 2 because 1 is the offset of col (starts at 1)
+                // We subtract here 2 because 1 is the offset of col (starts at 1)
                 // and other 1 is the new line character that we do not display
                 *overflow = (end - 2).checked_sub(code.chars().count()).unwrap_or(0);
             }

@@ -24,14 +24,14 @@ pub struct CompoundHandler {
 impl CompoundHandler {
     pub fn new(rules: &Rules) -> Self {
         CompoundHandler {
-            compound_tree: Self::generate_compunds(rules.compounds.clone()),
+            compound_tree: Self::generate_compounds(rules.compounds.clone()),
             is_triggered: false
         }
     }
 
     // Generates a tree where the key is the left item of 
     // the pair and values are all the right items of the pair
-    fn generate_compunds(word_pairs: Vec<(char, char)>) -> HashMap<char, Vec<char>> {
+    fn generate_compounds(word_pairs: Vec<(char, char)>) -> HashMap<char, Vec<char>> {
         let mut compound_tree = HashMap::new();
         for (left, right) in word_pairs {
             compound_tree

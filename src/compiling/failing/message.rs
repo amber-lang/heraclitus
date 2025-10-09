@@ -134,7 +134,7 @@ impl Message {
         Self::new(meta.get_code(), &Self::get_full_trace(meta, pos), MessageType::Info)
     }
 
-    /* Attach additional infromation */
+    /* Attach additional information */
 
     /// Add message to an existing log
     pub fn message<T: AsRef<str>>(mut self, text: T) -> Self {

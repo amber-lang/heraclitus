@@ -5,7 +5,7 @@ use crate::compiling::failing::position_info::PositionInfo;
 use serde::{Serialize, Deserialize};
 
 /// Default implementation of metadata. 
-/// This is useful for debuging or languages that are not too demanding.
+/// This is useful for debugging or languages that are not too demanding.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DefaultMetadata {
     /// Current index in the token stream
