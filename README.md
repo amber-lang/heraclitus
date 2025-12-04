@@ -45,7 +45,11 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.8.2
+## Version 1.8.4
+### Feat:
+- Added `PositionInfo::from_between_positions` method for creating a `PositionInfo` from two positions
+
+## Version 1.8.3
 ### Feat:
 - Introduced `ignore_escaped` property on regions to prevent from escaping region boundaries
 

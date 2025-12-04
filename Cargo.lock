@@ -20,7 +20,7 @@ dependencies = [
 
 [[package]]
 name = "heraclitus-compiler"
-version = "1.8.3"
+version = "1.8.4"
 dependencies = [
  "capitalize",
  "colored",
