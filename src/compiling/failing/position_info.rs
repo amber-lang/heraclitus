@@ -28,6 +28,8 @@ pub struct PositionInfo {
     pub path: Option<String>,
     /// Location of this error
     pub position: Position,
+    /// Index of the character in the file that the token starts
+    pub start: usize,
     /// Length of the token
     pub len: usize,
     /// Additional information
@@ -36,10 +38,11 @@ pub struct PositionInfo {
 
 impl PositionInfo {
     /// Create a new error from scratch
-    pub fn new(meta: &impl Metadata, position: Position, len: usize) -> Self {
+    pub fn new(meta: &impl Metadata, position: Position, start: usize, len: usize) -> Self {
         let info = PositionInfo {
             position,
             path: meta.get_path(),
+            start,
             len,
             data: None
         };
@@ -51,6 +54,7 @@ impl PositionInfo {
         let info = PositionInfo {
             path: meta.get_path(),
             position: Position::EOF,
+            start: 0,
             len: 0,
             data: None
         };
@@ -58,10 +62,11 @@ impl PositionInfo {
     }
 
     /// Create a new error at given position
-    pub fn at_pos(path: Option<String>, (row, col): (usize, usize), len: usize) -> Self {
+    pub fn at_pos(path: Option<String>, (row, col): (usize, usize), start: usize, len: usize) -> Self {
         PositionInfo {
             path,
             position: Position::Pos(row, col),
+            start,
             len,
             data: None
         }
@@ -94,7 +99,7 @@ impl PositionInfo {
     /// and error once you finished parsing the entire expression
     pub fn from_token(meta: &impl Metadata, token_opt: Option<Token>) -> Self {
         match token_opt {
-            Some(token) => PositionInfo::at_pos(meta.get_path(), token.pos, token.word.chars().count()),
+            Some(token) => PositionInfo::at_pos(meta.get_path(), token.pos, token.start, token.word.chars().count()),
             None => PositionInfo::at_eof(meta)
         }
     }
@@ -106,12 +111,26 @@ impl PositionInfo {
     pub fn from_between_tokens(meta: &impl Metadata, begin: Option<Token>, end: Option<Token>) -> Self {
         if let Some(begin) = begin {
             let (row, col) = begin.pos;
-            let end = end.map_or(usize::max_value(), |tok| tok.start);
-            let len = end - begin.start;
-            PositionInfo::at_pos(meta.get_path(), (row, col), len)
-        }
-        else {
+            let end_pos = end.map_or(usize::max_value(), |tok| tok.start);
+            let len = end_pos - begin.start;
+            PositionInfo::at_pos(meta.get_path(), (row, col), begin.start, len)
+        } else {
             PositionInfo::from_metadata(meta)
+        }
+    }
+
+    /// Create an error at position between two tokens
+    ///
+    /// This function is used to create an error between two tokens
+    /// which can be used to express an error in a specific range
+    pub fn from_between_positions(meta: &impl Metadata, begin: PositionInfo, end: PositionInfo) -> Self {
+        let start_index = begin.start;
+        let end_index = end.start + end.len;
+        let len = end_index - start_index;
+        if let Position::Pos(row, col) = begin.position {
+            PositionInfo::at_pos(meta.get_path(), (row, col), start_index, len)
+        } else {
+            PositionInfo::at_eof(meta)
         }
     }
 
@@ -177,7 +196,7 @@ mod test {
 
     #[test]
     fn test_position_info() {
-        let pos = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 1);
+        let pos = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 0, 1);
         assert_eq!(pos.get_path(), "test");
         assert_eq!(pos.get_pos_by_code("test"), (1, 1));
     }
@@ -190,5 +209,16 @@ mod test {
         let mut meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], None, Some("begin to end".to_string()));
         let pos = PositionInfo::from_between_tokens(&mut meta, Some(begin.clone()), Some(end.clone()));
         assert_eq!(pos.len, end.start - begin.start);
+    }
+
+    #[test]
+    fn test_position_info_between_positions() {
+        let begin = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 0, 5);
+        let end = PositionInfo::at_pos(Some("test".to_string()), (1, 10), 9, 3);
+        let mut meta = DefaultMetadata::new(vec![], None, Some("begin to end".to_string()));
+        let pos = PositionInfo::from_between_positions(&mut meta, begin.clone(), end.clone());
+        assert_eq!(pos.start, 0);
+        assert_eq!(pos.len, 12);
+        assert_eq!(pos.get_pos_by_code("begin to end"), (1, 1));
     }
 }

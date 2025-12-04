@@ -240,8 +240,8 @@ mod test {
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let trace = [
-            PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 4), 10),
-            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 9), 24),
+            PositionInfo::at_pos(Some("/path/to/bar".to_string()), (3, 4), 10, 10),
+            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 9), 24, 24),
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
@@ -258,7 +258,7 @@ mod test {
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let trace = [
-            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 6), 1)
+            PositionInfo::at_pos(Some("/path/to/foo".to_string()), (2, 6), 5, 1)
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)

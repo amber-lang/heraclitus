@@ -35,11 +35,11 @@ impl RegionHandler {
     // Error if after code lexing
     // some region was left unclosed
     #[inline]
-    pub fn is_region_closed(&self, reader: &Reader) -> Result<(), ((usize, usize), Region)> {
+    pub fn is_region_closed(&self, reader: &Reader) -> Result<(), ((usize, usize), usize, Region)> {
         if let Some(region) = self.region_stack.last() {
             if !region.allow_unclosed_region {
                 let pos = reader.get_position();
-                return Err((pos, region.clone()));
+                return Err((pos, reader.get_index(), region.clone()));
             }
         }
         Ok(())
