@@ -119,9 +119,9 @@ impl PositionInfo {
         }
     }
 
-    /// Create an error at position between two tokens
+    /// Create an error at position between two PositionInfo objects
     ///
-    /// This function is used to create an error between two tokens
+    /// This function is used to create an error between two positions
     /// which can be used to express an error in a specific range
     pub fn from_between_positions(meta: &impl Metadata, begin: PositionInfo, end: PositionInfo) -> Self {
         let start_index = begin.start;
