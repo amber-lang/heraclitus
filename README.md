@@ -45,9 +45,10 @@ let tokens = cc.tokenize()?;
 
 # Change log 🚀
 
-## Version 1.8.4
+## Version 1.9.0
 ### Feat:
 - Added `PositionInfo::from_between_positions` method for creating a `PositionInfo` from two positions
+- Breaking Change: `PositionInfo::new`, `PositionInfo::at_pos`, `PositionInfo::at_eof` now accept `start` parameter which determines the index of the first character in the source code
 
 ## Version 1.8.3
 ### Feat:
