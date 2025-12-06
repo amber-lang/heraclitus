@@ -28,7 +28,7 @@ pub struct PositionInfo {
     pub path: Option<String>,
     /// Location of this error
     pub position: Position,
-    /// Index of the character in the file that the token starts
+    /// Character index in the source file where this position starts
     pub start: usize,
     /// Length of the token
     pub len: usize,
