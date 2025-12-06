@@ -31,7 +31,7 @@ pub enum MessageType {
 /// ```should_panic
 /// # use heraclitus_compiler::prelude::*;
 /// # let path = Some(format!("path/to/file"));
-/// # let position = PositionInfo::at_pos(path.clone(), (0, 0), 0);
+/// # let position = PositionInfo::at_pos(path.clone(), (0, 0), 0, 0);
 /// # let guess = "type";
 /// # let code = Some(format!("code"));
 /// # let mut meta = DefaultMetadata::new(vec![], path, code);
@@ -195,7 +195,7 @@ mod test {
             "... further code",
         ].join("\n"));
         let path = Some(format!("path/to/file"));
-        let position = PositionInfo::at_pos(path.clone(), (2, 1), 4);
+        let position = PositionInfo::at_pos(path.clone(), (2, 1), 14, 4);
         let guess = "type";
         let mut meta = DefaultMetadata::new(vec![], path, code);
         Message::new_err_at_position(&mut meta, position)

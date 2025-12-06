@@ -251,7 +251,7 @@ impl Lexer {
                                     let pos = lex_state.reader.get_position();
                                     return Err((
                                         LexerErrorType::Singleline,
-                                        PositionInfo::at_pos(self.path.clone(), pos, 0)
+                                        PositionInfo::at_pos(self.path.clone(), pos, lex_state.reader.get_index(), 0)
                                             .data(region.name.clone()),
                                     ));
                                 }
@@ -316,10 +316,10 @@ impl Lexer {
         }
         self.add_word(&mut lex_state);
         // If some region exists that was not closed
-        if let Err((pos, region)) = lex_state.region_handler.is_region_closed(&lex_state.reader) {
+        if let Err((pos, start, region)) = lex_state.region_handler.is_region_closed(&lex_state.reader) {
             return Err((
                 LexerErrorType::Unclosed,
-                PositionInfo::at_pos(self.path.clone(), pos, 0).data(region.name),
+                PositionInfo::at_pos(self.path.clone(), pos, start, 0).data(region.name),
             ));
         }
 
