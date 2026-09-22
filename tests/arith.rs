@@ -19,5 +19,7 @@ fn arith() {
     compiler.load("// test\n12.24 +.123 + 12 + 321");
     let mut expr = arith_modules::Expr::new();
     compiler.debug();
-    assert!(compiler.compile(&mut expr).is_ok());
+    let lexem = compiler.tokenize().unwrap();
+    let mut meta = DefaultMetadata::new(lexem, compiler.path.clone(), compiler.code.clone());
+    assert!(expr.parse_debug(&mut meta).is_ok());
 }

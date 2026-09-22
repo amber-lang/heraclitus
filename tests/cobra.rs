@@ -21,5 +21,7 @@ fn cobra() {
     ].join("\n"));
     let mut ast = cobra_modules::IfStatement::new();
     compiler.debug();
-    assert!(compiler.compile(&mut ast).is_ok());
+    let lexem = compiler.tokenize().unwrap();
+    let mut meta = DefaultMetadata::new(lexem, compiler.path.clone(), compiler.code.clone());
+    assert!(ast.parse_debug(&mut meta).is_ok());
 }
