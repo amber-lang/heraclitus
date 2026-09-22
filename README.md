@@ -7,8 +7,10 @@
 [![Crate](https://img.shields.io/crates/v/heraclitus-compiler.svg)](https://crates.io/crates/heraclitus-compiler)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/heraclitus-compiler/)
 
+> [!WARNING]
+> As of 22.09.2026 this repository will not be updated in [crates.io](https://crates.io/crates/heraclitus-compiler) due to the increased maintenance effort. This library will still be maintained and can be used from this repository.
 
-Heraclitus is an open source compiler frontend written in rust. It's going to be used as a basis for programming languages such as [Amber](https://amber-lang.cc) and *Flame*.
+Heraclitus is an open source compiler frontend written in rust. It's used as a basis for [Amber](https://amber-lang.com) programming language.
 
 ## Heraclitus - the compiler frontend
 
