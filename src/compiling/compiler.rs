@@ -43,7 +43,8 @@ pub enum ScopingMode {
 /// Compiler that rules them all
 ///
 /// Compiler is a central unit of heraclitus.
-/// This structure handles tokenizing and parsing considering all your language settings.
+/// This structure handles tokenization and configuration of your language settings.
+/// Parsing is performed through the syntax module.
 ///
 /// # Example
 /// ```
