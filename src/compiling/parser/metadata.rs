@@ -4,7 +4,7 @@ use crate::compiling::failing::position_info::PositionInfo;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 
-/// Default implementation of metadata. 
+/// Default implementation of metadata.
 /// This is useful for debugging or languages that are not too demanding.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DefaultMetadata {
@@ -20,8 +20,9 @@ pub struct DefaultMetadata {
     pub indent: Option<usize>
 }
 
-impl Metadata for DefaultMetadata {
-    fn new(tokens: Vec<Token>, path: Option<String>, code: Option<String>) -> Self {
+impl DefaultMetadata {
+    /// Load tokens into metadata
+    pub fn new(tokens: Vec<Token>, path: Option<String>, code: Option<String>) -> Self {
         DefaultMetadata {
             index: 0,
             expr: tokens,
@@ -30,11 +31,13 @@ impl Metadata for DefaultMetadata {
             indent: None
         }
     }
+}
 
+impl Metadata for DefaultMetadata {
     fn get_token_at(&self, index: usize) -> Option<Token> {
         self.expr.get(index).cloned()
     }
-    
+
     fn set_index(&mut self, index: usize) {
         self.index = index
     }
@@ -61,12 +64,10 @@ impl Metadata for DefaultMetadata {
 }
 
 /// Metadata for carrying information through the ASI parsing phases.
-/// 
+///
 /// This Metadata trait should define your metadata struct with all additional data that you need
 /// in order to parse the source code. If you are looking for the default implementation - look at the `DefaultMetadata`.
 pub trait Metadata {
-    /// Load tokens into metadata
-    fn new(tokens: Vec<Token>, path: Option<String>, code: Option<String>) -> Self;
     /// Return optionally token under desired index in the lexem
     fn get_token_at(&self, index: usize) -> Option<Token>;
     /// Get current index

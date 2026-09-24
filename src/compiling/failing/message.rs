@@ -178,7 +178,7 @@ impl Message {
 
 #[cfg(test)]
 mod test {
-    use crate::prelude::{DefaultMetadata, Message, Metadata, PositionInfo};
+    use crate::prelude::{DefaultMetadata, Message, PositionInfo};
 
     #[test]
     fn test_message() {

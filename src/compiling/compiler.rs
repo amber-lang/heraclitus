@@ -1,11 +1,7 @@
-use capitalize::Capitalize;
 use std::fs::File;
 use std::io::prelude::*;
 use crate::compiling_rules::Rules;
-use crate::compiling::{Token, LexerError, LexerErrorType, Metadata, SyntaxModule};
-use crate::compiling::failing::message::Message;
-use crate::compiling::failing::failure::Failure;
-use crate::error_pos;
+use crate::compiling::{Token, LexerError};
 
 use super::lexer::Lexer;
 
@@ -20,7 +16,7 @@ use serde::{Serialize, Deserialize};
 pub enum SeparatorMode {
     /// Manual separators require user to manually write them all
     Manual,
-    /// Compiler uses ASI (automatic semicolon insertion) 
+    /// Compiler uses ASI (automatic semicolon insertion)
     /// and removes newlines that are not in the context of being a separator.
     /// This variant also requires a string that will represent the separator.
     SemiAutomatic(String),
@@ -45,10 +41,11 @@ pub enum ScopingMode {
 }
 
 /// Compiler that rules them all
-/// 
+///
 /// Compiler is a central unit of heraclitus.
-/// This structure handles tokenizing and parsing considering all your language settings.
-/// 
+/// This structure handles tokenization and configuration of your language settings.
+/// Parsing is performed through the syntax module.
+///
 /// # Example
 /// ```
 /// # use heraclitus_compiler::prelude::*;
@@ -62,7 +59,9 @@ pub enum ScopingMode {
 /// # let rules = Rules::new(vec![], vec![], reg![]);
 /// let mut global_ctx = GlobalContext::new();
 /// let cc = Compiler::new("HerbScript", rules);
-/// let meta = cc.compile(&mut global_ctx)?;
+/// let lexem = cc.tokenize().unwrap();
+/// let mut meta = DefaultMetadata::new(lexem, cc.path.clone(), cc.code.clone());
+/// global_ctx.parse(&mut meta)?;
 /// # Ok(())
 /// # }
 /// ```
@@ -130,34 +129,5 @@ impl Compiler {
     /// Parser will display information about the call stack
     pub fn debug(&mut self) {
         self.debug = true
-    }
-
-    /// Bulk run lexer and parser (used for testing purposes)
-    pub fn compile<M: Metadata>(&self, module: &mut impl SyntaxModule<M>) -> Result<M, Failure> {
-        match self.tokenize() {
-            Ok(lexem) => {
-                let mut meta = M::new(lexem, self.path.clone(), self.code.clone());
-                if self.debug {
-                    module.parse_debug(&mut meta)?;
-                } else {
-                    module.parse(&mut meta)?;
-                }
-                Ok(meta)
-            }
-            Err((kind, info)) => {
-                let data = info.data.clone().unwrap().capitalize();
-                // Create an error message
-                let message = match kind {
-                    LexerErrorType::Singleline => format!("{data} cannot be multiline"),
-                    LexerErrorType::Unclosed => format!("{data} unclosed"),
-                };
-                // Send error
-                let meta = M::new(vec![], self.path.clone(), self.code.clone());
-                error_pos!(&meta, info => {
-                    message: message,
-                    comment: "test"
-                })
-            }
-        }
     }
 }

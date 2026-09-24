@@ -95,7 +95,7 @@ mod test {
     use super::*;
     use crate::compiling::parser::pattern::*;
     use crate::compiling::parser::preset::*;
-    use crate::compiling::{ Token, DefaultMetadata, Metadata };
+    use crate::compiling::{ Token, DefaultMetadata };
 
     struct Expression {}
     impl SyntaxModule<DefaultMetadata> for Expression {
