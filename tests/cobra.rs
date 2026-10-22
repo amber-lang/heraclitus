@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use heraclitus_compiler::prelude::*;
 mod cobra_modules;
 
@@ -12,7 +14,7 @@ fn cobra() {
         })
     ];
     let rules = Rules::new(symbols, compounds, region);
-    let code = vec![
+    let code = [
         "if 'condition\\\\':",
         "  'do + this'",
         "  'do ++ that'"

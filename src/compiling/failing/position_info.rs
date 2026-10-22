@@ -109,7 +109,7 @@ impl PositionInfo {
     pub fn from_between_tokens(meta: &impl Metadata, begin: Option<Token>, end: Option<Token>) -> Self {
         if let Some(begin) = begin {
             let (row, col) = begin.pos;
-            let end_pos = end.map_or(usize::max_value(), |tok| tok.start);
+            let end_pos = end.map_or(usize::MAX, |tok| tok.start);
             let len = end_pos - begin.start;
             PositionInfo::at_pos(meta.get_path(), (row, col), begin.start, len)
         } else {
@@ -183,8 +183,8 @@ mod test {
         let begin = Token { word: "begin".to_string(), pos: (1, 1), start: 0 };
         let to = Token { word: "to".to_string(), pos: (1, 7), start: 6 };
         let end = Token { word: "end".to_string(), pos: (1, 10), start: 9 };
-        let mut meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], "begin to end");
-        let pos = PositionInfo::from_between_tokens(&mut meta, Some(begin.clone()), Some(end.clone()));
+        let meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], "begin to end");
+        let pos = PositionInfo::from_between_tokens(&meta, Some(begin.clone()), Some(end.clone()));
         assert_eq!(pos.len, end.start - begin.start);
     }
 
@@ -192,8 +192,8 @@ mod test {
     fn test_position_info_between_positions() {
         let begin = PositionInfo::at_pos(Some("test"), (1, 1), 0, 5);
         let end = PositionInfo::at_pos(Some("test"), (1, 10), 9, 3);
-        let mut meta = DefaultMetadata::new(vec![], "begin to end");
-        let pos = PositionInfo::from_between_positions(&mut meta, begin.clone(), end.clone());
+        let meta = DefaultMetadata::new(vec![], "begin to end");
+        let pos = PositionInfo::from_between_positions(&meta, begin.clone(), end.clone());
         assert_eq!(pos.start, 0);
         assert_eq!(pos.len, 12);
         assert_eq!(pos.get_pos_by_code("begin to end"), (1, 1));

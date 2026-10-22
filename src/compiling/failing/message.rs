@@ -222,8 +222,8 @@ mod test {
         let path = "path/to/file";
         let position = PositionInfo::at_pos(Some(path), (2, 1), 14, 4);
         let guess = "type";
-        let mut meta = DefaultMetadata::new(vec![], code).with_path(path);
-        Message::new_err_at_position(&mut meta, position)
+        let meta = DefaultMetadata::new(vec![], code).with_path(path);
+        Message::new_err_at_position(&meta, position)
             .message("Type of this parameter is invalid")
             .comment(format!("Maybe you meant type {guess} instead"))
             .show();

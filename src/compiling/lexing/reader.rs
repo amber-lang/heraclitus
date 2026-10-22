@@ -14,9 +14,9 @@ pub struct Reader {
 }
 
 impl Reader {
-    pub fn new(code: &String) -> Self {
+    pub fn new(code: &str) -> Self {
         Reader {
-            code: code.clone(),
+            code: code.to_string(),
             row: BEGINNING.0,
             col: BEGINNING.1,
             index: 0,
@@ -117,7 +117,7 @@ impl Iterator for Reader {
 mod test {
     #[test]
     fn letter_position() {
-        let code = vec![
+        let code = [
             "apple",
             "banana",
             "orange"
@@ -142,7 +142,7 @@ mod test {
 
     #[test]
     fn index_position() {
-        let code = vec![
+        let code = [
             "apple",
             "orange",
         ].join("\n");
@@ -162,7 +162,7 @@ mod test {
     #[test]
     fn correct_history_and_future() {
         const SIZE: usize = 5;
-        let code = vec![
+        let code = [
             "apple",
             "kiwi"
         ].join("\n");

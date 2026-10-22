@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![allow(clippy::result_large_err)]
 
 //! # Heraclitus - the compiler frontend
 //! 

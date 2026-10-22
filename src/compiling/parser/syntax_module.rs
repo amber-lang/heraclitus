@@ -115,14 +115,14 @@ mod test {
         let mut exp = Expression {};
         let dataset1 = vec![
             Token {
-                word: format!("let"),
+                word: "let".to_string(),
                 pos: (0, 0),
                 start: 0
             }
         ];
         let dataset2 = vec![
             Token {
-                word: format!("tell"),
+                word: "tell".to_string(),
                 pos: (0, 0),
                 start: 0
             }
@@ -154,15 +154,15 @@ mod test {
         let mut exp = Preset {};
         let dataset = vec![
             // Variable
-            Token { word: format!("_text"), pos: (0, 0), start: 0 },
+            Token { word: "_text".to_string(), pos: (0, 0), start: 0 },
             // Numeric
-            Token { word: format!("12321"), pos: (0, 0), start: 0 },
+            Token { word: "12321".to_string(), pos: (0, 0), start: 0 },
             // Number
-            Token { word: format!("-123.12"), pos: (0, 0), start: 0 },
+            Token { word: "-123.12".to_string(), pos: (0, 0), start: 0 },
             // Integer
-            Token { word: format!("-12"), pos: (0, 0), start: 0 },
+            Token { word: "-12".to_string(), pos: (0, 0), start: 0 },
             // Float
-            Token { word: format!("-.681"), pos: (0, 0), start: 0 }
+            Token { word: "-.681".to_string(), pos: (0, 0), start: 0 }
         ];
         let result = exp.parse(&mut DefaultMetadata::new(dataset, ""));
         assert!(result.is_ok());
@@ -177,13 +177,8 @@ mod test {
         #[allow(unused_must_use)]
         fn parse(&mut self, meta: &mut DefaultMetadata) -> SyntaxResult {
             // Any
-            if let Ok(_) = token(meta, "apple") {}
-            else if let Ok(_) = token(meta, "orange") {}
-            else if let Ok(_) = token(meta, "banana") {}
-            else {
-                if let Err(details) = token(meta, "banana") {
-                    return Err(details);
-                }
+            if token(meta, "apple").is_err() && token(meta, "orange").is_err() {
+                token(meta, "banana")?;
             }
             // Optional
             token(meta, "optional");
@@ -191,10 +186,10 @@ mod test {
             syntax(meta, &mut Expression::new())?;
             // Repeat
             loop {
-                if let Err(_) = token(meta, "test") {
+                if token(meta, "test").is_err() {
                     break;
                 }
-                if let Err(_) = token(meta, ",") {
+                if token(meta, ",").is_err() {
                     break;
                 }
             }
@@ -209,42 +204,42 @@ mod test {
         let mut exp = PatternModule {};
         // Everything should pass
         let dataset1 = vec![
-            Token { word: format!("orange"), pos: (0, 0), start: 0 },
-            Token { word: format!("optional"), pos: (0, 0), start: 0 },
-            Token { word: format!("let"), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!(","), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!("end"), pos: (0, 0), start: 0 }
+            Token { word: "orange".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "optional".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "let".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: ",".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "end".to_string(), pos: (0, 0), start: 0 }
         ];
         // Token should fail
         let dataset2 = vec![
-            Token { word: format!("kiwi"), pos: (0, 0), start: 0 },
-            Token { word: format!("optional"), pos: (0, 0), start: 0 },
-            Token { word: format!("let"), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!(","), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!("end"), pos: (0, 0), start: 0 }
+            Token { word: "kiwi".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "optional".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "let".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: ",".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "end".to_string(), pos: (0, 0), start: 0 }
         ];
         // Syntax should fail
         let dataset3 = vec![
-            Token { word: format!("orange"), pos: (0, 0), start: 0 },
-            Token { word: format!("tell"), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!(","), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!("end"), pos: (0, 0), start: 0 }
+            Token { word: "orange".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "tell".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: ",".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "end".to_string(), pos: (0, 0), start: 0 }
         ];
         // Token should fail because of repeat matching (this , this) ,
         let dataset4 = vec![
-            Token { word: format!("orange"), pos: (0, 0), start: 0 },
-            Token { word: format!("tell"), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!(","), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!("this"), pos: (0, 0), start: 0 },
-            Token { word: format!("end"), pos: (0, 0), start: 0 }
+            Token { word: "orange".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "tell".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: ",".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "this".to_string(), pos: (0, 0), start: 0 },
+            Token { word: "end".to_string(), pos: (0, 0), start: 0 }
         ];
         let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, ""));
         let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, ""));

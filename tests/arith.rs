@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use heraclitus_compiler::prelude::*;
 mod arith_modules;
 

@@ -204,7 +204,7 @@ mod test {
 
     #[test]
     fn test_displayer() {
-        let code = vec![
+        let code = [
             "let a = 12",
             "value = 'this",
             "is mutltiline",
@@ -218,14 +218,14 @@ mod test {
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .line(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
             .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
     }
 
     #[test]
     fn test_end_of_line_displayer() {
-        let code = vec![
+        let code = [
             "hello"
         ].join("\n");
         // Uncomment to see the error message
@@ -235,27 +235,27 @@ mod test {
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .line(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
             .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
     }
 
     #[test]
     fn test_between_tokens() {
-        let code = vec![
+        let code = [
             "foo(12 + 24)"
         ].join("\n");
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let begin = Token { word: "12".to_string(), pos: (1, 5), start: 4 };
         let end = Token { word: ")".to_string(), pos: (1, 12), start: 11 };
-        let mut meta = DefaultMetadata::new(vec![], code.clone());
+        let meta = DefaultMetadata::new(vec![], code.clone());
         let trace = [
-            PositionInfo::from_between_tokens(&mut meta, Some(begin), Some(end))
+            PositionInfo::from_between_tokens(&meta, Some(begin), Some(end))
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
-            .line(Some(format!("Cannot call function \"foobar\" on a number")))
+            .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
             .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
     }
