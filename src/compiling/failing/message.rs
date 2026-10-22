@@ -42,7 +42,7 @@ pub struct Snippet {
 /// # use heraclitus_compiler::prelude::*;
 /// # let path = "path/to/file";
 /// # let position = PositionInfo::at_pos(Some(path), (1, 1), 0, 0);
-/// # let mut meta = DefaultMetadata::new(vec![], "code").with_path(path);
+/// # let meta = DefaultMetadata::new(vec![], "code").with_path(path);
 /// let guess = "type";
 ///
 /// Message::new_err_at_position(&meta, position)

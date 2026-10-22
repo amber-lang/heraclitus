@@ -30,14 +30,15 @@ Ready to get started?
 
 ## Example
 ```rust
-use heraclitus::prelude::*;
-Compiler::new("HerbScript", rules);
+use heraclitus_compiler::prelude::*;
+Compiler::new("HerbScript", rules, "let a = 12");
 ```
 It is recommended to use included prelude to import just the things we will actually need.
 
-The `Compiler` requires lexer rules in order to exist.
+The `Compiler` requires lexer rules and the source code in order to exist.
 
 ```rust
-let cc = Compiler::new("HerbScript", rules);
+let cc = Compiler::new("HerbScript", rules, "let a = 12");
 let tokens = cc.tokenize()?;
+let mut meta = DefaultMetadata::new(tokens, cc.code.clone());
 ```
