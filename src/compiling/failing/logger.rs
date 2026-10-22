@@ -233,11 +233,13 @@ mod test {
         let trace = [
             PositionInfo::at_pos(Some("/path/to/foo"), (1, 6), 5, 1)
         ];
+        let snippet = Message::get_snippet(&code, &trace[0]);
+        assert!(snippet.is_some(), "Snippet should exist for the position at the end of the line");
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)
             .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
-            .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
+            .snippet(snippet.as_ref());
     }
 
     #[test]
