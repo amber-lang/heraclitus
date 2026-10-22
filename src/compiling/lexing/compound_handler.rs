@@ -107,7 +107,7 @@ mod test {
             CompoundReaction::Begin,
             CompoundReaction::End,
         ];
-        let code = format!("!<=><=");
+        let code = "!<=><=".to_string();
         let mut reader = Reader::new(&code);
         let symbols = vec!['<', '=', '>'];
         let compounds = vec![('<', '='), ('=', '>')];

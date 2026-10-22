@@ -14,22 +14,28 @@ pub struct DefaultMetadata {
     pub expr: Vec<Token>,
     /// Optionally path of the file
     pub path: Option<String>,
-    /// Optionally code of the file
-    pub code: Option<String>,
+    /// Code of the file
+    pub code: String,
     /// Debug value that is used internally
     pub indent: Option<usize>
 }
 
 impl DefaultMetadata {
     /// Load tokens into metadata
-    pub fn new(tokens: Vec<Token>, path: Option<String>, code: Option<String>) -> Self {
+    pub fn new(tokens: Vec<Token>, code: impl Into<String>) -> Self {
         DefaultMetadata {
             index: 0,
             expr: tokens,
-            path,
-            code,
+            path: None,
+            code: code.into(),
             indent: None
         }
+    }
+
+    /// Set path of the file (used in error messages)
+    pub fn with_path(mut self, path: impl Into<String>) -> Self {
+        self.path = Some(path.into());
+        self
     }
 }
 
@@ -54,11 +60,11 @@ impl Metadata for DefaultMetadata {
        self.indent = Some(indent)
     }
 
-    fn get_path(&self) -> Option<String> {
-        self.path.clone()
+    fn get_path(&self) -> Option<&str> {
+        self.path.as_deref()
     }
 
-    fn get_code(&self) -> Option<&String> {
+    fn get_code(&self) -> &str {
         self.code.as_ref()
     }
 }
@@ -79,9 +85,9 @@ pub trait Metadata {
     /// Setter for debug value
     fn set_debug(&mut self, indent: usize);
     /// Getter for path of the file
-    fn get_path(&self) -> Option<String>;
+    fn get_path(&self) -> Option<&str>;
     /// Getter for code of the file
-    fn get_code(&self) -> Option<&String>;
+    fn get_code(&self) -> &str;
     /// Get traceback
     fn get_trace(&self) -> Vec<PositionInfo> {
         vec![]

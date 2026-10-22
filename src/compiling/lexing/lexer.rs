@@ -174,7 +174,7 @@ impl Lexer {
                 // then skip finding a new position
                 if SeparatorMode::Manual != self.separator_mode || letter != '\n' {
                     // If the region is tokenized, then check if the letter is a separator
-                    if !region.tokenize || !vec![' ', '\t'].contains(&letter) {
+                    if !region.tokenize || ![' ', '\t'].contains(&letter) {
                         lex_state.position = lex_state.reader.get_position();
                     }
                 }
@@ -251,7 +251,7 @@ impl Lexer {
                                     let pos = lex_state.reader.get_position();
                                     return Err((
                                         LexerErrorType::Singleline,
-                                        PositionInfo::at_pos(self.path.clone(), pos, lex_state.reader.get_index(), 0)
+                                        PositionInfo::at_pos(self.path.as_deref(), pos, lex_state.reader.get_index(), 0)
                                             .data(region.name.clone()),
                                     ));
                                 }
@@ -264,7 +264,7 @@ impl Lexer {
                                 // Create indent regions: '\n   '
                                 if let ScopingMode::Indent = self.scoping_mode {
                                     // If we are still in the indent region - proceed
-                                    if lex_state.is_indenting && vec![' ', '\t'].contains(&letter) {
+                                    if lex_state.is_indenting && [' ', '\t'].contains(&letter) {
                                         self.word_push(&mut lex_state, letter);
                                     }
                                     // If it's the new line - start indent region
@@ -276,7 +276,7 @@ impl Lexer {
                                     // concludes current indent region
                                     if lex_state.is_indenting {
                                         if let Some(next_char) = lex_state.reader.peek() {
-                                            if !vec![' ', '\t'].contains(&next_char) {
+                                            if ![' ', '\t'].contains(&next_char) {
                                                 self.add_indent(&mut lex_state);
                                                 lex_state.is_indenting = false;
                                             }
@@ -297,7 +297,7 @@ impl Lexer {
                                 /*****************/
 
                                 // Skip whitespace
-                                if vec![' ', '\t'].contains(&letter) {
+                                if [' ', '\t'].contains(&letter) {
                                     self.add_word(&mut lex_state);
                                 }
                                 // Handle special symbols
@@ -319,7 +319,7 @@ impl Lexer {
         if let Err((pos, start, region)) = lex_state.region_handler.is_region_closed(&lex_state.reader) {
             return Err((
                 LexerErrorType::Unclosed,
-                PositionInfo::at_pos(self.path.clone(), pos, start, 0).data(region.name),
+                PositionInfo::at_pos(self.path.as_deref(), pos, start, 0).data(region.name),
             ));
         }
 
@@ -429,7 +429,7 @@ mod test {
         let mut result = vec![];
         // Simulate lexing
         let res = lexer
-            .tokenize(&vec!["if condition:", "    if subcondition:", "        pass"].join("\n"));
+            .tokenize(&["if condition:", "    if subcondition:", "        pass"].join("\n"));
         assert!(res.is_ok());
         for lex in res.unwrap() {
             result.push((lex.word, (lex.pos.0, lex.pos.1), lex.start));
@@ -454,7 +454,7 @@ mod test {
         let lexer = super::Lexer::new(rules);
         let mut result = vec![];
         // Simulate lexing
-        let res = lexer.tokenize(&vec!["let age = 12", "+", "12;"].join("\n"));
+        let res = lexer.tokenize(&["let age = 12", "+", "12;"].join("\n"));
         assert!(res.is_ok());
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
@@ -474,7 +474,7 @@ mod test {
         let lexer = super::Lexer::new(rules);
         let mut result = vec![];
         // Simulate lexing
-        let res = lexer.tokenize(&vec!["'this", "is", "a", "multiline", "string'"].join("\n"));
+        let res = lexer.tokenize(&["'this", "is", "a", "multiline", "string'"].join("\n"));
         assert!(res.is_ok());
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
@@ -494,7 +494,7 @@ mod test {
         let lexer = super::Lexer::new(rules);
         let mut result = vec![];
         // Simulate lexing
-        let res = lexer.tokenize(&vec!["\"this is \\\"escaped\\\" string\""].join("\n"));
+        let res = lexer.tokenize(&["\"this is \\\"escaped\\\" string\""].join("\n"));
         assert!(res.is_ok());
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
@@ -521,7 +521,7 @@ mod test {
         let lexer = super::Lexer::new(rules);
         let mut result = vec![];
         // Simulate lexing
-        let res = lexer.tokenize(&vec!["// comment \\", "// not same region\n"].join("\n"));
+        let res = lexer.tokenize(&["// comment \\", "// not same region\n"].join("\n"));
         for lex in res.unwrap() {
             result.push((lex.word, lex.pos.0, lex.pos.1));
         }
@@ -556,7 +556,7 @@ mod test {
 
         let text = r#""\{should not be interpolated // should not be a comment}""#;
 
-        let res = lexer.tokenize(&vec![text].join("\n"));
+        let res = lexer.tokenize(&[text].join("\n"));
         assert!(res.is_ok());
 
         let mut result = vec![];
