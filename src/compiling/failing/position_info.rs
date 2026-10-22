@@ -41,7 +41,7 @@ impl PositionInfo {
     pub fn new(meta: &impl Metadata, position: Position, start: usize, len: usize) -> Self {
         let info = PositionInfo {
             position,
-            path: meta.get_path(),
+            path: meta.get_path().map(String::from),
             start,
             len,
             data: None
@@ -52,7 +52,7 @@ impl PositionInfo {
     /// Create a new error at the end of file
     pub fn at_eof(meta: &impl Metadata) -> Self {
         let info = PositionInfo {
-            path: meta.get_path(),
+            path: meta.get_path().map(String::from),
             position: Position::EOF,
             start: 0,
             len: 0,
@@ -62,9 +62,9 @@ impl PositionInfo {
     }
 
     /// Create a new error at given position
-    pub fn at_pos(path: Option<String>, (row, col): (usize, usize), start: usize, len: usize) -> Self {
+    pub fn at_pos(path: Option<&str>, (row, col): (usize, usize), start: usize, len: usize) -> Self {
         PositionInfo {
-            path,
+            path: path.map(String::from),
             position: Position::Pos(row, col),
             start,
             len,
@@ -141,32 +141,11 @@ impl PositionInfo {
     }
 
     /// Get position of the error by either path or code
-    pub fn get_pos_by_file_or_code(&self, code: Option<&String>) -> (usize, usize) {
+    pub fn get_pos_by_file_or_code(&self, code: &str) -> (usize, usize) {
         match self.position {
             Position::Pos(row, col) => (row, col),
-            Position::EOF => {
-                if let Some(code) = code {
-                    self.get_pos_by_code(code)
-                }
-                else if let Some(path) = &self.path {
-                    match self.get_pos_by_file(path) {
-                        Ok((row, col)) => (row, col),
-                        Err(_) => (0, 0)
-                    }
-                }
-                else {
-                    (0, 0)
-                }
-            }
+            Position::EOF => self.get_pos_by_code(code),
         }
-    }
-
-    /// In case of EOF this function ensures you to return concrete position
-    pub fn get_pos_by_file(&self, path: impl AsRef<str>) -> std::io::Result<(usize, usize)> {
-        let mut code = String::new();
-        let mut file = File::open(path.as_ref())?;
-        file.read_to_string(&mut code)?;
-        Ok(self.get_pos_by_code(&code))
     }
 
     /// In case of EOF this function ensures you to return concrete position
@@ -196,7 +175,7 @@ mod test {
 
     #[test]
     fn test_position_info() {
-        let pos = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 0, 1);
+        let pos = PositionInfo::at_pos(Some("test"), (1, 1), 0, 1);
         assert_eq!(pos.get_path(), "test");
         assert_eq!(pos.get_pos_by_code("test"), (1, 1));
     }
@@ -206,16 +185,16 @@ mod test {
         let begin = Token { word: "begin".to_string(), pos: (1, 1), start: 0 };
         let to = Token { word: "to".to_string(), pos: (1, 7), start: 6 };
         let end = Token { word: "end".to_string(), pos: (1, 10), start: 9 };
-        let mut meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], None, Some("begin to end".to_string()));
+        let mut meta = DefaultMetadata::new(vec![begin.clone(), to.clone(), end.clone()], "begin to end");
         let pos = PositionInfo::from_between_tokens(&mut meta, Some(begin.clone()), Some(end.clone()));
         assert_eq!(pos.len, end.start - begin.start);
     }
 
     #[test]
     fn test_position_info_between_positions() {
-        let begin = PositionInfo::at_pos(Some("test".to_string()), (1, 1), 0, 5);
-        let end = PositionInfo::at_pos(Some("test".to_string()), (1, 10), 9, 3);
-        let mut meta = DefaultMetadata::new(vec![], None, Some("begin to end".to_string()));
+        let begin = PositionInfo::at_pos(Some("test"), (1, 1), 0, 5);
+        let end = PositionInfo::at_pos(Some("test"), (1, 10), 9, 3);
+        let mut meta = DefaultMetadata::new(vec![], "begin to end");
         let pos = PositionInfo::from_between_positions(&mut meta, begin.clone(), end.clone());
         assert_eq!(pos.start, 0);
         assert_eq!(pos.len, 12);

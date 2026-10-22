@@ -24,18 +24,28 @@ pub enum MessageType {
     Info
 }
 
-/// Logger itself
+/// Code snippet that Message can relate to
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Snippet {
+    pub(crate) line: usize,
+    pub(crate) before: Option<String>,
+    pub(crate) current: String,
+    pub(crate) after: Option<String>
+}
+
+/// A message (error, warning or info) object that can be shown to the user.
+/// Optionally it can point to a place in the code.
 ///
-/// Log the message you want to show to the user
 /// # Example
-/// ```should_panic
+/// ```
 /// # use heraclitus_compiler::prelude::*;
-/// # let path = Some(format!("path/to/file"));
-/// # let position = PositionInfo::at_pos(path.clone(), (0, 0), 0, 0);
-/// # let guess = "type";
-/// # let code = Some(format!("code"));
-/// # let mut meta = DefaultMetadata::new(vec![], path, code);
-/// Message::new_err_at_position(&mut meta, position)
+/// # let path = "path/to/file";
+/// # let position = PositionInfo::at_pos(Some(path), (1, 1), 0, 0);
+/// # let mut meta = DefaultMetadata::new(vec![], "code").with_path(path);
+/// let guess = "type";
+///
+/// Message::new_err_at_position(&meta, position)
 ///     .message("Type of this parameter is invalid")
 ///     .comment(format!("Maybe you meant type {guess} instead"))
 ///     .show();
@@ -47,8 +57,8 @@ pub struct Message {
     pub kind: MessageType,
     /// Trace of the error
     pub trace: Vec<PositionInfo>,
-    /// Optionally store source code
-    pub code: Option<String>,
+    /// Optionally store source code snippet
+    pub snippet: Option<Snippet>,
     /// Optionally store message
     pub message: Option<String>,
     /// Optionally store comment
@@ -57,11 +67,13 @@ pub struct Message {
 
 impl Message {
     /// Create a new logger instance
-    pub fn new(code: Option<&String>, trace: &[PositionInfo], kind: MessageType) -> Self {
+    pub fn new(code: &str, trace: &[PositionInfo], kind: MessageType) -> Self {
+        let trace = trace.iter().rev().cloned().collect::<Vec<PositionInfo>>();
+        let snippet = trace.first().and_then(|pos| Self::get_snippet(code, pos));
         Message {
             kind,
-            trace: trace.iter().rev().cloned().collect(),
-            code: code.cloned(),
+            trace,
+            snippet,
             message: None,
             comment: None
         }
@@ -72,7 +84,7 @@ impl Message {
         Message {
             kind,
             trace: vec![],
-            code: None,
+            snippet: None,
             message: Some(message.as_ref().to_string()),
             comment: None
         }
@@ -137,13 +149,13 @@ impl Message {
     /* Attach additional information */
 
     /// Add message to an existing log
-    pub fn message<T: AsRef<str>>(mut self, text: T) -> Self {
+    pub fn message(mut self, text: impl AsRef<str>) -> Self {
         self.message = Some(String::from(text.as_ref()));
         self
     }
 
     /// Add comment to an existing log
-    pub fn comment<T: AsRef<str>>(mut self, text: T) -> Self {
+    pub fn comment(mut self, text: impl AsRef<str>) -> Self {
         self.comment = Some(String::from(text.as_ref()));
         self
     }
@@ -157,7 +169,7 @@ impl Message {
                 .header(self.kind.clone())
                 .line(self.message.clone())
                 .path()
-                .snippet(self.code.clone())
+                .snippet(self.snippet.as_ref())
                 .line(self.comment.clone());
         }
         // If this error is a message error
@@ -174,6 +186,19 @@ impl Message {
         trace.push(position);
         trace
     }
+
+    pub(crate) fn get_snippet(code: &str, position: &PositionInfo) -> Option<Snippet> {
+        let (row, _) = position.get_pos_by_file_or_code(code);
+        let index = row.checked_sub(1)?;
+        let lines = code.lines().map(str::trim_end).collect::<Vec<&str>>();
+
+        Some(Snippet {
+            line: row,
+            before: index.checked_sub(1).and_then(|i| lines.get(i).map(|v| v.to_string())),
+            current: lines.get(index)?.to_string(),
+            after: lines.get(index + 1).map(|v| v.to_string())
+        })
+    }
 }
 
 #[cfg(test)]
@@ -189,15 +214,15 @@ mod test {
 
     #[test]
     fn test_message_with_code() {
-        let code = Some([
+        let code = [
             "... some code",
             "name = false",
             "... further code",
-        ].join("\n"));
-        let path = Some(format!("path/to/file"));
-        let position = PositionInfo::at_pos(path.clone(), (2, 1), 14, 4);
+        ].join("\n");
+        let path = "path/to/file";
+        let position = PositionInfo::at_pos(Some(path), (2, 1), 14, 4);
         let guess = "type";
-        let mut meta = DefaultMetadata::new(vec![], path, code);
+        let mut meta = DefaultMetadata::new(vec![], code).with_path(path);
         Message::new_err_at_position(&mut meta, position)
             .message("Type of this parameter is invalid")
             .comment(format!("Maybe you meant type {guess} instead"))

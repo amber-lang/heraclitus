@@ -70,7 +70,7 @@ pub struct Compiler {
     /// Name of your language
     pub name: String,
     /// Source code in a form of string
-    pub code: Option<String>,
+    pub code: String,
     /// Path to the compiled file if exists
     pub path: Option<String>,
     // Check if user wants to debug parser
@@ -81,10 +81,10 @@ pub struct Compiler {
 
 impl Compiler {
     /// Create a new compiler with provided rules of your language
-    pub fn new<T: AsRef<str>>(name: T, rules: Rules) -> Self {
+    pub fn new<T: AsRef<str>>(name: T, rules: Rules, code: impl Into<String>) -> Self {
         Compiler {
             name: String::from(name.as_ref()),
-            code: None,
+            code: code.into(),
             path: None,
             debug: false,
             lexer: Lexer::new(rules)
@@ -106,14 +106,14 @@ impl Compiler {
         let mut file = File::open(&file_path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
-        self.code = Some(contents);
+        self.code = contents;
         self.path = Some(file_path);
         Ok(())
     }
 
     /// Load code string
-    pub fn load<T: AsRef<str>>(&mut self, code: T) {
-        self.code = Some(String::from(code.as_ref()));
+    pub fn load(&mut self, code: impl Into<String>) {
+        self.code = code.into();
     }
 
     /// Set source file path
@@ -123,7 +123,7 @@ impl Compiler {
 
     /// Run just lexer
     pub fn tokenize(&self) -> Result<Vec<Token>, LexerError> {
-        self.lexer.tokenize(&self.code.clone().unwrap())
+        self.lexer.tokenize(&self.code.clone())
     }
 
     /// Parser will display information about the call stack

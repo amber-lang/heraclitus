@@ -127,9 +127,8 @@ mod test {
                 start: 0
             }
         ];
-        let path = Some(format!("path/to/file"));
-        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, path.clone(), None));
-        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, path.clone(), None));
+        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, ""));
+        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, ""));
         assert!(result1.is_ok());
         assert!(result2.is_err());
     }
@@ -165,8 +164,7 @@ mod test {
             // Float
             Token { word: format!("-.681"), pos: (0, 0), start: 0 }
         ];
-        let path = Some(format!("path/to/file"));
-        let result = exp.parse(&mut DefaultMetadata::new(dataset, path, None));
+        let result = exp.parse(&mut DefaultMetadata::new(dataset, ""));
         assert!(result.is_ok());
     }
 
@@ -248,11 +246,10 @@ mod test {
             Token { word: format!("this"), pos: (0, 0), start: 0 },
             Token { word: format!("end"), pos: (0, 0), start: 0 }
         ];
-        let path = Some(format!("path/to/file"));
-        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, path.clone(), None));
-        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, path.clone(), None));
-        let result3 = exp.parse(&mut DefaultMetadata::new(dataset3, path.clone(), None));
-        let result4 = exp.parse(&mut DefaultMetadata::new(dataset4, path.clone(), None));
+        let result1 = exp.parse(&mut DefaultMetadata::new(dataset1, ""));
+        let result2 = exp.parse(&mut DefaultMetadata::new(dataset2, ""));
+        let result3 = exp.parse(&mut DefaultMetadata::new(dataset3, ""));
+        let result4 = exp.parse(&mut DefaultMetadata::new(dataset4, ""));
         assert!(result1.is_ok());
         assert!(result2.is_err());
         assert!(result3.is_err());
