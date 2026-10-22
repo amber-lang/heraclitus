@@ -13,7 +13,7 @@ pub mod logger;
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn parse() -> SyntaxResult {
-/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
+/// # let meta = &mut DefaultMetadata::new(vec![], "");
 /// let tok = meta.get_current_token();
 /// if let Err(failure) = token(meta, "keyword") {
 ///   return error!(meta, tok, "Expected keyword");
@@ -43,7 +43,7 @@ macro_rules! error {
 /// ```
 /// # use heraclitus_compiler::prelude::*;
 /// # fn parse() -> SyntaxResult {
-/// # let meta = &mut DefaultMetadata::new(vec![], None, None);
+/// # let meta = &mut DefaultMetadata::new(vec![], "");
 /// if let Err(failure) = token(meta, "keyword") {
 ///   return error_pos!(meta, failure.unwrap_quiet(), "Expected keyword");
 /// }

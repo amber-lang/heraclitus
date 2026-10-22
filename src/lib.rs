@@ -21,7 +21,7 @@
 //! ```
 //! use heraclitus_compiler::prelude::*;
 //! # let rules = Rules::new(vec![], vec![], reg![]);
-//! Compiler::new("HerbScript", rules);
+//! Compiler::new("HerbScript", rules, "let a = 12");
 //! ```
 //! It is recommended to use included prelude to import just the things we will actually need.
 //! 
@@ -31,7 +31,7 @@
 //! # use heraclitus_compiler::prelude::*;
 //! # fn compiler() -> Result<(), LexerError> {
 //! # let rules = Rules::new(vec![], vec![], reg![]);
-//! let cc = Compiler::new("HerbScript", rules);
+//! let cc = Compiler::new("HerbScript", rules, "let a = 12");
 //! let tokens = cc.tokenize()?;
 //! # Ok(())
 //! # }

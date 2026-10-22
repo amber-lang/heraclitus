@@ -14,7 +14,7 @@ pub struct DefaultMetadata {
     pub expr: Vec<Token>,
     /// Optionally path of the file
     pub path: Option<String>,
-    /// Optionally code of the file
+    /// Code of the file
     pub code: String,
     /// Debug value that is used internally
     pub indent: Option<usize>
@@ -32,6 +32,7 @@ impl DefaultMetadata {
         }
     }
 
+    /// Set path of the file (used in error messages)
     pub fn with_path(mut self, path: impl Into<String>) -> Self {
         self.path = Some(path.into());
         self

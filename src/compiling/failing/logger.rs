@@ -231,7 +231,7 @@ mod test {
         // Uncomment to see the error message
         sleep(Duration::from_secs(1));
         let trace = [
-            PositionInfo::at_pos(Some("/path/to/foo"), (2, 6), 5, 1)
+            PositionInfo::at_pos(Some("/path/to/foo"), (1, 6), 5, 1)
         ];
         super::Logger::new(MessageType::Error, &trace)
             .header(MessageType::Error)

@@ -12,16 +12,16 @@ fn cobra() {
         })
     ];
     let rules = Rules::new(symbols, compounds, region);
-    let mut compiler = Compiler::new("Cobra", rules);
-    compiler.use_indents();
-    compiler.load(vec![
+    let code = vec![
         "if 'condition\\\\':",
         "  'do + this'",
         "  'do ++ that'"
-    ].join("\n"));
+    ].join("\n");
+    let mut compiler = Compiler::new("Cobra", rules, code);
+    compiler.use_indents();
     let mut ast = cobra_modules::IfStatement::new();
     compiler.debug();
     let lexem = compiler.tokenize().unwrap();
-    let mut meta = DefaultMetadata::new(lexem, compiler.path.clone(), compiler.code.clone());
+    let mut meta = DefaultMetadata::new(lexem, compiler.code.clone());
     assert!(ast.parse_debug(&mut meta).is_ok());
 }

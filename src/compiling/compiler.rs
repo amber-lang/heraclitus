@@ -58,9 +58,9 @@ pub enum ScopingMode {
 /// # fn compiler() -> Result<(), Failure> {
 /// # let rules = Rules::new(vec![], vec![], reg![]);
 /// let mut global_ctx = GlobalContext::new();
-/// let cc = Compiler::new("HerbScript", rules);
+/// let cc = Compiler::new("HerbScript", rules, "let a = 12");
 /// let lexem = cc.tokenize().unwrap();
-/// let mut meta = DefaultMetadata::new(lexem, cc.path.clone(), cc.code.clone());
+/// let mut meta = DefaultMetadata::new(lexem, cc.code.clone());
 /// global_ctx.parse(&mut meta)?;
 /// # Ok(())
 /// # }

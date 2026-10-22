@@ -3,8 +3,6 @@
 //! This module defines `ErrorDetails` structure which is returned as
 //! an error by lexer and is used in parsing phase as well.
 
-use std::fs::File;
-use std::io::*;
 use crate::compiling::{Metadata, Token};
 
 #[cfg(feature = "serde")]
