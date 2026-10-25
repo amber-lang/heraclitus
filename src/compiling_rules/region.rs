@@ -193,28 +193,28 @@ mod test {
     #[test]
     fn region_parses_correctly() {
         let expected = Region {
-            id: format!("global"),
-            name: format!("Global context"),
-            begin: format!(""),
-            end: format!(""),
+            id: "global".to_string(),
+            name: "Global context".to_string(),
+            begin: String::new(),
+            end: String::new(),
             interp: vec![
                 Region {
-                    id: format!("string"),
-                    name: format!("String Literal"),
-                    begin: format!("'"),
-                    end: format!("'"),
+                    id: "string".to_string(),
+                    name: "String Literal".to_string(),
+                    begin: "'".to_string(),
+                    end: "'".to_string(),
                     interp: vec![
                         Region {
-                            id: format!("string_interp"),
-                            name: format!("String Interpolation"),
-                            begin: format!("${{"),
-                            end: format!("}}"),
+                            id: "string_interp".to_string(),
+                            name: "String Interpolation".to_string(),
+                            begin: "${".to_string(),
+                            end: "}".to_string(),
                             interp: vec![],
                             tokenize: true,
                             allow_unclosed_region: false,
                             singleline: false,
                             global: false,
-                            references: Some(format!("global")),
+                            references: Some("global".to_string()),
                             ignore_escaped: false,
                         }],
                     tokenize: false,

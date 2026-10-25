@@ -126,7 +126,7 @@ impl RegionHandler {
             self.match_region_by(
                 reader,
                 |candidate: &Region| &candidate.end,
-                &[region.clone()],
+                std::slice::from_ref(region),
                 ReadMode::History,
             )
         } else {
@@ -155,7 +155,7 @@ mod test {
 
     #[test]
     fn match_region() {
-        let lines = vec!["begin", "\\begin", "end"];
+        let lines = ["begin", "\\begin", "end"];
         let expected = vec![(0, String::from("begin")), (15, String::from("end"))];
         let code = lines.join(" ");
         let mut reader = Reader::new(&code);
@@ -192,7 +192,7 @@ mod test {
 
     #[test]
     fn handle_region() {
-        let lines = vec!["'My name is \\\\\\'{name}.\\\\'"];
+        let lines = ["'My name is \\\\\\'{name}.\\\\'"];
         let expected = vec![0, 16, 21, 25];
         let code = lines.join("\n");
         let region = reg![reg!(string as "String literal" => {
