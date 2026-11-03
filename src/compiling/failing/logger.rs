@@ -220,7 +220,7 @@ mod test {
             .header(MessageType::Error)
             .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
-            .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
+            .snippet(Message::get_snippet(&code, &trace[0]).as_deref());
     }
 
     #[test]
@@ -239,7 +239,7 @@ mod test {
             .header(MessageType::Error)
             .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
-            .snippet(snippet.as_ref());
+            .snippet(snippet.as_deref());
     }
 
     #[test]
@@ -259,6 +259,6 @@ mod test {
             .header(MessageType::Error)
             .line(Some("Cannot call function \"foobar\" on a number".to_string()))
             .path()
-            .snippet(Message::get_snippet(&code, &trace[0]).as_ref());
+            .snippet(Message::get_snippet(&code, &trace[0]).as_deref());
     }
 }
