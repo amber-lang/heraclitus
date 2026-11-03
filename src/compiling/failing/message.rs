@@ -58,7 +58,7 @@ pub struct Message {
     /// Trace of the error
     pub trace: Vec<PositionInfo>,
     /// Optionally store source code snippet
-    pub snippet: Option<Snippet>,
+    pub snippet: Option<Box<Snippet>>,
     /// Optionally store message
     pub message: Option<String>,
     /// Optionally store comment
@@ -169,7 +169,7 @@ impl Message {
                 .header(self.kind.clone())
                 .line(self.message.clone())
                 .path()
-                .snippet(self.snippet.as_ref())
+                .snippet(self.snippet.as_deref())
                 .line(self.comment.clone());
         }
         // If this error is a message error
@@ -187,17 +187,17 @@ impl Message {
         trace
     }
 
-    pub(crate) fn get_snippet(code: &str, position: &PositionInfo) -> Option<Snippet> {
+    pub(crate) fn get_snippet(code: &str, position: &PositionInfo) -> Option<Box<Snippet>> {
         let (row, _) = position.get_pos_by_file_or_code(code);
         let index = row.checked_sub(1)?;
         let lines = code.lines().map(str::trim_end).collect::<Vec<&str>>();
 
-        Some(Snippet {
+        Some(Box::new(Snippet {
             line: row,
             before: index.checked_sub(1).and_then(|i| lines.get(i).map(|v| v.to_string())),
             current: lines.get(index)?.to_string(),
             after: lines.get(index + 1).map(|v| v.to_string())
-        })
+        }))
     }
 }
 
